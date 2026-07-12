@@ -11,7 +11,8 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=3000
 COPY package*.json ./
-RUN npm ci
+# The server runs via tsx (a devDependency), so keep dev deps even under NODE_ENV=production.
+RUN npm ci --include=dev
 COPY --from=build /app/dist ./dist
 COPY src ./src
 COPY tsconfig.json ./
