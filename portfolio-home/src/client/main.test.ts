@@ -78,12 +78,14 @@ describe('featured banner', () => {
     expect($$('.feat-banner .feat')).toHaveLength(featured.length);
   });
 
-  test('the docker terminal lists every container in the stack', async () => {
+  test('the kubectl terminal lists every pod in the stack', async () => {
     await mountPage();
-    // The mock is hand-kept in sync with docker-compose.yml. If a service is added there and not
-    // here, the graphic is lying about what is running — this is the test that says so.
+    // The mock is hand-kept in sync with the Deployments under k8s/base/. If a service is added
+    // there and not here, the graphic is lying about what is running — this is the test that says so.
     const names = $$('.term .ps td.n').map((td) => td.textContent);
-    expect(names).toEqual(['nginx', 'home', 'quiz', 'vmcp', 'rs-mcp-server', 'vmcp-db', 'fvt-traffic']);
+    expect(names).toEqual([
+      'nginx', 'home', 'quiz', 'vmcp', 'vmcp-db', 'rs-mcp-server', 'platform-auth', 'fvt-traffic',
+    ]);
     expect($$('.term .ps td.up')).toHaveLength(names.length);
   });
 

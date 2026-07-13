@@ -71,15 +71,18 @@ const signInView = (): string => `
     <button class="pg-btn primary" data-act="go">Sign in</button>
   </div>`;
 
-// The code, once. The button says "I have written it down" rather than "OK", because "OK" is what
-// people click without reading.
+// The code. The button says "I have written it down" rather than "OK", because "OK" is what people
+// click without reading. It is also recoverable from the account menu for as long as you stay signed
+// in — but that is a convenience, not a safety net, and the warning is careful not to let it read as
+// one: sign out or clear the browser and it is gone for good.
 const codeView = (username: string, code: string): string => `
   <h2>Write this down</h2>
   <p class="pg-sub">You are <strong>${esc(username)}</strong>. This is your code.</p>
   <div class="pg-code" data-code>${esc(code)}</div>
   <p class="pg-warn">
-    <strong>This is the only time you will ever see it.</strong> It is not stored anywhere we can read
-    it, there is no email on this account, and there is no way to reset it. Lose the code and the
+    <strong>Write it down now.</strong> You can see it again from your account menu (top-right) while
+    you stay signed in, but it is not stored anywhere we can read it, there is no email on this
+    account, and there is no way to reset it. Sign out or clear this browser without it and the
     account is gone, along with everything in it.
   </p>
   <div class="pg-actions">

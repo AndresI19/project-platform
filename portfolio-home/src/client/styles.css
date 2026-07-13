@@ -176,7 +176,7 @@ section { margin-bottom: 30px; }
 
 /* Grouped entries — several repos that are one project, drawn inside a single card / row. The
    group card is wider than a plain featured card because it stacks its members vertically. */
-/* Two of the four featured cards are `wide` (the grouped repo card and the docker terminal). The
+/* Two of the four featured cards are `wide` (the grouped repo card and the kubectl terminal). The
    banner's usable width is 1412px — the 1440px column minus .wrap's padding — so the budget is
    2×292 + 2×390 + 3 gaps of 14 + 4px of banner padding = 1410px. That fits, and all four cards are
    visible without scrolling. Grow either width and the fourth card falls off the right edge. */
@@ -252,14 +252,14 @@ section { margin-bottom: 30px; }
 .dgm-t text.you { fill: var(--ink); font-size: 11px; font-weight: 800; }
 .dgm-t text.edge { fill: var(--muted); font-size: 7.5px; font-weight: 700; letter-spacing: .3px; }
 
-/* The `docker ps` mock — a terminal window with real chrome. Its palette is fixed dark in BOTH
-   themes: a terminal that turns white in light mode stops looking like a terminal. */
-.media.docker { background: none; padding: 0; border: none; }
+/* The `kubectl get pods` mock — a terminal window with real chrome. Its palette is fixed dark in
+   BOTH themes: a terminal that turns white in light mode stops looking like a terminal. */
+.media.k8s { background: none; padding: 0; border: none; }
 /* The terminal is a flex item of .media.diagram, and a flex item's default (flex: 0 1 auto) sizes
-   it to its *content* — so it collapsed to the intrinsic width of the `docker ps` table and pooled
+   it to its *content* — so it collapsed to the intrinsic width of the pod table and pooled
    every spare pixel against the right edge. Growing it to fill the card is what evens the gutters.
    (The vMCP card never had this problem only because .dgm already sets width: 100%.) */
-.media.docker .term { flex: 1; min-width: 0; }
+.media.k8s .term { flex: 1; min-width: 0; }
 .term {
   --t-bg: #14161d; --t-bar: #1f2230; --t-ink: #e6e9f2; --t-dim: #7c86a0;
   --t-green: #46d17f; --t-cyan: #43c9e0; --t-purple: #a78bfa;
@@ -295,7 +295,7 @@ section { margin-bottom: 30px; }
 }
 .ps td { padding: 3px 12px 3px 0; white-space: nowrap; }
 /* The trailing column's right padding would otherwise stack on top of .term-body's, leaving the
-   right gutter wider than the left. PORTS is the widest column, so it takes the slack instead. */
+   right gutter wider than the left. The last column (STATUS) takes the slack instead. */
 .ps th:last-child, .ps td:last-child { padding-right: 0; width: 100%; }
 .ps tr:first-child td { padding-top: 6px; }
 .ps td.n { color: var(--t-ink); font-weight: 700; }
@@ -304,7 +304,7 @@ section { margin-bottom: 30px; }
   display: inline-block; width: 5px; height: 5px; border-radius: 50%;
   background: var(--t-green); margin-right: 5px; vertical-align: 1px;
 }
-.ps td.pt { color: var(--t-dim); }
+.ps td.rd { color: var(--t-dim); }
 
 /* Status badges. Amber "work in progress" reads as caution; slate "archived" reads as inert —
    the point is that a visitor can tell at a glance which is which without reading the word. */

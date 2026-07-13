@@ -98,8 +98,8 @@ export interface Project {
    *  the quiz's garden alone reads as a game, so the question it asks is shown above it. */
   images?: [string, string];
   /** An inline schematic drawn in place of an image. 'vmcp' shows a user reaching two MCP
-   *  servers through the gateway; 'docker' is a mock `docker ps` of the running stack. */
-  diagram?: 'vmcp' | 'docker' | 'platformui';
+   *  servers through the gateway; 'k8s' is a mock `kubectl get pods` of the running cluster. */
+  diagram?: 'vmcp' | 'k8s' | 'platformui';
   /** Status badge — how finished this is, so a visitor does not misjudge it. */
   tag?: { label: string; icon: 'wip' | 'archived' };
 }
@@ -139,7 +139,6 @@ export const ENTRIES: Entry[] = [
     featured: true,
     blurb:
       'The platform monorepo: the home page you are on, and the identity service behind it. Two subprojects, one repository — because they are two halves of one platform that version together.',
-    diagram: 'platformui',
     members: [
       {
         name: 'portfolio-home',
@@ -267,7 +266,7 @@ export const ENTRIES: Entry[] = [
     live: { type: 'health', url: '/api/health' },
     blurb:
       'The platform everything here runs on: a minikube cluster where nginx fronts every app on one port, published through an outbound Cloudflare tunnel with no open ports, and secrets sealed into the manifests themselves.',
-    diagram: 'docker',
+    diagram: 'k8s',
     links: [
       // The wiki is the real documentation — architecture, networking, secrets, backup/restore — so
       // it leads. The repository is the artifact; the wiki is the explanation.

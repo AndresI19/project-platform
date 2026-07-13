@@ -74,10 +74,10 @@ export function btn(l: Link, cls = 'btn'): string {
   return `<a class="${cls} ${l.primary ? 'primary' : 'ghost'}" href="${esc(l.href)}"${tab(l.external)}${res}>${esc(l.label)}</a>`;
 }
 
-/** Featured card for a single project. The `docker ps` table needs the full width to avoid
+/** Featured card for a single project. The `kubectl get pods` table needs the full width to avoid
     wrapping its columns, so a card carrying it gets the same width as a group card. */
 export function featCard(p: Project): string {
-  return `<article class="feat lux${p.diagram === 'docker' ? ' wide' : ''}">
+  return `<article class="feat lux${p.diagram === 'k8s' ? ' wide' : ''}">
     <div class="feat-top">
       <h3>${esc(p.name)}</h3>
       ${badges(tagChip(p), liveBadge(p))}
