@@ -1,7 +1,7 @@
 # @platform/ui
 
 The shared layer behind the project-platform front ends — [portfolio-home](../portfolio-home) and
-[flashcards-app](../flashcards-app).
+[data-driven-quiz-server](https://github.com/AndresI19/data-driven-quiz-server).
 
 It holds only what the two apps must agree on. Everything else stays in the app that uses it.
 
