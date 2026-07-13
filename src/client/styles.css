@@ -54,14 +54,11 @@
   -webkit-background-clip: text; background-clip: text; color: transparent;
 }
 .mast-title { color: var(--muted); font-size: 15.5px; font-weight: 650; }
-/* The masthead panel now runs to the full width of the column, but the PROSE does not follow it out
-   there: past ~80 characters a line is measurably harder to read, because the eye loses its place on
-   the return sweep. So the bio holds a measure and centres — which lines it up with the contact row
-   below it rather than tucking it inside something wider. Both are centred; they read as siblings. */
-/* Wider and larger than the body text elsewhere: this is the one paragraph anyone actually reads, and
-   at 14.5px/80ch it filled 645px of a 1412px masthead — small print in a big frame. 900px is still
-   inside the comfortable measure at this size (~95 characters), and it is centred, so its edges stay
-   in line with the contact row beneath rather than tucking inside it. */
+/* Larger and wider than the body text elsewhere: this is the one paragraph anyone actually reads.
+   The masthead panel runs the full width of the column, but the PROSE does not follow it out there —
+   past ~95 characters the eye loses its place on the return sweep. So the bio holds a measure and
+   centres, which keeps its edges in line with the contact row beneath rather than tucking it inside
+   something wider. Both are centred; they read as siblings. */
 .mast-bio { color: var(--ink); font-size: 16.5px; line-height: 1.55; margin: 14px auto 0; max-width: 900px; }
 /* The closer sits on its own line — it is the turn from "who I am" to "and here is the thing
    itself", so it gets the weight of a separate statement rather than trailing the paragraph. */
@@ -72,7 +69,7 @@
 .cx {
   display: inline-flex; align-items: center; gap: 6px; text-decoration: none;
   color: var(--muted); background: var(--panel-2); border: 1px solid var(--line);
-  border-radius: 999px; padding: 5px 11px 5px 9px; font-size: 12.5px; font-weight: 650;
+  border-radius: 999px; padding: 6px 13px 6px 10px; font-size: 13.5px; font-weight: 650;
   transition: color .13s, border-color .13s, background .13s, transform .13s cubic-bezier(.2, .8, .2, 1);
 }
 .cx:hover { transform: translateY(-1px); }
@@ -100,8 +97,8 @@
 
 /* Section label — reuses the quiz's .lab style. */
 .lab {
-  font-size: 11px; text-transform: uppercase; letter-spacing: .7px; color: var(--muted);
-  font-weight: 700; margin: 0 0 12px 2px;
+  font-size: 12px; text-transform: uppercase; letter-spacing: .8px; color: var(--muted);
+  font-weight: 700; margin: 0 0 14px 2px;
 }
 section { margin-bottom: 30px; }
 
@@ -127,7 +124,7 @@ section { margin-bottom: 30px; }
    show — were flatter than the employment history sitting under them. The rail is indigo here and
    green there, so the two sections still read as different kinds of thing. */
 .feat {
-  flex: none; width: 290px; scroll-snap-align: start; overflow: hidden;
+  flex: none; width: 292px; scroll-snap-align: start; overflow: hidden;
   background: color-mix(in srgb, var(--accent) 5%, var(--panel));
   border: 1px solid color-mix(in srgb, var(--accent) 22%, var(--line));
   border-left: 3px solid var(--accent);
@@ -142,12 +139,12 @@ section { margin-bottom: 30px; }
   .feat, .feat:hover, .exp, .exp:hover { transition: none; transform: none; }
 }
 .feat-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-.feat h3 { margin: 0; font-size: 16.5px; font-weight: 750; }
-.tech { color: var(--muted); font-size: 11px; font-weight: 650; margin-top: 2px; }
-.feat-blurb { color: var(--muted); font-size: 13px; margin: 9px 0 14px; flex: 1; }
+.feat h3 { margin: 0; font-size: 18px; font-weight: 750; }
+.tech { color: var(--muted); font-size: 12px; font-weight: 650; margin-top: 2px; }
+.feat-blurb { color: var(--muted); font-size: 14.5px; margin: 10px 0 14px; flex: 1; }
 .feat-actions { display: flex; gap: 8px; }
 .btn {
-  text-decoration: none; font-size: 12.5px; font-weight: 700; border-radius: 11px; padding: 8px 14px;
+  text-decoration: none; font-size: 13.5px; font-weight: 700; border-radius: 11px; padding: 9px 16px;
   transition: transform .13s cubic-bezier(.2, .8, .2, 1), box-shadow .13s, border-color .13s;
 }
 .btn:hover { transform: translateY(-1px); }
@@ -158,18 +155,22 @@ section { margin-bottom: 30px; }
 }
 .btn.ghost { color: var(--ink); border: 1px solid var(--line); background: var(--panel-2); }
 .btn.ghost:hover { border-color: var(--accent); color: var(--accent); }
-.btn.sm { font-size: 11.5px; padding: 6px 11px; border-radius: 9px; }
+.btn.sm { font-size: 12.5px; padding: 7px 12px; border-radius: 9px; }
 
 /* Grouped entries — several repos that are one project, drawn inside a single card / row. The
    group card is wider than a plain featured card because it stacks its members vertically. */
-.feat.wide { width: 380px; }
+/* Two of the four featured cards are `wide` (the grouped repo card and the docker terminal). The
+   banner's usable width is 1412px — the 1440px column minus .wrap's padding — so the budget is
+   2×292 + 2×390 + 3 gaps of 14 + 4px of banner padding = 1410px. That fits, and all four cards are
+   visible without scrolling. Grow either width and the fourth card falls off the right edge. */
+.feat.wide { width: 390px; }
 /* Deliberately grey, not accented: "2 repos" is a count, not a status. Tinting it would put it in
    the same visual class as the live/featured/WIP badges it sits beside, which all mean something. */
 .grouped {
   flex: none; color: var(--slate);
   background: color-mix(in srgb, var(--slate) 13%, var(--panel));
   border: 1px solid color-mix(in srgb, var(--slate) 34%, var(--line));
-  border-radius: 999px; padding: 2px 8px; font-size: 10.5px; font-weight: 700;
+  border-radius: 999px; padding: 3px 9px; font-size: 11.5px; font-weight: 700;
   text-transform: uppercase; letter-spacing: .4px;
 }
 .members { display: flex; flex-direction: column; gap: 8px; }
@@ -180,14 +181,14 @@ section { margin-bottom: 30px; }
   border-radius: 10px; padding: 10px 12px;
 }
 .member-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-.member-name { font-size: 13.5px; font-weight: 720; }
-.member-blurb { color: var(--muted); font-size: 12.5px; margin: 5px 0 9px; }
+.member-name { font-size: 14.5px; font-weight: 720; }
+.member-blurb { color: var(--muted); font-size: 13.5px; margin: 6px 0 10px; }
 .member-actions { display: flex; flex-wrap: wrap; gap: 7px; }
 
 /* Card artwork — a GIF, or the inline schematic. Sits between the blurb and the actions, so it
    takes up the slack in cards whose blurb is short. */
 .media { margin: 0 0 12px; border-radius: 10px; overflow: hidden; border: 1px solid var(--line); }
-.media img { display: block; width: 100%; height: 118px; object-fit: cover; }
+.media img { display: block; width: 100%; height: 138px; object-fit: cover; }
 .media.diagram { background: var(--panel-2); padding: 8px 6px; display: flex; }
 
 /* Two graphics, two frames. Sharing one frame made them read as a single image with the garden
@@ -205,7 +206,7 @@ section { margin-bottom: 30px; }
 .media.stack img:first-child { height: auto; object-fit: contain; background: #fbfbfe; }
 /* The garden keeps its original full 118px — the question sits above it rather than eating into it,
    which is the whole reason the two are separately framed. */
-.media.stack img:last-child { height: 118px; object-fit: cover; }
+.media.stack img:last-child { height: 138px; object-fit: cover; }
 
 /* The wordmark just rests on the card — no plate, no border, no box. It is a logo, not a
    screenshot, and framing it made it look like a piece of UI rather than a mark. Contained so it
@@ -214,7 +215,7 @@ section { margin-bottom: 30px; }
   background: none; border: none; border-radius: 0;
   padding: 2px 0; margin: 0 0 12px;
 }
-.media.logo img { height: 46px; object-fit: contain; }
+.media.logo img { height: 54px; object-fit: contain; }
 .dgm { width: 100%; height: auto; color: var(--muted); }
 .dgm-line path { fill: none; stroke: currentColor; stroke-width: 1.4; }
 .dgm-box rect { fill: var(--panel); stroke: var(--line); stroke-width: 1.4; }
@@ -246,7 +247,7 @@ section { margin-bottom: 30px; }
   --t-bg: #14161d; --t-bar: #1f2230; --t-ink: #e6e9f2; --t-dim: #7c86a0;
   --t-green: #46d17f; --t-cyan: #43c9e0; --t-purple: #a78bfa;
   font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
-  font-size: 10.5px; border-radius: 10px; overflow: hidden;
+  font-size: 11.5px; border-radius: 10px; overflow: hidden;
   border: 1px solid #2b3040; box-shadow: 0 6px 18px rgba(0, 0, 0, .28);
 }
 .term-bar {
@@ -293,7 +294,7 @@ section { margin-bottom: 30px; }
 .tag {
   display: inline-flex; align-items: center; gap: 5px; align-self: flex-start; margin-top: 7px;
   border-radius: 999px; padding: 2px 9px 2px 7px;
-  font-size: 10.5px; font-weight: 750; letter-spacing: .2px; white-space: nowrap;
+  font-size: 11.5px; font-weight: 750; letter-spacing: .2px; white-space: nowrap;
 }
 /* Orange, not amber: this badge sits inside the amber project list, so sharing its hue would make
    the warning disappear into the row it is warning about. */
@@ -316,7 +317,7 @@ section { margin-bottom: 30px; }
 .proj-head .tag { margin-top: 0; }
 
 /* Live/offline indicator: red dot + text when up; muted when offline/checking. */
-.live { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 750; letter-spacing: .2px; }
+.live { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 750; letter-spacing: .2px; }
 .live .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); flex: none; }
 .live.checking { color: var(--muted); }
 .live.down { color: var(--muted); }
@@ -340,17 +341,17 @@ section { margin-bottom: 30px; }
   border-radius: 14px; box-shadow: var(--shadow); padding: 15px 17px; overflow: hidden;
 }
 .exp-head { display: flex; align-items: baseline; gap: 9px; flex-wrap: wrap; }
-.exp-role { font-size: 15px; font-weight: 730; }
-.exp-org { font-size: 13px; font-weight: 750; color: var(--exp-2); }
-.exp-dates { font-size: 12px; color: var(--muted); margin-left: auto; font-variant-numeric: tabular-nums; }
-.exp-blurb { color: var(--muted); font-size: 13px; margin: 8px 0 10px; }
+.exp-role { font-size: 16.5px; font-weight: 730; }
+.exp-org { font-size: 14px; font-weight: 750; color: var(--exp-2); }
+.exp-dates { font-size: 13px; color: var(--muted); margin-left: auto; font-variant-numeric: tabular-nums; }
+.exp-blurb { color: var(--muted); font-size: 14.5px; margin: 10px 0 12px; max-width: 105ch; }
 /* The doc links are FAB bubbles: raised, filled, floating off the panel. These point at shipped IBM
    products — the strongest evidence on the card — and as underlined text they read as a footnote.
    The lift on hover is what sells them as buttons rather than chips. */
 .exp-links { display: flex; flex-wrap: wrap; gap: 10px; padding: 2px 0 4px; }
 .exp-fab {
   display: inline-flex; align-items: center; gap: 8px; text-decoration: none;
-  color: #fff; font-size: 12.5px; font-weight: 750; letter-spacing: .1px;
+  color: #fff; font-size: 13.5px; font-weight: 750; letter-spacing: .1px;
   background: linear-gradient(140deg, var(--exp), var(--exp-2));
   border-radius: 999px; padding: 7px 13px 7px 7px;
   box-shadow:
@@ -395,7 +396,7 @@ section { margin-bottom: 30px; }
   .projects li, .projects li:hover { transition: none; transform: none; }
 }
 .projects time {
-  flex: none; width: 96px; color: var(--proj-2); font-size: 12.5px; font-weight: 700;
+  flex: none; width: 104px; color: var(--proj-2); font-size: 13.5px; font-weight: 700;
   font-variant-numeric: tabular-nums; padding-top: 2px;
 }
 /* Inside an amber row, the indigo chips and rails would be a second theme fighting the first —
@@ -417,13 +418,13 @@ section { margin-bottom: 30px; }
 .projects .chip.primary:hover { background: color-mix(in srgb, var(--proj) 20%, var(--panel)); }
 .projects .chip.ghost:hover { color: var(--proj-2); border-color: var(--proj); }
 .proj-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-.proj-name { color: var(--ink); font-size: 15px; font-weight: 720; text-decoration: none; }
+.proj-name { color: var(--ink); font-size: 16.5px; font-weight: 720; text-decoration: none; }
 .proj-name:hover { color: var(--accent); text-decoration: underline; }
-.tech-inline { color: var(--muted); font-size: 12px; }
+.tech-inline { color: var(--muted); font-size: 13px; }
 /* Chips are the list-row equivalent of .btn — same primary/ghost split, smaller. */
 .chip {
-  display: inline-flex; align-items: center; border-radius: 9px; padding: 3px 9px;
-  font-size: 11.5px; font-weight: 700; text-decoration: none;
+  display: inline-flex; align-items: center; border-radius: 9px; padding: 4px 10px;
+  font-size: 12.5px; font-weight: 700; text-decoration: none;
 }
 .chip.primary {
   color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, var(--panel));
@@ -432,13 +433,13 @@ section { margin-bottom: 30px; }
 .chip.primary:hover { background: color-mix(in srgb, var(--accent) 18%, var(--panel)); }
 .chip.ghost { color: var(--muted); background: var(--panel); border: 1px solid var(--line); }
 .chip.ghost:hover { color: var(--accent); border-color: var(--accent); }
-.proj-blurb { color: var(--muted); font-size: 13px; margin: 4px 0 0; }
+.proj-blurb { color: var(--muted); font-size: 14.5px; margin: 5px 0 0; max-width: 105ch; }
 .proj-links { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 9px; }
 .proj-body { min-width: 0; flex: 1; }
 /* A group row nests .member panels, which already carry their own borders. */
 .group-row .members { margin-top: 10px; }
 
-.foot { color: var(--muted); font-size: 12px; text-align: center; margin-top: 40px; font-style: italic; }
+.foot { color: var(--muted); font-size: 13px; text-align: center; margin-top: 44px; font-style: italic; }
 
 /* Build version, pinned bottom-right. Fixed rather than in the footer so it is legible without
    scrolling to the end — it is a "what am I looking at" affordance, not a credit. */
