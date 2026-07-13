@@ -82,3 +82,5 @@ stay separate repositories.
 Add it here only if **both** apps need it. A token one app consumes is not a design system, it is a
 global variable — put it in that app's stylesheet instead. The quiz's correct/incorrect greens and
 reds, and the home page's per-section hues, are all correctly app-local for exactly this reason.
+
+<!-- published from portfolio-home/packages/platform-ui via `npm run publish:ui` -->
