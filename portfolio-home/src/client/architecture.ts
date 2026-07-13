@@ -44,6 +44,15 @@ const box = (cls: string, name: string, meta = '', href = '', icon = ''): string
 const arrow = (cls: string, label = ''): string =>
   `<div class="arch-arrow ${cls}" aria-hidden="true">${label ? `<span class="arch-arrow-l">${label}</span>` : ''}</div>`;
 
+/** A horizontal arrow for diagram 2. `cls` carries the direction ('fwd' → or 'back' ←) and a tint
+ *  ('rose' for a token, 'key' for a public-key fetch). */
+const harrow = (cls: string, label: string): string =>
+  `<div class="auth-h ${cls}" aria-hidden="true"><span class="auth-h-l">${label}</span></div>`;
+
+/** A short vertical connector inside diagram 2's provider column (platform-auth → platform-db). */
+const vconn = (label: string): string =>
+  `<div class="auth-v" aria-hidden="true"><span class="auth-v-l">${label}</span></div>`;
+
 /* ── Diagram 1 — the topology ──────────────────────────────────────────────────────────────────── */
 function topologyDiagram(): string {
   // Row map (keep in step with styles.css):
@@ -146,50 +155,87 @@ function topologyDiagram(): string {
 }
 
 /* ── Diagram 2 — auth & the browser ────────────────────────────────────────────────────────────── */
+// TWO stacked pictures, because a front end touches platform-auth for two different reasons and the
+// old single grid blurred them. TOP is the MISS path: the browser's gate, finding no local identity,
+// asks platform-auth for a token — this is client-side, and it is the only thing that ever calls
+// /auth. BOTTOM is the VALIDATION path: a front-end POD's middleware checks a token it was handed,
+// against the public keys — server-side, once per request, no database. Consuming services sit on the
+// LEFT of both, the identity service on the RIGHT: who GETS a token above, who CHECKS one below.
 function authDiagram(): string {
-  // A SEQUENCE, not a topology, so it gets its own small grid rather than the map's 18 rows. Three
-  // moves in order: the browser gets a token from platform-auth (①), carries it to the front ends on
-  // later calls (②), and each front end verifies it by pulling the public keys (③). The dashed line is
-  // the teaching point — verification is decentralised, there is no per-request call back to auth.
   return `
     <div class="arch-diagram arch-auth">
-      <div class="auth-grid">
 
-        ${box('au-you', 'You', 'a browser', '', PERSON)}
-
-        <!-- Left arrow: sign in. Right arrow: carry the token. -->
-        ${arrow('au-a-issue', '① sign in')}
-        ${arrow('au-a-carry', '② carry it')}
-        <span class="au-note au-note-issue"><code>POST /auth/token</code> — the 7-char code in, an RS256 token back</span>
-        <span class="au-note au-note-carry"><code>Authorization: Bearer …</code> on quiz-progress &amp; vMCP-admin calls</span>
-
-        ${box('b-auth au-auth', 'platform-auth', 'mints &amp; signs the token')}
-
-        <div class="au-pages">
-          <div class="au-pages-h">the front-end pages</div>
-          <div class="au-pages-row">
-            ${box('b-app au-pg', 'home')}
-            ${box('b-app au-pg', 'quiz')}
-            ${box('b-app au-pg', 'vmcp')}
+      <!-- ① THE MISS PATH — client-side, the browser has no identity yet -->
+      <section class="auth-panel">
+        <div class="auth-panel-h">
+          <span class="auth-badge miss">auth miss</span>
+          <h4>Getting a token — the client side</h4>
+        </div>
+        <div class="auth-flow">
+          <div class="auth-col consumer">
+            ${box('b-app au-cbox', 'home · quiz · vmcp', 'the gate / account menu — in the browser')}
+            <span class="auth-tag">no <code>platform:identity</code> in localStorage → the gate opens</span>
+          </div>
+          <div class="auth-conn">
+            ${harrow('fwd', 'POST /auth/token')}
+            ${harrow('back rose', 'signed token → localStorage')}
+          </div>
+          <div class="auth-col provider">
+            ${box('b-auth au-cbox', 'platform-auth', 'mints &amp; signs an RS256 token')}
+            ${vconn('checks the code')}
+            ${box('b-vol au-cbox', 'platform-db', 'usernames + hashed codes')}
           </div>
         </div>
+        <p class="auth-expl">
+          The <strong>gate</strong> (vMCP uses a slimmer account menu) reads the browser's local storage.
+          On a <strong>miss</strong> — a first visit, or after signing out — it calls platform-auth,
+          which checks your 7-character code against platform-db and returns a signed token. That token
+          is the only thing kept. “Continue as guest” never reaches this row: it writes a local guest
+          marker and calls nothing. Because all three front ends share the one storage key, exactly one
+          sign-in fills it — the others then find it already set and never open the gate.
+        </p>
+      </section>
 
-        ${arrow('a-user au-a-sql short', 'SQL')}
-        ${box('b-vol au-db', 'platform-db', 'usernames + hashed codes')}
+      <div class="auth-divider" aria-hidden="true"><span>then, on every request that carries the token…</span></div>
 
-        <!-- Verify: the pages pull the public keys and check the signature locally. Dashed, because
-             keys flow, not requests — jose caches them, so it is not a call per token. -->
-        <div class="au-verify" aria-hidden="true"><span class="au-verify-l">③ verify · GET /.well-known/jwks.json</span></div>
-      </div>
+      <!-- ② THE VALIDATION PATH — server-side, a token is presented and checked -->
+      <section class="auth-panel">
+        <div class="auth-panel-h">
+          <span class="auth-badge met">validation</span>
+          <h4>Checking a token — the server side</h4>
+        </div>
+        <div class="auth-flow">
+          <div class="auth-col consumer">
+            ${box('b-app au-cbox', 'quiz · vmcp', 'the pod — its verify middleware')}
+            <span class="auth-tag met">valid → the request proceeds, as that user / admin</span>
+            <span class="auth-tag miss">invalid or absent → anonymous (refused, or read-only on vMCP)</span>
+          </div>
+          <div class="auth-conn">
+            ${harrow('fwd key', 'GET /.well-known/jwks.json')}
+            ${harrow('back key', 'public keys — fetched once, cached')}
+          </div>
+          <div class="auth-col provider">
+            ${box('b-auth au-cbox', 'platform-auth', 'serves the public keys')}
+          </div>
+        </div>
+        <p class="auth-expl">
+          The browser sends the token as an <code>Authorization: Bearer</code> header. Each pod's own
+          <strong>middleware</strong> verifies the signature against platform-auth's public keys —
+          fetched once and cached, so there is no per-request call to auth and no database read. A good
+          signature is <strong>validation met</strong>, and the request runs as that user; anything else
+          (expired, forged, missing) falls to anonymous. No central gateway does this — every service
+          checks for itself. home has no gated routes, so it never reaches this row at all.
+        </p>
+      </section>
 
       <footer class="arch-foot">
         <div class="arch-key">
+          <span class="arch-chip b-app">consuming service</span>
           <span class="arch-chip b-auth">identity</span>
-          <span class="arch-chip b-app">front end</span>
           <span class="arch-chip b-vol">database</span>
           <span class="arch-chip au-chip-verify">public-key fetch</span>
         </div>
-        <span class="arch-more" style="cursor:default">Tokens are verified by each service, not by a gateway.</span>
+        <span class="arch-more" style="cursor:default">Issued by one service · checked by every service.</span>
       </footer>
     </div>`;
 }

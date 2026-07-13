@@ -915,64 +915,88 @@ section { margin-bottom: 30px; }
   .arch-viewport, .arch-track { transition: none; }
 }
 
-/* ── Diagram 2 — auth & the browser ──────────────────────────────────────────────────────────────
-   A sequence, not a topology: two lanes under the browser. The left lane is the identity service and
-   its database; the right lane is the front-end pages. Solid arrows are requests; the dashed line is
-   the public-key fetch, which flows the other way and only occasionally. */
-.arch-auth .auth-grid {
+/* ── Diagram 2 — auth & the browser: two stacked pictures ────────────────────────────────────────
+   TOP is the miss path (the browser's gate gets a token); BOTTOM is validation (a pod checks one).
+   Consuming services on the left, the identity service on the right, arrows between. Each picture is a
+   three-part row — consumer | connectors | provider — with an explanation beneath it. */
+.arch-auth { max-width: 860px; margin: 0 auto; }
+.auth-panel-h { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+.auth-panel-h h4 { margin: 0; font-size: 15px; color: var(--ink); font-weight: 750; }
+.auth-badge {
+  font-size: 10px; font-weight: 800; letter-spacing: .5px; text-transform: uppercase;
+  padding: 3px 10px; border-radius: 999px; white-space: nowrap;
+}
+.auth-badge.miss { color: var(--live); background: color-mix(in srgb, var(--live) 13%, transparent); }
+.auth-badge.met  { color: var(--exp-2); background: color-mix(in srgb, var(--exp) 16%, transparent); }
+
+.auth-flow {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  column-gap: 46px; row-gap: 2px;
-  align-items: center; max-width: 760px; margin: 0 auto;
+  grid-template-columns: 1fr minmax(150px, 0.9fr) 1fr;
+  align-items: center; gap: 12px;
 }
-.au-you { grid-column: 1 / 3; justify-self: center; width: 100%; max-width: 260px; }
-.au-you.b-you { border-color: var(--ink); }
-.arch-auth .au-you .arch-i { color: var(--ink); }
+.auth-col { display: flex; flex-direction: column; gap: 9px; align-items: stretch; }
+.au-cbox { text-align: center; }
+.auth-tag {
+  font-size: 11px; color: var(--muted); line-height: 1.45;
+  padding: 6px 10px; border-radius: 8px; background: var(--panel); border: 1px solid var(--line);
+}
+.auth-tag.met  { border-color: color-mix(in srgb, var(--exp) 38%, var(--line)); }
+.auth-tag.miss { border-color: color-mix(in srgb, var(--live) 32%, var(--line)); }
+.auth-tag code { font-size: 10px; }
 
-.au-a-issue { grid-column: 1; grid-row: 2; }
-.au-a-carry { grid-column: 2; grid-row: 2; }
-.au-a-issue::before, .au-a-carry::before {
-  background-image: repeating-linear-gradient(180deg, var(--live) 0 8px, transparent 8px 14px);
+/* The middle column: two horizontal arrows, one each way, with the label riding above the shaft. */
+.auth-conn { display: flex; flex-direction: column; gap: 26px; padding: 6px 0; }
+.auth-h { position: relative; height: 3px; }
+.auth-h::before {                                     /* shaft */
+  content: ''; position: absolute; top: 0; left: 7px; right: 7px; height: 3px;
+  background-image: repeating-linear-gradient(90deg, color-mix(in srgb, var(--muted) 75%, var(--ink)) 0 8px, transparent 8px 14px);
+  background-size: 14px 100%; animation: auth-flow-x .9s linear infinite;
 }
-.au-a-issue::after, .au-a-carry::after { border-top-color: var(--live); }
-.au-a-issue .arch-arrow-l, .au-a-carry .arch-arrow-l { color: var(--live); }
+.auth-h::after {                                      /* head */
+  content: ''; position: absolute; top: 50%; transform: translateY(-50%);
+  border: 7px solid transparent; border-top: 0; border-bottom: 0;
+}
+.auth-h.fwd::after  { right: 0; border-left: 8px solid color-mix(in srgb, var(--muted) 75%, var(--ink)); }
+.auth-h.back::after { left: 0;  border-right: 8px solid color-mix(in srgb, var(--muted) 75%, var(--ink)); }
+.auth-h.back::before { animation-direction: reverse; }
+@keyframes auth-flow-x { to { background-position-x: 14px; } }
+.auth-h-l {
+  position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%);
+  white-space: nowrap; font-size: 10px; font-weight: 700; color: var(--muted);
+  background: var(--panel-2); padding: 0 5px;
+}
+/* rose = a token being issued/returned; key = a public-key (JWKS) fetch. */
+.auth-h.rose::before { background-image: repeating-linear-gradient(90deg, var(--live) 0 8px, transparent 8px 14px); }
+.auth-h.rose::after  { border-left-color: var(--live); border-right-color: var(--live); }
+.auth-h.rose .auth-h-l { color: var(--live); }
+.auth-h.key::before  { background-image: repeating-linear-gradient(90deg, var(--accent2) 0 7px, transparent 7px 13px); }
+.auth-h.key.fwd::after  { border-left-color: var(--accent2); }
+.auth-h.key.back::after { border-right-color: var(--accent2); }
+.auth-h.key .auth-h-l { color: var(--accent2); }
 
-.au-note { grid-row: 3; align-self: start; font-size: 11px; color: var(--muted); line-height: 1.4; padding-top: 2px; }
-.au-note code { font-size: 10.5px; }
-.au-note-issue { grid-column: 1; }
-.au-note-carry { grid-column: 2; }
+/* The provider column's internal platform-auth → platform-db link (vertical, with its own label). */
+.auth-v { position: relative; height: 28px; }
+.auth-v::before {
+  content: ''; position: absolute; top: 0; bottom: 8px; left: 50%; transform: translateX(-50%); width: 3px;
+  background-image: repeating-linear-gradient(180deg, color-mix(in srgb, var(--muted) 75%, var(--ink)) 0 8px, transparent 8px 14px);
+  background-size: 100% 14px; animation: arch-flow .9s linear infinite;
+}
+.auth-v::after {
+  content: ''; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);
+  border: 7px solid transparent; border-bottom: 0; border-top-color: color-mix(in srgb, var(--muted) 75%, var(--ink));
+}
+.auth-v-l { position: absolute; top: 50%; left: calc(50% + 10px); transform: translateY(-50%); white-space: nowrap; font-size: 10px; font-weight: 700; color: var(--muted); }
 
-.au-auth  { grid-column: 1; grid-row: 4; }
-.au-pages { grid-column: 2; grid-row: 4 / 6; align-self: stretch;
-  border: 2px dashed color-mix(in srgb, var(--accent) 40%, var(--line)); border-radius: 12px;
-  padding: 10px; background: color-mix(in srgb, var(--accent) 4%, transparent); }
-.au-pages-h { font-size: 10.5px; font-weight: 750; color: var(--muted); text-align: center; margin-bottom: 8px; letter-spacing: .2px; }
-.au-pages-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; }
-.au-pages-row .arch-box { padding: 8px 6px; }
+.auth-expl { font-size: 13px; color: var(--muted); line-height: 1.6; margin: 18px 0 0; }
+.auth-expl strong { color: var(--ink); font-weight: 650; }
+.auth-expl code { font-size: 11.5px; }
 
-.au-a-sql { grid-column: 1; grid-row: 5; height: 30px; }
-.au-db { grid-column: 1; grid-row: 6; }
-
-/* The verify line: from the pages (right lane) back to platform-auth (left lane). Dashed and pointing
-   LEFT, because the keys are pulled toward whoever is checking a signature. */
-.au-verify {
-  grid-column: 1 / 3; grid-row: 7;
-  position: relative; height: 34px; margin-top: 6px;
+/* The divider that separates the two pictures — and names the seam: "then, on every request…". */
+.auth-divider {
+  display: flex; align-items: center; gap: 14px; margin: 30px 0;
+  color: var(--muted); font-size: 11px; font-weight: 700; letter-spacing: .2px;
 }
-.au-verify::before {
-  content: ''; position: absolute; top: 14px; left: 25%; right: 25%; height: 3px;
-  background-image: repeating-linear-gradient(90deg, var(--accent2) 0 7px, transparent 7px 13px);
-  background-size: 13px 100%;
-}
-.au-verify::after {
-  content: ''; position: absolute; top: 9px; left: 25%; transform: translateX(-100%);
-  border: 7px solid transparent; border-right: 0; border-left-color: var(--accent2);
-}
-.au-verify-l {
-  position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
-  font-size: 10.5px; font-weight: 700; color: var(--accent2); white-space: nowrap;
-  background: var(--panel-2); padding: 0 6px;
-}
+.auth-divider::before, .auth-divider::after { content: ''; flex: 1; height: 1px; background: var(--line); }
 .au-chip-verify { border-color: var(--accent2) !important; border-style: dashed !important; color: var(--accent2); }
 
 /* ── One column on a phone ───────────────────────────────────────────────────────────────────────
@@ -1031,14 +1055,12 @@ section { margin-bottom: 30px; }
   .arch-diagram { padding: 18px 12px 8px; }
   .arch-foot { justify-content: center; }
 
-  /* Diagram 2 collapses to a single stacked column — the two lanes cannot sit side by side on a
-     phone, and the dashed verify LINE has nowhere to run, so it becomes a plain centred label. */
-  .arch-auth .auth-grid { display: flex; flex-direction: column; gap: 10px; max-width: 420px; }
-  .au-you { max-width: none; }
-  .au-a-issue, .au-a-carry, .au-a-sql { align-self: center; }
-  .au-note { text-align: center; }
-  .au-pages { align-self: stretch; }
-  .au-verify { height: auto; margin-top: 2px; }
-  .au-verify::before, .au-verify::after { display: none; }
-  .au-verify-l { position: static; transform: none; display: block; text-align: center; background: none; }
+  /* Diagram 2: each picture's three-part row (consumer | arrows | provider) stacks into one column.
+     The horizontal arrows have no width to run across, so their shafts/heads are dropped and each
+     label becomes a plain centred caption between the boxes it used to join. */
+  .auth-flow { grid-template-columns: 1fr; gap: 8px; }
+  .auth-conn { flex-direction: column; gap: 6px; padding: 2px 0; }
+  .auth-h { height: auto; }
+  .auth-h::before, .auth-h::after { display: none; }
+  .auth-h-l { position: static; transform: none; display: block; text-align: center; background: none; }
 }
