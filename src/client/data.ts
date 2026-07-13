@@ -205,18 +205,24 @@ export const ENTRIES: Entry[] = [
     // The platform this page is served by — worth featuring, since it is the thing tying the
     // other projects together into one host.
     name: 'platform-orchestration',
-    date: '2026-07-12',
+    date: '2026-07-13',
     featured: true,
-    tech: 'Docker Compose · nginx · k8s',
+    // Compose is gone: the platform was cut over to Kubernetes, and the public site is now served
+    // from the cluster through a Cloudflare tunnel. The old string said "Docker Compose" for a day
+    // after that stopped being true.
+    tech: 'Kubernetes · nginx · Cloudflare Tunnel',
     // If this page answered at all, nginx routed to `home` — so the stack it orchestrates is up.
     // Reaching the home page IS the liveliness signal for the thing that serves the home page.
     live: { type: 'health', url: '/api/health' },
     blurb:
-      'The platform everything here runs on: an nginx reverse proxy fronting every app on one port, a Compose stack that builds them from their own repos, and a minikube scaffold for later.',
+      'The platform everything here runs on: a minikube cluster where nginx fronts every app on one port, published through an outbound Cloudflare tunnel with no open ports, and secrets sealed into the manifests themselves.',
     diagram: 'docker',
-    // No repository yet — this repo has no GitHub remote. Add the link here once it is pushed:
-    //   { label: 'Repository', href: `${GITHUB_ORG}/platform-orchestration`, external: true },
-    links: [],
+    links: [
+      // The wiki is the real documentation — architecture, networking, secrets, backup/restore — so
+      // it leads. The repository is the artifact; the wiki is the explanation.
+      { label: 'Wiki', href: `${GITHUB_ORG}/platform-orchestration/wiki`, external: true },
+      { label: 'Repository', href: `${GITHUB_ORG}/platform-orchestration`, external: true },
+    ],
   },
   {
     // Deliberately not featured: it is a small site, and the banner is for the things worth arriving

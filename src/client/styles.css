@@ -3,11 +3,9 @@
    (--good and --gold used to be declared here too; they were inherited by the original copy-paste
    and never used by a single rule, so they are gone.) */
 :root {
-  /* The content column. A fixed 1080px left a 1920px monitor 44% empty; capping at 1440 puts the
-     page at ~75% of a common desktop. The 92vw term is what stops it touching the edges on anything
-     narrower — on a 1440px laptop the column becomes 1325px rather than pinning to the frame. */
-  --wrap-max: min(1440px, 92vw);
-  --wrap-pad: 0 14px 96px;
+  /* The content column is NOT declared here any more. It lives in @platform/ui's base.css, which is
+     now the single definition of it — this page and the quiz having different gutters was exactly
+     the bug that moved it there. */
 
   --live: #e11d48;
   /* The old indigo, kept as its own token: the platform is navy now, but the greeting dialog is the
@@ -532,3 +530,175 @@ section { margin-bottom: 30px; }
   transition: color .13s, background .13s;
 }
 .hello-skip:hover { color: var(--ink); background: var(--chip); }
+
+
+/* ─────────────────────────────────────────────────────────────────────────────────────────────
+   The architecture pull-down: a handle on the banner's bottom edge that grows the banner
+   downward to reveal the diagram. See architecture.ts.
+   ───────────────────────────────────────────────────────────────────────────────────────────── */
+
+/* The banner needs room beneath its content for the tab to straddle the border. */
+.masthead { padding-bottom: 34px; }
+
+.arch-pull {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  transform: translate(-50%, 50%);
+  z-index: 4;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 17px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--panel);
+  color: var(--accent);
+  box-shadow: var(--shadow);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: border-color .14s, box-shadow .14s, color .14s;
+}
+.arch-pull:hover { border-color: var(--accent); box-shadow: var(--shadow-lg); }
+.arch-pull:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.arch-pull-c { transition: transform .3s cubic-bezier(.2, .8, .2, 1); font-size: 11px; }
+.masthead.arch-open .arch-pull-c { transform: rotate(180deg); }
+
+/* The expand itself. Animating grid-template-rows from 0fr to 1fr transitions to the content's REAL
+   height — unlike a max-height guess, which either clips the diagram (too low) or spends the close
+   animation counting down invisible pixels (too high). */
+.arch-panel {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows .4s cubic-bezier(.2, .8, .2, 1), opacity .3s ease;
+  opacity: 0;
+}
+.arch-panel-in { overflow: hidden; min-height: 0; }
+.masthead.arch-open .arch-panel { grid-template-rows: 1fr; opacity: 1; }
+
+@media (prefers-reduced-motion: reduce) {
+  .arch-panel { transition: none; }
+  .arch-pull-c { transition: none; }
+}
+
+.arch-diagram {
+  margin-top: 22px;
+  padding-top: 20px;
+  border-top: 1px solid var(--line);
+  text-align: left;
+}
+
+/* A tier is one horizontal band. It WRAPS, so on a phone the three apps stack into a column instead
+   of being squeezed into three unreadable slivers — the whole reason this is HTML and not an SVG. */
+.arch-tier { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; }
+
+/* The boxes. Solid 2px borders and a real fill, so each component reads as a discrete box the way
+   the wiki's box-drawing characters do — the earlier 1px hairline on a near-white fill dissolved
+   into the panel behind it, and the diagram read as a list rather than as a system. */
+.arch-node {
+  flex: 1 1 190px;
+  max-width: 280px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 12px 14px;
+  border: 2px solid var(--line);
+  border-radius: 10px;
+  background: var(--panel);
+  text-align: center;
+  transition: transform .12s ease, box-shadow .12s ease;
+}
+.arch-name { font-weight: 800; font-size: 13.5px; color: var(--ink); letter-spacing: -.1px; }
+.arch-meta { color: var(--muted); font-size: 11.5px; line-height: 1.35; }
+
+.arch-link { text-decoration: none; }
+.arch-link:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
+
+/* Four kinds of thing, four unmistakable treatments. Colour carries the one distinction that
+   matters: what you can visit, what is plumbing, what holds state, and what is not ours at all. */
+.arch-app {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, var(--panel));
+}
+.arch-app .arch-name { color: var(--accent); }
+.arch-infra {
+  border-color: color-mix(in srgb, var(--muted) 55%, var(--line));
+  background: var(--panel-2);
+}
+.arch-data {
+  border-color: var(--accent2);
+  background: color-mix(in srgb, var(--accent2) 13%, var(--panel));
+}
+.arch-data .arch-name { color: color-mix(in srgb, var(--accent2) 75%, var(--ink)); }
+.arch-ext {
+  border-style: dashed;
+  border-color: color-mix(in srgb, var(--muted) 45%, var(--line));
+  background: transparent;
+}
+.arch-ext .arch-name { color: var(--muted); }
+
+/* The connector between tiers, with the hop's protocol on it. */
+.arch-edge {
+  display: flex; align-items: center; gap: 10px;
+  margin: 10px 0;
+  color: var(--muted); font-size: 11px; font-weight: 600;
+}
+.arch-edge::before, .arch-edge::after {
+  content: ''; flex: 1; height: 2px;
+  background: linear-gradient(90deg, transparent, var(--line), transparent);
+}
+.arch-edge span { flex: none; text-align: center; }
+
+/* THE CLUSTER IS AN ENCLOSURE, not a caption. A dashed rule with a label under it reads as a section
+   heading; a frame with the components inside it reads as a boundary — and the boundary is the most
+   important fact in the picture, because it is what "nothing is exposed inbound" actually means. */
+.arch-cluster {
+  position: relative;
+  margin: 22px 0;
+  padding: 26px 14px 16px;
+  border: 2px dashed color-mix(in srgb, var(--accent) 55%, var(--line));
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--accent) 4%, transparent);
+}
+.arch-cluster-tag {
+  position: absolute;
+  top: 0;
+  left: 16px;
+  transform: translateY(-50%);
+  padding: 3px 12px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-size: 11px;
+  font-weight: 750;
+  letter-spacing: .2px;
+  white-space: nowrap;
+}
+
+.arch-foot {
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 10px;
+  margin-top: 18px; padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+.arch-key { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
+/* The legend swatches are the boxes themselves, in miniature — an empty square in a key is a colour
+   sample; a labelled box is the actual thing you are about to see. */
+.arch-chip {
+  padding: 3px 10px;
+  border: 2px solid var(--line);
+  border-radius: 7px;
+  font-size: 11px;
+  font-weight: 700;
+}
+.arch-more { font-size: 12.5px; font-weight: 700; color: var(--accent); text-decoration: none; }
+.arch-more:hover { text-decoration: underline; }
+
+@media (max-width: 640px) {
+  .arch-pull { font-size: 12px; padding: 7px 13px; white-space: normal; max-width: 80vw; }
+  .arch-cluster { padding: 24px 8px 12px; }
+  .arch-foot { justify-content: center; }
+}
