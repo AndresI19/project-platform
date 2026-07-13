@@ -257,6 +257,12 @@ export function mountAccountFab(): void {
   };
 
   host.addEventListener('click', (e) => {
+    // Stop the click reaching the document-level close handler below. Without this, opening the
+    // panel and closing it are the SAME click: the toggle handler rebuilds host.innerHTML, which
+    // detaches the very button that was clicked, so by the time the document handler runs
+    // `host.contains(e.target)` is false — the click reads as "outside" and shuts the panel it just
+    // opened. The result is a FAB you can never open, and therefore a sign-out you can never reach.
+    e.stopPropagation();
     const act = (e.target as HTMLElement).closest<HTMLElement>('[data-act]')?.dataset.act;
     if (act === 'toggle') {
       open = !open;

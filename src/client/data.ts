@@ -99,7 +99,7 @@ export interface Project {
   images?: [string, string];
   /** An inline schematic drawn in place of an image. 'vmcp' shows a user reaching two MCP
    *  servers through the gateway; 'docker' is a mock `docker ps` of the running stack. */
-  diagram?: 'vmcp' | 'docker';
+  diagram?: 'vmcp' | 'docker' | 'platformui';
   /** Status badge — how finished this is, so a visitor does not misjudge it. */
   tag?: { label: string; icon: 'wip' | 'archived' };
 }
@@ -124,6 +124,21 @@ export const isGroup = (e: Entry): e is Group => 'members' in e;
 
 // Featured entries lead the banner; the rest follow in the full list. Dates are last-commit dates.
 export const ENTRIES: Entry[] = [
+  {
+    // First, and featured: it is the page you are on, and the source of truth for @platform/ui —
+    // the design system every other front end here builds from. It used to sit unfeatured near the
+    // bottom, which undersold the one project that literally renders everything above it.
+    name: 'portfolio-home',
+    date: '2026-07-13',
+    featured: true,
+    tech: 'Vanilla TS · Vite · Express',
+    // Reaching this page at all means the server answered, so its own health probe is honest.
+    live: { type: 'health', url: '/api/health' },
+    blurb:
+      "You're looking at it. Vanilla TypeScript rendered from one data file, an Express server behind the platform's reverse proxy — and the home of @platform/ui, the design tokens and shared server middleware this site and the quiz both build from.",
+    diagram: 'platformui',
+    links: [{ label: 'Repository', href: `${GITHUB_ORG}/portfolio-home`, external: true }],
+  },
   {
     name: 'Cloud Developer Quiz',
     date: '2026-07',
@@ -223,19 +238,6 @@ export const ENTRIES: Entry[] = [
       { label: 'Wiki', href: `${GITHUB_ORG}/platform-orchestration/wiki`, external: true },
       { label: 'Repository', href: `${GITHUB_ORG}/platform-orchestration`, external: true },
     ],
-  },
-  {
-    // Deliberately not featured: it is a small site, and the banner is for the things worth arriving
-    // for. It is still live-probed, because the page claiming to be up while being down would be a
-    // funnier bug than it is worth.
-    name: 'portfolio-home',
-    date: '2026-07-12',
-    tech: 'Vanilla TS · Vite · Express',
-    // Reaching this page at all means the server answered, so its own health probe is honest.
-    live: { type: 'health', url: '/api/health' },
-    blurb:
-      "You're looking at the page! Vanilla TypeScript rendered from one data file, an Express server behind the platform's reverse proxy — and the home of @platform/ui, the design tokens this site and the quiz both build from.",
-    links: [{ label: 'Repository', href: `${GITHUB_ORG}/portfolio-home`, external: true }],
   },
   {
     name: 'Job-Search-Go',
