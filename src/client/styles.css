@@ -533,172 +533,313 @@ section { margin-bottom: 30px; }
 
 
 /* ─────────────────────────────────────────────────────────────────────────────────────────────
-   The architecture pull-down: a handle on the banner's bottom edge that grows the banner
-   downward to reveal the diagram. See architecture.ts.
+   The architecture panel: a chevron on the banner's bottom edge that grows the banner downward
+   to reveal the diagram. See architecture.ts.
    ───────────────────────────────────────────────────────────────────────────────────────────── */
 
-/* The banner needs room beneath its content for the tab to straddle the border. */
-.masthead { padding-bottom: 34px; }
+.masthead { padding-bottom: 30px; }
 
+/* The chevron. No label — the shape is the affordance, and a pill of text sat directly under the
+   contact row competing with it for attention. */
 .arch-pull {
-  position: absolute;
-  left: 50%;
-  bottom: 0;
+  position: absolute; left: 50%; bottom: 0;
   transform: translate(-50%, 50%);
   z-index: 4;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 17px;
+  display: grid; place-items: center;
+  width: 38px; height: 38px;
   border: 1px solid var(--line);
-  border-radius: 999px;
+  border-radius: 50%;
   background: var(--panel);
   color: var(--accent);
   box-shadow: var(--shadow);
-  font: inherit;
-  font-size: 13px;
-  font-weight: 700;
+  font: inherit; font-size: 13px;
   cursor: pointer;
-  white-space: nowrap;
-  transition: border-color .14s, box-shadow .14s, color .14s;
+  transition: border-color .14s, box-shadow .14s, transform .25s cubic-bezier(.2,.8,.2,1);
 }
 .arch-pull:hover { border-color: var(--accent); box-shadow: var(--shadow-lg); }
-.arch-pull:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-.arch-pull-c { transition: transform .3s cubic-bezier(.2, .8, .2, 1); font-size: 11px; }
+.arch-pull:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.arch-pull-c { line-height: 1; transition: transform .3s cubic-bezier(.2,.8,.2,1); }
 .masthead.arch-open .arch-pull-c { transform: rotate(180deg); }
 
-/* The expand itself. Animating grid-template-rows from 0fr to 1fr transitions to the content's REAL
-   height — unlike a max-height guess, which either clips the diagram (too low) or spends the close
-   animation counting down invisible pixels (too high). */
+/* Animating grid-template-rows 0fr → 1fr transitions to the content's REAL height. A max-height
+   guess either clips the diagram or spends the close animation counting down invisible pixels. */
 .arch-panel {
-  display: grid;
-  grid-template-rows: 0fr;
-  transition: grid-template-rows .4s cubic-bezier(.2, .8, .2, 1), opacity .3s ease;
+  display: grid; grid-template-rows: 0fr;
+  transition: grid-template-rows .42s cubic-bezier(.2,.8,.2,1), opacity .3s ease;
   opacity: 0;
 }
 .arch-panel-in { overflow: hidden; min-height: 0; }
 .masthead.arch-open .arch-panel { grid-template-rows: 1fr; opacity: 1; }
-
 @media (prefers-reduced-motion: reduce) {
-  .arch-panel { transition: none; }
-  .arch-pull-c { transition: none; }
+  .arch-panel, .arch-pull-c { transition: none; }
 }
 
+/* The diagram sits on its own recessed surface below the divider, so the banner reads as two
+   things: the introduction, and the evidence for it. Without the change of ground the boxes float
+   on the same white as the bio and the panel has no edge. */
 .arch-diagram {
-  margin-top: 22px;
-  padding-top: 20px;
+  margin-top: 24px;
+  padding: 22px 18px 8px;
   border-top: 1px solid var(--line);
+  background: var(--panel-2);
+  border-radius: 14px;
   text-align: left;
 }
 
-/* A tier is one horizontal band. It WRAPS, so on a phone the three apps stack into a column instead
-   of being squeezed into three unreadable slivers — the whole reason this is HTML and not an SVG. */
-.arch-tier { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; }
+/* Two columns: the traffic path (col 1) and the agent's rail (col 2). Every stage of the path is
+   its own ROW, so the rail can span rows and the enclosures can be frames painted behind the
+   content. A wrapper div would hide the apps from the grid and the rail would have nothing to
+   align to. */
+.arch-grid {
+  display: grid;
+  grid-template-columns: 1fr minmax(140px, 190px);
+  column-gap: 18px;
+  align-items: center;
+}
+/* Explicit rows, so the rail's span and the frames' spans are stated rather than inferred.
+   Keep in step with the row map in architecture.ts. */
+.r1  { grid-row: 1; }
+.r2  { grid-row: 2; }
+.r3  { grid-row: 3; }
+.r4  { grid-row: 4; }
+.r5  { grid-row: 5; }
+.r6  { grid-row: 6; }
+.r7  { grid-row: 7; }
+.r8  { grid-row: 8; }
+.r9  { grid-row: 9; }
+.r10 { grid-row: 10; }
+.r11 { grid-row: 11; }
+.r12 { grid-row: 12; }
+.r13 { grid-row: 13; }
+.r14 { grid-row: 14; }
+.r15 { grid-row: 15; }
+.r16 { grid-row: 16; }
+/* Everything on the traffic path lives in column 1 and sits above the frames. */
+.arch-grid > * { grid-column: 1; position: relative; z-index: 1; }
 
-/* The boxes. Solid 2px borders and a real fill, so each component reads as a discrete box the way
-   the wiki's box-drawing characters do — the earlier 1px hairline on a near-white fill dissolved
-   into the panel behind it, and the diagram read as a list rather than as a system. */
-.arch-node {
-  flex: 1 1 190px;
-  max-width: 280px;
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
+/* "You" spans both columns so it centres on the DIAGRAM, not on the left column. */
+.b-you { grid-column: 1 / -1; justify-self: center; }
+/* The agent sits out to the right, off the browser's path. */
+.b-agent { grid-column: 2; justify-self: stretch; }
+
+/* THE RAIL. Rows 2 → 9: from beneath the agent to the apps row, where its arrowhead lands on the
+   gateway. Because it is a grid span, that alignment is exact and survives every reflow — no
+   measuring, no magic numbers. */
+.arch-rail {
+  grid-column: 2;
+  grid-row: 2 / 11;
+  position: relative;
+  z-index: 1;
+  justify-self: center;
+  align-self: stretch;
+  width: 2px;
+  background: repeating-linear-gradient(180deg, var(--accent) 0 7px, transparent 7px 13px);
+}
+.arch-rail::after { /* arrowhead, pointing into the apps row */
+  content: '';
+  position: absolute; bottom: -1px; left: 50%;
+  transform: translateX(-50%);
+  border: 7px solid transparent;
+  border-top-color: var(--accent);
+}
+.arch-rail-l {
+  position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%, -50%) rotate(90deg);
+  white-space: nowrap;
+  font-size: 10.5px; font-weight: 750; letter-spacing: .3px;
+  color: var(--accent);
+  background: var(--panel-2);
+  padding: 2px 7px;
+}
+
+/* Enclosures, drawn BEHIND the content (z-index 0) as row-spanning frames.
+   Hardware is the outermost fact: all of this is one machine under a desk, and the cluster nests
+   inside it — so "the cloud" here is visibly something you could unplug. */
+.arch-frame {
+  grid-column: 1 / -1;
+  z-index: 0;
+  pointer-events: none;
+  border-radius: 16px;
+  /* MUST opt out of the grid's align-items: center. Without this the frame is centred inside its
+     row span and collapses to the height of its own tag — a 40px badge floating in the middle of the
+     cluster instead of a border around it. Anything meant to SPAN has to stretch explicitly. */
+  align-self: stretch;
+  justify-self: stretch;
+}
+.arch-hw {
+  grid-row: 5 / 15;          /* label row 5 → through the tool servers */
+  margin: 0 -12px;
+  border: 2px solid color-mix(in srgb, var(--slate) 60%, var(--line));
+  background: color-mix(in srgb, var(--slate) 6%, transparent);
+}
+.arch-k8s {
+  grid-row: 6 / 15;          /* nested: starts one row lower, on its own label row */
+  margin: 0 0;
+  border: 2px dashed color-mix(in srgb, var(--accent) 60%, var(--line));
+  background: color-mix(in srgb, var(--accent) 5%, transparent);
+}
+
+/* The label rows: short spacers that give each frame's border somewhere to sit. */
+.arch-grid { grid-auto-rows: min-content; }
+
+/* Tags are SIBLINGS of the frames, not children — a child of a z-index:0 frame cannot paint above
+   the content boxes, because it cannot escape its parent's stacking context. */
+.arch-tag {
+  justify-self: start;
+  align-self: center;
+  z-index: 2;
+  padding: 3px 12px; border-radius: 999px;
+  font-size: 10.5px; font-weight: 750; letter-spacing: .2px;
+  white-space: nowrap;
+}
+.arch-tag-hw  { margin-left: -6px; }
+.arch-tag-k8s { margin-left: 6px; }
+.arch-tag-hw  { background: var(--slate); color: #fff; }
+.arch-tag-k8s { background: var(--accent); color: var(--accent-ink); }
+
+/* Boxes ─────────────────────────────────────────────────────────────────────────────────────── */
+.arch-box {
+  display: flex; flex-direction: column; gap: 3px;
   padding: 12px 14px;
   border: 2px solid var(--line);
-  border-radius: 10px;
+  border-radius: 11px;
   background: var(--panel);
   text-align: center;
   transition: transform .12s ease, box-shadow .12s ease;
 }
+.arch-box.wide { width: 100%; }        /* Cloudflare and nginx: everything passes through them, and a
+                                          box the full width of the column is what says so. */
 .arch-name { font-weight: 800; font-size: 13.5px; color: var(--ink); letter-spacing: -.1px; }
 .arch-meta { color: var(--muted); font-size: 11.5px; line-height: 1.35; }
-
 .arch-link { text-decoration: none; }
 .arch-link:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
 
-/* Four kinds of thing, four unmistakable treatments. Colour carries the one distinction that
-   matters: what you can visit, what is plumbing, what holds state, and what is not ours at all. */
-.arch-app {
-  border-color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 12%, var(--panel));
-}
-.arch-app .arch-name { color: var(--accent); }
-.arch-infra {
-  border-color: color-mix(in srgb, var(--muted) 55%, var(--line));
-  background: var(--panel-2);
-}
-.arch-data {
-  border-color: var(--accent2);
-  background: color-mix(in srgb, var(--accent2) 13%, var(--panel));
-}
-.arch-data .arch-name { color: color-mix(in srgb, var(--accent2) 75%, var(--ink)); }
-.arch-ext {
-  border-style: dashed;
-  border-color: color-mix(in srgb, var(--muted) 45%, var(--line));
-  background: transparent;
-}
-.arch-ext .arch-name { color: var(--muted); }
+.arch-row { display: flex; flex-wrap: wrap; gap: 10px; }
+.arch-row > .arch-box { flex: 1 1 150px; }
+.arch-row-tight { margin-top: 10px; }
 
-/* The connector between tiers, with the hop's protocol on it. */
-.arch-edge {
-  display: flex; align-items: center; gap: 10px;
-  margin: 10px 0;
-  color: var(--muted); font-size: 11px; font-weight: 600;
-}
-.arch-edge::before, .arch-edge::after {
-  content: ''; flex: 1; height: 2px;
-  background: linear-gradient(90deg, transparent, var(--line), transparent);
-}
-.arch-edge span { flex: none; text-align: center; }
+/* Colour is the taxonomy. Bolder than the first pass: on the grey ground a tinted 1px hairline
+   dissolved, and the diagram read as a list rather than as a system. */
+.b-you    { border-color: var(--ink); background: var(--panel); width: 240px; margin: 0 auto; }
+.b-you .arch-name { color: var(--ink); }
+.b-agent  { border-color: var(--accent2); background: color-mix(in srgb, var(--accent2) 14%, var(--panel)); }
+.b-agent .arch-name { color: color-mix(in srgb, var(--accent2) 72%, var(--ink)); }
+.b-edge   { border-color: var(--proj); background: color-mix(in srgb, var(--proj) 13%, var(--panel)); }
+.b-edge .arch-name { color: var(--proj-2); }
+.b-infra  { border-color: color-mix(in srgb, var(--muted) 60%, var(--line)); background: var(--panel); }
+.b-app    { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 14%, var(--panel)); }
+.b-app .arch-name { color: var(--accent); }
+/* Volumes get their own colour and a mount glyph: they are the only things here that SURVIVE a pod,
+   and that is the distinction most worth seeing at a glance. */
+.b-vol    { border-color: var(--exp); background: color-mix(in srgb, var(--exp) 13%, var(--panel)); border-style: dashed; }
+.b-vol .arch-name { color: var(--exp-2); }
+.b-vault  { border-color: var(--wip); background: color-mix(in srgb, var(--wip) 13%, var(--panel)); }
+.b-vault .arch-name { color: var(--wip); }
+.b-ext    { border-color: color-mix(in srgb, var(--muted) 50%, var(--line)); border-style: dashed; background: transparent; }
+.b-ext .arch-name { color: var(--muted); }
 
-/* THE CLUSTER IS AN ENCLOSURE, not a caption. A dashed rule with a label under it reads as a section
-   heading; a frame with the components inside it reads as a boundary — and the boundary is the most
-   important fact in the picture, because it is what "nothing is exposed inbound" actually means. */
-.arch-cluster {
+/* Arrows ────────────────────────────────────────────────────────────────────────────────────── */
+.arch-arrow {
   position: relative;
-  margin: 22px 0;
-  padding: 26px 14px 16px;
-  border: 2px dashed color-mix(in srgb, var(--accent) 55%, var(--line));
-  border-radius: 16px;
-  background: color-mix(in srgb, var(--accent) 4%, transparent);
+  height: 34px;
+  display: grid; place-items: center;
 }
-.arch-cluster-tag {
-  position: absolute;
-  top: 0;
-  left: 16px;
-  transform: translateY(-50%);
-  padding: 3px 12px;
-  border-radius: 999px;
-  background: var(--accent);
-  color: var(--accent-ink);
-  font-size: 11px;
-  font-weight: 750;
-  letter-spacing: .2px;
-  white-space: nowrap;
+.arch-arrow::before { /* the shaft */
+  content: '';
+  position: absolute; top: 0; bottom: 7px; left: 50%;
+  width: 2px; transform: translateX(-50%);
+  background: color-mix(in srgb, var(--muted) 45%, var(--line));
+}
+.arch-arrow::after { /* the head */
+  content: '';
+  position: absolute; bottom: 0; left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: color-mix(in srgb, var(--muted) 55%, var(--line));
+}
+.arch-arrow-l {
+  position: relative; z-index: 1;
+  background: var(--panel-2);
+  padding: 1px 8px;
+  font-size: 10.5px; font-weight: 650;
+  color: var(--muted);
 }
 
+
+/* The outbound box: one box, one table. Four identical boxes spent width on repetition; the table
+   carries what actually differs between them. */
+.arch-ext-box { text-align: left; }
+.arch-tbl { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 11.5px; }
+.arch-tbl th {
+  text-align: left; font-weight: 750; color: var(--ink);
+  padding: 3px 10px 3px 0; white-space: nowrap;
+  border-bottom: 1px solid var(--line);
+}
+.arch-tbl td { color: var(--muted); padding: 3px 0; border-bottom: 1px solid var(--line); }
+.arch-tbl tr:last-child th, .arch-tbl tr:last-child td { border-bottom: 0; }
+
+/* Legend + footer ───────────────────────────────────────────────────────────────────────────── */
 .arch-foot {
   display: flex; align-items: center; justify-content: space-between;
   flex-wrap: wrap; gap: 10px;
-  margin-top: 18px; padding-top: 14px;
+  margin-top: 16px; padding-top: 12px;
   border-top: 1px solid var(--line);
 }
 .arch-key { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
-/* The legend swatches are the boxes themselves, in miniature — an empty square in a key is a colour
-   sample; a labelled box is the actual thing you are about to see. */
+/* The legend swatches ARE the boxes, in miniature — an empty square is a colour sample; a labelled
+   box is the thing you are about to see. */
 .arch-chip {
-  padding: 3px 10px;
-  border: 2px solid var(--line);
-  border-radius: 7px;
-  font-size: 11px;
-  font-weight: 700;
+  padding: 3px 10px; border: 2px solid var(--line); border-radius: 7px;
+  font-size: 11px; font-weight: 700;
 }
 .arch-more { font-size: 12.5px; font-weight: 700; color: var(--accent); text-decoration: none; }
 .arch-more:hover { text-decoration: underline; }
 
-@media (max-width: 640px) {
-  .arch-pull { font-size: 12px; padding: 7px 13px; white-space: normal; max-width: 80vw; }
-  .arch-cluster { padding: 24px 8px 12px; }
+/* One column on a phone.
+   The rows are EXPLICIT, so this cannot simply become a single column: "You" and the agent are both
+   on row 1 and would stack on top of each other rather than flow. And it cannot fall back to flex,
+   because the hardware and cluster frames span rows — only grid can draw them. So the whole map
+   shifts down by one to give the agent a row of its own. Mechanical, but stated outright, and it
+   keeps the enclosures intact on a phone, which is the part that carries the meaning. */
+@media (max-width: 780px) {
+  .arch-grid { grid-template-columns: 1fr; }
+
+  .b-you   { grid-column: 1; grid-row: 1; width: 100%; }
+  .b-agent { grid-column: 1; grid-row: 2; }
+
+  /* The rail has no second column to run down, so it becomes a plain arrow under the agent. The
+     relationship it drew is still true; it just no longer has two columns to draw it across. */
+  .arch-rail {
+    grid-column: 1;
+    grid-row: 3;
+    width: 100%;
+    height: 30px;
+    align-self: center;
+    background: none;
+  }
+  .arch-rail::before {
+    content: '';
+    position: absolute; top: 0; bottom: 7px; left: 50%;
+    width: 2px; transform: translateX(-50%);
+    background: repeating-linear-gradient(180deg, var(--accent) 0 6px, transparent 6px 11px);
+  }
+  .arch-rail::after { bottom: 0; }
+  .arch-rail-l { transform: translate(-50%, -50%); font-size: 10px; }
+
+  /* Everything after the agent shifts down one row. */
+  .r2 { grid-row: 4; }   .r3 { grid-row: 5; }   .r4 { grid-row: 6; }
+  .r5 { grid-row: 7; }   .r6 { grid-row: 8; }   .r7 { grid-row: 9; }
+  .r8 { grid-row: 10; }  .r9 { grid-row: 11; }  .r10 { grid-row: 12; }
+  .r11 { grid-row: 13; } .r12 { grid-row: 14; } .r13 { grid-row: 15; }
+  .r14 { grid-row: 16; } .r15 { grid-row: 17; } .r16 { grid-row: 18; }
+  .arch-hw  { grid-row: 7 / 17; margin: 0 -6px; }
+  .arch-k8s { grid-row: 8 / 17; margin: 0; }
+
+  .arch-diagram { padding: 18px 12px 8px; }
+  /* flex-basis is the MAIN-axis size, so `flex: 1 1 150px` becomes a 150px HEIGHT the moment the
+     row turns into a column — the app boxes ballooned to 150px tall. Let them size to content. */
+  .arch-row { flex-direction: column; }
+  .arch-row > .arch-box { flex: 0 0 auto; }
   .arch-foot { justify-content: center; }
+  .arch-tag { font-size: 9.5px; left: 8px; padding: 2px 8px; }
 }

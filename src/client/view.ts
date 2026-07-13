@@ -207,11 +207,14 @@ export function pageHtml(version: string): string {
              over the page. -->
         ${architecturePanel()}
 
-        <!-- The pull-down tab sits on the banner's bottom edge, straddling the border, so it reads
-             as a handle attached to the banner rather than a button parked beneath it. -->
+        <!-- A chevron on the banner's bottom edge, straddling the border, so it reads as a handle
+             attached to the banner rather than a button parked beneath it. No label: the shape is
+             the affordance, and a pill of text competed with the contact row directly above it for
+             attention it did not deserve. The accessible name lives on aria-label, which
+             architecture.ts keeps in step with the open state. -->
         <button class="arch-pull" data-act="architecture" type="button"
-                aria-expanded="false" aria-controls="arch-panel">
-          <span class="arch-pull-t">Show me the platform architecture</span>
+                aria-expanded="false" aria-controls="arch-panel"
+                aria-label="Show the platform architecture">
           <span class="arch-pull-c" aria-hidden="true">▾</span>
         </button>
       </header>
