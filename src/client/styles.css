@@ -8,6 +8,9 @@
      the bug that moved it there. */
 
   --live: #e11d48;
+  /* The agent's path through the stack. A dark red, deliberately unlike the navy of the browser's
+     route and unlike --live's pink: the two paths must be told apart at a glance. */
+  --agent: #9f1239;
   /* The old indigo, kept as its own token: the platform is navy now, but the greeting dialog is the
      one surface that should not look like the rest of the page — it is an interruption, and it reads
      as one by being a different blue from everything behind it. */
@@ -26,6 +29,7 @@
 @media (prefers-color-scheme: dark) {
   :root {
     --live: #ff5d78;
+    --agent: #ff8098;
     --indigo: #818cff; --indigo-2: #a3abff;
     /* Brand marks need lifting off the dark panels — GitHub's near-black would vanish. */
     --brand-gh: #e6edf3; --brand-li: #5aa9f0; --brand-em: #2dd4bf;
@@ -533,36 +537,37 @@ section { margin-bottom: 30px; }
 
 
 /* ─────────────────────────────────────────────────────────────────────────────────────────────
-   The architecture panel: a chevron on the banner's bottom edge that grows the banner downward
-   to reveal the diagram. See architecture.ts.
+   The architecture panel. See architecture.ts — the grid IS the diagram.
    ───────────────────────────────────────────────────────────────────────────────────────────── */
 
-.masthead { padding-bottom: 30px; }
+.masthead { padding-bottom: 0; overflow: hidden; }
 
-/* The chevron. No label — the shape is the affordance, and a pill of text sat directly under the
-   contact row competing with it for attention. */
+/* An embedded bar, flush inside the banner's lower edge — not a floating button stuck on top of it.
+   The wide chevron is the affordance; the label says what it does. */
 .arch-pull {
-  position: absolute; left: 50%; bottom: 0;
-  transform: translate(-50%, 50%);
-  z-index: 4;
-  display: grid; place-items: center;
-  width: 38px; height: 38px;
-  border: 1px solid var(--line);
-  border-radius: 50%;
-  background: var(--panel);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  width: calc(100% + 68px);       /* bleed to the banner's edges, past its padding */
+  margin: 20px -34px 0;
+  padding: 9px 0 8px;
+  border: 0;
+  border-top: 1px solid var(--line);
+  background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--accent) 6%, transparent));
   color: var(--accent);
-  box-shadow: var(--shadow);
-  font: inherit; font-size: 13px;
+  font: inherit; font-size: 12.5px; font-weight: 700;
+  letter-spacing: .2px;
   cursor: pointer;
-  transition: border-color .14s, box-shadow .14s, transform .25s cubic-bezier(.2,.8,.2,1);
+  transition: background .16s ease, color .16s ease;
 }
-.arch-pull:hover { border-color: var(--accent); box-shadow: var(--shadow-lg); }
-.arch-pull:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
-.arch-pull-c { line-height: 1; transition: transform .3s cubic-bezier(.2,.8,.2,1); }
+.arch-pull:hover { background: color-mix(in srgb, var(--accent) 11%, transparent); }
+.arch-pull:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.arch-pull-c { width: 52px; height: 10px; transition: transform .3s cubic-bezier(.2,.8,.2,1); }
 .masthead.arch-open .arch-pull-c { transform: rotate(180deg); }
 
-/* Animating grid-template-rows 0fr → 1fr transitions to the content's REAL height. A max-height
-   guess either clips the diagram or spends the close animation counting down invisible pixels. */
+/* grid-template-rows 0fr → 1fr transitions to the content's REAL height. A max-height guess either
+   clips the diagram or spends the close animation counting down invisible pixels. */
 .arch-panel {
   display: grid; grid-template-rows: 0fr;
   transition: grid-template-rows .42s cubic-bezier(.2,.8,.2,1), opacity .3s ease;
@@ -570,276 +575,291 @@ section { margin-bottom: 30px; }
 }
 .arch-panel-in { overflow: hidden; min-height: 0; }
 .masthead.arch-open .arch-panel { grid-template-rows: 1fr; opacity: 1; }
-@media (prefers-reduced-motion: reduce) {
-  .arch-panel, .arch-pull-c { transition: none; }
-}
+@media (prefers-reduced-motion: reduce) { .arch-panel, .arch-pull-c { transition: none; } }
 
-/* The diagram sits on its own recessed surface below the divider, so the banner reads as two
-   things: the introduction, and the evidence for it. Without the change of ground the boxes float
-   on the same white as the bio and the panel has no edge. */
+/* Its own recessed ground below the divider, so the banner reads as two things: the introduction,
+   and the evidence for it. */
 .arch-diagram {
-  margin-top: 24px;
-  padding: 22px 18px 8px;
+  margin: 22px 0 0;
+  padding: 24px 16px 10px;
   border-top: 1px solid var(--line);
   background: var(--panel-2);
   border-radius: 14px;
   text-align: left;
 }
 
-/* Two columns: the traffic path (col 1) and the agent's rail (col 2). Every stage of the path is
-   its own ROW, so the rail can span rows and the enclosures can be frames painted behind the
-   content. A wrapper div would hide the apps from the grid and the rail would have nothing to
-   align to. */
+/* ── The grid ─────────────────────────────────────────────────────────────────────────────────
+   col 1 vault · 2 home · 3 platform-content · 4 quiz · 5 vmcp/db/rs-mcp/APIs · 6 agent lane      */
 .arch-grid {
   display: grid;
-  grid-template-columns: 1fr minmax(140px, 190px);
-  column-gap: 18px;
+  grid-template-columns: 44px repeat(4, 1fr) 168px;
+  column-gap: 12px;
+  grid-auto-rows: min-content;
   align-items: center;
 }
-/* Explicit rows, so the rail's span and the frames' spans are stated rather than inferred.
-   Keep in step with the row map in architecture.ts. */
-.r1  { grid-row: 1; }
-.r2  { grid-row: 2; }
-.r3  { grid-row: 3; }
-.r4  { grid-row: 4; }
-.r5  { grid-row: 5; }
-.r6  { grid-row: 6; }
-.r7  { grid-row: 7; }
-.r8  { grid-row: 8; }
-.r9  { grid-row: 9; }
-.r10 { grid-row: 10; }
-.r11 { grid-row: 11; }
-.r12 { grid-row: 12; }
-.r13 { grid-row: 13; }
-.r14 { grid-row: 14; }
-.r15 { grid-row: 15; }
-.r16 { grid-row: 16; }
-/* Everything on the traffic path lives in column 1 and sits above the frames. */
-.arch-grid > * { grid-column: 1; position: relative; z-index: 1; }
+.arch-grid > * { position: relative; z-index: 1; }
 
-/* "You" spans both columns so it centres on the DIAGRAM, not on the left column. */
-.b-you { grid-column: 1 / -1; justify-self: center; }
-/* The agent sits out to the right, off the browser's path. */
-.b-agent { grid-column: 2; justify-self: stretch; }
+.r1{grid-row:1}   .r2{grid-row:2}   .r3{grid-row:3}   .r4{grid-row:4}
+.r5{grid-row:5}   .r6{grid-row:6}   .r7{grid-row:7}   .r8{grid-row:8}
+.r9{grid-row:9}   .r10{grid-row:10} .r11{grid-row:11} .r12{grid-row:12}
+.r14{grid-row:14} .r15{grid-row:15} .r16{grid-row:16}
+.c2{grid-column:2} .c3{grid-column:3} .c4{grid-column:4} .c5{grid-column:5}
 
-/* THE RAIL. Rows 2 → 9: from beneath the agent to the apps row, where its arrowhead lands on the
-   gateway. Because it is a grid span, that alignment is exact and survives every reflow — no
-   measuring, no magic numbers. */
-.arch-rail {
-  grid-column: 2;
-  grid-row: 2 / 11;
-  position: relative;
-  z-index: 1;
-  justify-self: center;
-  align-self: stretch;
-  width: 2px;
-  background: repeating-linear-gradient(180deg, var(--accent) 0 7px, transparent 7px 13px);
-}
-.arch-rail::after { /* arrowhead, pointing into the apps row */
-  content: '';
-  position: absolute; bottom: -1px; left: 50%;
-  transform: translateX(-50%);
-  border: 7px solid transparent;
-  border-top-color: var(--accent);
-}
-.arch-rail-l {
-  position: absolute; top: 50%; left: 50%;
-  transform: translate(-50%, -50%) rotate(90deg);
-  white-space: nowrap;
-  font-size: 10.5px; font-weight: 750; letter-spacing: .3px;
-  color: var(--accent);
-  background: var(--panel-2);
-  padding: 2px 7px;
-}
+/* The stack's trunk — Cloudflare, cloudflared, nginx — spans every app column, because everything
+   passes through them. */
+.wide, .a-user:not([class*=" c"]) { grid-column: 2 / 6; }
+/* "You" sits over the Cloudflare box and centres on it. */
+.b-you { grid-column: 2 / 6; justify-self: center; width: 250px; }
+.b-agent { grid-column: 6; }
 
-/* Enclosures, drawn BEHIND the content (z-index 0) as row-spanning frames.
-   Hardware is the outermost fact: all of this is one machine under a desk, and the cluster nests
-   inside it — so "the cloud" here is visibly something you could unplug. */
-.arch-frame {
-  grid-column: 1 / -1;
-  z-index: 0;
-  pointer-events: none;
-  border-radius: 16px;
-  /* MUST opt out of the grid's align-items: center. Without this the frame is centred inside its
-     row span and collapses to the height of its own tag — a 40px badge floating in the middle of the
-     cluster instead of a border around it. Anything meant to SPAN has to stretch explicitly. */
-  align-self: stretch;
-  justify-self: stretch;
-}
-.arch-hw {
-  grid-row: 5 / 15;          /* label row 5 → through the tool servers */
-  margin: 0 -12px;
-  border: 2px solid color-mix(in srgb, var(--slate) 60%, var(--line));
-  background: color-mix(in srgb, var(--slate) 6%, transparent);
-}
-.arch-k8s {
-  grid-row: 6 / 15;          /* nested: starts one row lower, on its own label row */
-  margin: 0 0;
-  border: 2px dashed color-mix(in srgb, var(--accent) 60%, var(--line));
-  background: color-mix(in srgb, var(--accent) 5%, transparent);
-}
-
-/* The label rows: short spacers that give each frame's border somewhere to sit. */
-.arch-grid { grid-auto-rows: min-content; }
-
-/* Tags are SIBLINGS of the frames, not children — a child of a z-index:0 frame cannot paint above
-   the content boxes, because it cannot escape its parent's stacking context. */
-.arch-tag {
-  justify-self: start;
-  align-self: center;
-  z-index: 2;
-  padding: 3px 12px; border-radius: 999px;
-  font-size: 10.5px; font-weight: 750; letter-spacing: .2px;
-  white-space: nowrap;
-}
-.arch-tag-hw  { margin-left: -6px; }
-.arch-tag-k8s { margin-left: 6px; }
-.arch-tag-hw  { background: var(--slate); color: #fff; }
-.arch-tag-k8s { background: var(--accent); color: var(--accent-ink); }
-
-/* Boxes ─────────────────────────────────────────────────────────────────────────────────────── */
+/* ── Boxes ───────────────────────────────────────────────────────────────────────────────────── */
 .arch-box {
   display: flex; flex-direction: column; gap: 3px;
-  padding: 12px 14px;
+  padding: 11px 13px;
   border: 2px solid var(--line);
   border-radius: 11px;
   background: var(--panel);
   text-align: center;
-  transition: transform .12s ease, box-shadow .12s ease;
 }
-.arch-box.wide { width: 100%; }        /* Cloudflare and nginx: everything passes through them, and a
-                                          box the full width of the column is what says so. */
-.arch-name { font-weight: 800; font-size: 13.5px; color: var(--ink); letter-spacing: -.1px; }
-.arch-meta { color: var(--muted); font-size: 11.5px; line-height: 1.35; }
-.arch-link { text-decoration: none; }
+.arch-name { font-weight: 800; font-size: 13px; color: var(--ink); letter-spacing: -.1px; }
+.arch-meta { color: var(--muted); font-size: 11px; line-height: 1.35; }
+.arch-link { text-decoration: none; transition: transform .12s ease, box-shadow .12s ease; }
 .arch-link:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
 
-.arch-row { display: flex; flex-wrap: wrap; gap: 10px; }
-.arch-row > .arch-box { flex: 1 1 150px; }
-.arch-row-tight { margin-top: 10px; }
-
-/* Colour is the taxonomy. Bolder than the first pass: on the grey ground a tinted 1px hairline
-   dissolved, and the diagram read as a list rather than as a system. */
-.b-you    { border-color: var(--ink); background: var(--panel); width: 240px; margin: 0 auto; }
-.b-you .arch-name { color: var(--ink); }
-.b-agent  { border-color: var(--accent2); background: color-mix(in srgb, var(--accent2) 14%, var(--panel)); }
-.b-agent .arch-name { color: color-mix(in srgb, var(--accent2) 72%, var(--ink)); }
-.b-edge   { border-color: var(--proj); background: color-mix(in srgb, var(--proj) 13%, var(--panel)); }
+.b-you   { border-color: var(--ink); }
+.b-agent { border-color: var(--live); background: color-mix(in srgb, var(--live) 12%, var(--panel)); }
+.b-agent .arch-name { color: var(--live); }
+.b-edge  { border-color: var(--proj); background: color-mix(in srgb, var(--proj) 13%, var(--panel)); }
 .b-edge .arch-name { color: var(--proj-2); }
-.b-infra  { border-color: color-mix(in srgb, var(--muted) 60%, var(--line)); background: var(--panel); }
-.b-app    { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 14%, var(--panel)); }
+.b-infra { border-color: color-mix(in srgb, var(--muted) 60%, var(--line)); }
+.b-app   { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 14%, var(--panel)); }
 .b-app .arch-name { color: var(--accent); }
-/* Volumes get their own colour and a mount glyph: they are the only things here that SURVIVE a pod,
-   and that is the distinction most worth seeing at a glance. */
-.b-vol    { border-color: var(--exp); background: color-mix(in srgb, var(--exp) 13%, var(--panel)); border-style: dashed; }
+/* Volumes are the only things here that SURVIVE a pod — the distinction most worth seeing. */
+.b-vol   { border-color: var(--exp); border-style: dashed; background: color-mix(in srgb, var(--exp) 13%, var(--panel)); }
 .b-vol .arch-name { color: var(--exp-2); }
-.b-vault  { border-color: var(--wip); background: color-mix(in srgb, var(--wip) 13%, var(--panel)); }
-.b-vault .arch-name { color: var(--wip); }
-.b-ext    { border-color: color-mix(in srgb, var(--muted) 50%, var(--line)); border-style: dashed; background: transparent; }
+.b-vault { border-color: var(--wip); background: color-mix(in srgb, var(--wip) 13%, var(--panel)); }
+.b-vault .arch-name, .vault-t { color: var(--wip); }
+.b-ext   { border-color: color-mix(in srgb, var(--muted) 50%, var(--line)); border-style: dashed; background: transparent; }
 .b-ext .arch-name { color: var(--muted); }
 
-/* Arrows ────────────────────────────────────────────────────────────────────────────────────── */
-.arch-arrow {
-  position: relative;
-  height: 34px;
-  display: grid; place-items: center;
+/* The database, inset from the right so the gateway's rail can run PAST it rather than through it. */
+.db { margin-right: 26px; }
+
+/* The vault: a tall narrow box down the flank of the cluster, spanning it — because every secret in
+   every workload is decrypted by it. Rotated text, because the box is taller than it is wide. */
+.vault {
+  grid-column: 1;
+  grid-row: 7 / 17;
+  align-self: stretch;
+  justify-content: center;
+  padding: 8px 2px;
 }
-.arch-arrow::before { /* the shaft */
+.vault-t {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  font-weight: 800;
+  font-size: 11.5px;
+  letter-spacing: .3px;
+  white-space: nowrap;
+}
+
+/* ── Arrows ──────────────────────────────────────────────────────────────────────────────────── */
+/* The label sits BESIDE the shaft, not on it: a label centred over an arrow hides the very thing it
+   is annotating, and needs an opaque background to stay legible — which then punches a hole in the
+   line. Offset to the side, it needs no background at all. */
+.arch-arrow { height: 36px; position: relative; }
+.arch-arrow::before {                      /* shaft */
   content: '';
-  position: absolute; top: 0; bottom: 7px; left: 50%;
+  position: absolute; top: 0; bottom: 8px; left: 50%;
   width: 2px; transform: translateX(-50%);
-  background: color-mix(in srgb, var(--muted) 45%, var(--line));
+  background: color-mix(in srgb, var(--muted) 50%, var(--line));
 }
-.arch-arrow::after { /* the head */
+.arch-arrow::after {                       /* head */
   content: '';
   position: absolute; bottom: 0; left: 50%;
   transform: translateX(-50%);
   border: 6px solid transparent;
-  border-top-color: color-mix(in srgb, var(--muted) 55%, var(--line));
+  border-top-color: color-mix(in srgb, var(--muted) 60%, var(--line));
 }
 .arch-arrow-l {
-  position: relative; z-index: 1;
-  background: var(--panel-2);
-  padding: 1px 8px;
+  position: absolute;
+  top: 50%; left: calc(50% + 11px);
+  transform: translateY(-50%);
+  white-space: nowrap;
   font-size: 10.5px; font-weight: 650;
   color: var(--muted);
 }
 
-
-/* The outbound box: one box, one table. Four identical boxes spent width on repetition; the table
-   carries what actually differs between them. */
-.arch-ext-box { text-align: left; }
-.arch-tbl { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 11.5px; }
-.arch-tbl th {
-  text-align: left; font-weight: 750; color: var(--ink);
-  padding: 3px 10px 3px 0; white-space: nowrap;
-  border-bottom: 1px solid var(--line);
+/* The agent's path: dark red, dotted. Same road as the browser — Cloudflare, cloudflared, nginx —
+   but it gets off at the gateway and never touches the web tier. */
+.a-agent::before {
+  background: repeating-linear-gradient(180deg, var(--agent) 0 5px, transparent 5px 10px);
 }
-.arch-tbl td { color: var(--muted); padding: 3px 0; border-bottom: 1px solid var(--line); }
+.a-agent::after { border-top-color: var(--agent); }
+.a-agent .arch-arrow-l { color: var(--agent); font-weight: 750; }
+
+/* Where the agent joins the stack: down its own lane, then left into Cloudflare. */
+.ag-join {
+  grid-column: 6;
+  grid-row: 2 / 4;
+  align-self: stretch;
+  position: relative;
+}
+.ag-join::before {                          /* down the lane */
+  content: '';
+  position: absolute; top: 0; bottom: 50%; left: 12px;
+  width: 2px;
+  background: repeating-linear-gradient(180deg, var(--agent) 0 5px, transparent 5px 10px);
+}
+.ag-join::after {                           /* then LEFT, into Cloudflare's right edge */
+  content: '';
+  position: absolute; bottom: calc(50% - 1px);
+  left: -16px; width: 30px;                 /* from the drop-line (at 12px) back out to the box */
+  height: 2px;
+  background: repeating-linear-gradient(90deg, var(--agent) 0 5px, transparent 5px 10px);
+}
+.ag-head {                                  /* the arrowhead, pointing into Cloudflare */
+  position: absolute; bottom: calc(50% - 5px); left: -20px;
+  border: 5px solid transparent;
+  border-right-color: var(--agent);
+}
+
+/* The gateway's line to the tool server: straight down the RIGHT edge of column 5, past the
+   database. Spanning rows is what makes it exact. */
+.vm-rail {
+  grid-column: 5;
+  grid-row: 12 / 14;
+  justify-self: end;
+  align-self: stretch;
+  width: 2px;
+  margin-right: 6px;
+  background: color-mix(in srgb, var(--muted) 55%, var(--line));
+}
+.vm-rail::after {
+  content: '';
+  position: absolute; bottom: -1px; left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: color-mix(in srgb, var(--muted) 60%, var(--line));
+}
+.vm-rail-l {
+  /* To the RIGHT of the rail, in the gutter — to its left is the database, and a label printed over
+     the thing it is not describing is worse than no label. */
+  position: absolute; top: 50%; left: 9px;
+  transform: translateY(-50%);
+  white-space: nowrap;
+  font-size: 10.5px; font-weight: 650;
+  color: var(--muted);
+}
+
+/* ── Enclosures ──────────────────────────────────────────────────────────────────────────────── */
+.arch-frame {
+  grid-column: 1 / 6;
+  z-index: 0;
+  pointer-events: none;
+  border-radius: 16px;
+  /* MUST opt out of the grid's align-items: center, or the frame is centred inside its row span and
+     collapses to nothing. Anything meant to SPAN has to stretch explicitly. */
+  align-self: stretch;
+  justify-self: stretch;
+}
+.arch-hw  { grid-row: 5 / 17; margin: 0 -10px; border: 2px solid color-mix(in srgb, var(--slate) 60%, var(--line)); background: color-mix(in srgb, var(--slate) 6%, transparent); }
+.arch-k8s { grid-row: 6 / 17; margin: 0; border: 2px dashed color-mix(in srgb, var(--accent) 60%, var(--line)); background: color-mix(in srgb, var(--accent) 5%, transparent); }
+
+/* Tags are SIBLINGS of the frames — a child of a z-index:0 frame cannot paint above the boxes,
+   because it cannot escape its parent's stacking context. */
+.arch-tag {
+  grid-column: 1 / 4;
+  justify-self: start;
+  align-self: center;
+  z-index: 2;
+  padding: 3px 11px; border-radius: 999px;
+  font-size: 10px; font-weight: 750; letter-spacing: .2px;
+  white-space: nowrap;
+}
+.arch-tag-hw  { background: var(--slate); color: #fff; margin-left: -4px; }
+.arch-tag-k8s { background: var(--accent); color: var(--accent-ink); margin-left: 8px; }
+
+/* ── The outbound box ────────────────────────────────────────────────────────────────────────── */
+.arch-ext-box { text-align: left; }
+.arch-tbl { width: 100%; border-collapse: collapse; margin-top: 6px; font-size: 10.5px; }
+.arch-tbl th { text-align: left; font-weight: 750; color: var(--ink); padding: 2px 8px 2px 0; border-bottom: 1px solid var(--line); }
+.arch-tbl td { color: var(--muted); padding: 2px 0; border-bottom: 1px solid var(--line); }
 .arch-tbl tr:last-child th, .arch-tbl tr:last-child td { border-bottom: 0; }
 
-/* Legend + footer ───────────────────────────────────────────────────────────────────────────── */
+/* ── Legend ──────────────────────────────────────────────────────────────────────────────────── */
 .arch-foot {
   display: flex; align-items: center; justify-content: space-between;
   flex-wrap: wrap; gap: 10px;
   margin-top: 16px; padding-top: 12px;
   border-top: 1px solid var(--line);
 }
-.arch-key { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
-/* The legend swatches ARE the boxes, in miniature — an empty square is a colour sample; a labelled
-   box is the thing you are about to see. */
-.arch-chip {
-  padding: 3px 10px; border: 2px solid var(--line); border-radius: 7px;
-  font-size: 11px; font-weight: 700;
-}
+.arch-key { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.arch-chip { padding: 3px 9px; border: 2px solid var(--line); border-radius: 7px; font-size: 10.5px; font-weight: 700; }
+.k-agent { border-color: var(--agent); border-style: dotted; color: var(--agent); }
 .arch-more { font-size: 12.5px; font-weight: 700; color: var(--accent); text-decoration: none; }
 .arch-more:hover { text-decoration: underline; }
 
-/* One column on a phone.
-   The rows are EXPLICIT, so this cannot simply become a single column: "You" and the agent are both
-   on row 1 and would stack on top of each other rather than flow. And it cannot fall back to flex,
-   because the hardware and cluster frames span rows — only grid can draw them. So the whole map
-   shifts down by one to give the agent a row of its own. Mechanical, but stated outright, and it
-   keeps the enclosures intact on a phone, which is the part that carries the meaning. */
-@media (max-width: 780px) {
-  .arch-grid { grid-template-columns: 1fr; }
+/* ── One column on a phone ───────────────────────────────────────────────────────────────────────
+   The rows are explicit, and on desktop several boxes SHARE a row because they are columns of it —
+   home, platform-content, quiz and vmcp are all r11. Collapse to one column and "row 11" now means
+   four different things: they land in the same cell and stack on top of each other, and three of
+   them disappear. So the mobile map addresses each box by WHAT IT IS, not by where it sat.
 
-  .b-you   { grid-column: 1; grid-row: 1; width: 100%; }
-  .b-agent { grid-column: 1; grid-row: 2; }
+   It also cannot fall back to flex: the hardware and cluster frames span rows, and only grid draws
+   them. Losing the enclosures would lose the point of the picture. */
+@media (max-width: 900px) {
+  .arch-grid { grid-template-columns: 1fr; column-gap: 0; }
+  .arch-grid > * { grid-column: 1 !important; }
 
-  /* The rail has no second column to run down, so it becomes a plain arrow under the agent. The
-     relationship it drew is still true; it just no longer has two columns to draw it across. */
-  .arch-rail {
-    grid-column: 1;
-    grid-row: 3;
-    width: 100%;
-    height: 30px;
-    align-self: center;
-    background: none;
+  .b-you   { grid-row: 1; width: 100%; }
+  .b-agent { grid-row: 2; }
+  .ag-join { grid-row: 3; align-self: center; height: 24px; }
+  .ag-join::before { left: 50%; transform: translateX(-50%); top: 0; bottom: 4px; }
+  .ag-join::after, .ag-head { display: none; }
+
+  .a-user.r2  { grid-row: 4; }
+  .b-edge.r3  { grid-row: 5; }
+  .a-user.r4  { grid-row: 6; }
+  .arch-tag-hw  { grid-row: 7; }
+  .arch-tag-k8s { grid-row: 8; }
+  .b-infra.r7 { grid-row: 9; }
+  .a-user.r8  { grid-row: 10; }
+  .b-infra.r9 { grid-row: 11; }
+
+  /* The agent's parallel arrows have no second lane to run down, so they would sit on top of the
+     browser's. One arrow into the gateway still says where the agent ends up. */
+  .a-agent.r4, .a-agent.r8, .a-user.c2, .a-user.c4 { display: none; }
+  .a-agent.c5 { grid-row: 12; }
+
+  /* Each box gets its own row, addressed by identity. */
+  .b-app.c2   { grid-row: 13; }   /* home */
+  .b-vol.c3   { grid-row: 14; }   /* platform-content */
+  .b-app.c4   { grid-row: 15; }   /* quiz */
+  .b-app.c5   { grid-row: 16; }   /* vmcp */
+  .b-vol.db   { grid-row: 17; margin-right: 0; }
+  .vault      { grid-row: 18; align-self: auto; padding: 11px 13px; }
+  .b-infra.c5 { grid-row: 19; }   /* rs-mcp-server */
+  .b-infra.c2 { grid-row: 20; }   /* fvt-traffic */
+  .a-user.c5  { grid-row: 21; }   /* outbound */
+  .b-ext.c5   { grid-row: 22; }
+
+  .vault-t { writing-mode: horizontal-tb; transform: none; }
+  .vm-rail { display: none; }     /* nothing to run past: the db is no longer beside anything */
+
+  .arch-hw  { grid-row: 7 / 23; margin: 0 -6px; }
+  .arch-k8s { grid-row: 8 / 23; margin: 0; }
+  .arch-tag { grid-column: 1; }
+
+  /* A long label offset beside the arrow runs off a phone. Let it wrap rather than overflow — the
+     diagram must never be the thing that makes the page scroll sideways. */
+  .arch-arrow-l {
+    left: calc(50% + 10px);
+    max-width: 44vw;
+    white-space: normal;
+    line-height: 1.2;
   }
-  .arch-rail::before {
-    content: '';
-    position: absolute; top: 0; bottom: 7px; left: 50%;
-    width: 2px; transform: translateX(-50%);
-    background: repeating-linear-gradient(180deg, var(--accent) 0 6px, transparent 6px 11px);
-  }
-  .arch-rail::after { bottom: 0; }
-  .arch-rail-l { transform: translate(-50%, -50%); font-size: 10px; }
 
-  /* Everything after the agent shifts down one row. */
-  .r2 { grid-row: 4; }   .r3 { grid-row: 5; }   .r4 { grid-row: 6; }
-  .r5 { grid-row: 7; }   .r6 { grid-row: 8; }   .r7 { grid-row: 9; }
-  .r8 { grid-row: 10; }  .r9 { grid-row: 11; }  .r10 { grid-row: 12; }
-  .r11 { grid-row: 13; } .r12 { grid-row: 14; } .r13 { grid-row: 15; }
-  .r14 { grid-row: 16; } .r15 { grid-row: 17; } .r16 { grid-row: 18; }
-  .arch-hw  { grid-row: 7 / 17; margin: 0 -6px; }
-  .arch-k8s { grid-row: 8 / 17; margin: 0; }
-
-  .arch-diagram { padding: 18px 12px 8px; }
-  /* flex-basis is the MAIN-axis size, so `flex: 1 1 150px` becomes a 150px HEIGHT the moment the
-     row turns into a column — the app boxes ballooned to 150px tall. Let them size to content. */
-  .arch-row { flex-direction: column; }
-  .arch-row > .arch-box { flex: 0 0 auto; }
+  .arch-diagram { padding: 18px 10px 8px; }
   .arch-foot { justify-content: center; }
-  .arch-tag { font-size: 9.5px; left: 8px; padding: 2px 8px; }
 }

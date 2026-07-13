@@ -207,15 +207,17 @@ export function pageHtml(version: string): string {
              over the page. -->
         ${architecturePanel()}
 
-        <!-- A chevron on the banner's bottom edge, straddling the border, so it reads as a handle
-             attached to the banner rather than a button parked beneath it. No label: the shape is
-             the affordance, and a pill of text competed with the contact row directly above it for
-             attention it did not deserve. The accessible name lives on aria-label, which
-             architecture.ts keeps in step with the open state. -->
+        <!-- An embedded pull-down bar, not a floating button: it is part of the banner's own
+             furniture, spanning it and sitting flush inside its lower edge. A circular FAB read as
+             something stuck ON TOP of the banner; this reads as the banner's own handle, which is
+             what it is. The wide chevron is the affordance. -->
         <button class="arch-pull" data-act="architecture" type="button"
-                aria-expanded="false" aria-controls="arch-panel"
-                aria-label="Show the platform architecture">
-          <span class="arch-pull-c" aria-hidden="true">▾</span>
+                aria-expanded="false" aria-controls="arch-panel">
+          <span class="arch-pull-t">Show me the platform architecture</span>
+          <svg class="arch-pull-c" viewBox="0 0 64 12" aria-hidden="true" focusable="false">
+            <path d="M2 2 L32 10 L62 2" fill="none" stroke="currentColor"
+                  stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
         </button>
       </header>
 
