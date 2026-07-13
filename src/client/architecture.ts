@@ -59,6 +59,23 @@ const arrow = (cls: string, label = ''): string =>
   `<div class="arch-arrow ${cls}" aria-hidden="true">${label ? `<span class="arch-arrow-l">${label}</span>` : ''}</div>`;
 
 export function architecturePanel(): string {
+  // Six content columns (plus the vault's), because three services across four columns always left a
+  // dead one. Each service spans two — home 2-3, quiz 4-5, vmcp 6-7 — so they fill the width; and
+  // platform-content spans 3-4, the OVERLAP, so it sits under the gap between home and quiz.
+  //
+  // That finer grid also buys the mount connectors for free: home occupies columns 2-3 and
+  // platform-content occupies 3-4, so they share column 3 — a straight line there joins them, with
+  // no elbow needed. The offset that would have demanded one simply does not exist once the grid is
+  // fine enough to say what it means.
+  //
+  // Row map (keep in step with styles.css):
+  //   1 callers        7 cloudflared    13 volumes
+  //   2 arrows         8 arrow          14 fvt-traffic
+  //   3 Cloudflare     9 nginx          15 rs-mcp-server
+  //   4 arrow ↓ (spans the frame edges, so it lands ON cloudflared, not on the box's wall)
+  //   5 hw label      10 fan-out        16 the cluster's bottom padding
+  //   6 k8s label     11 services       17 arrow ↓ (crosses OUT of the machine)
+  //                   12 connectors     18 Public APIs — outside, on the internet
   return `
     <div class="arch-panel" id="arch-panel">
       <div class="arch-panel-in">
@@ -69,73 +86,68 @@ export function architecturePanel(): string {
             ${box('b-you r1', 'You', 'a browser', '', PERSON)}
             ${box('b-agent r1', 'Agent / MCP consumer', 'Claude Desktop, an SDK', '', ROBOT)}
 
-            <!-- Two roads into Cloudflare. The agent's is dark red and dotted: it takes the SAME road
-                 as the browser — Cloudflare → cloudflared → nginx → vmcp — it just gets off at a
-                 different stop and never touches the web tier. -->
-            ${arrow('a-user u1 r2', 'TLS')}
-            ${arrow('a-agent u2 r2', 'MCP')}
+            ${arrow('a-user w r2', 'TLS')}
+            ${arrow('a-agent right r2', 'MCP')}
 
-            <!-- Enclosures, painted behind the content. The tags are siblings, not children: a child
-                 of a z-index:0 frame cannot paint above the boxes — it cannot escape its parent's
-                 stacking context. -->
             <div class="arch-frame arch-hw" aria-hidden="true"></div>
             <div class="arch-frame arch-k8s" aria-hidden="true"></div>
             <span class="arch-tag arch-tag-hw r5">one Fedora workstation · Colima QEMU VM</span>
             <span class="arch-tag arch-tag-k8s r6">minikube cluster · namespace: platform</span>
 
-            <!-- The vault spans the cluster, because that is precisely what it does: every secret in
-                 every workload is decrypted by it. A box in a row would have made it look like one
-                 more component in the chain. -->
             <div class="arch-box b-vault vault">
               <span class="vault-t">sealed-secrets · the vault</span>
             </div>
 
-            ${box('b-edge wide r3', 'Cloudflare', 'terminates TLS · the only thing the internet can see')}
+            ${box('b-edge w r3', 'Cloudflare', 'terminates TLS · the only thing the internet can see')}
 
-            ${arrow('a-user r4', 'outbound tunnel — never an inbound port')}
-            ${arrow('a-agent c5 r4')}
+            <!-- These two SPAN the frame edges (rows 4→7). Stopped at row 4 they died on the
+                 workstation's wall, as though the traffic never got in. It does: it lands on
+                 cloudflared, inside. -->
+            ${arrow('a-user w pierce', 'outbound tunnel — never an inbound port')}
+            ${arrow('a-agent right pierce')}
 
-            <!-- cloudflared wears Cloudflare's colour: it is Cloudflare's own agent, sitting on this
-                 side of the wall. Same system, two ends of one tunnel. -->
-            ${box('b-edge wide r7', 'cloudflared', 'dials OUT — there is no open port')}
-            ${arrow('a-user r8', 'http')}
-            ${arrow('a-agent c5 r8')}
+            ${box('b-edge w r7', 'cloudflared', 'dials OUT — there is no open port')}
+            ${arrow('a-user w r8', 'http')}
+            ${arrow('a-agent right r8')}
 
-            ${box('b-net wide r9', 'nginx', 'the router — splits by host and by path')}
+            ${box('b-net w r9', 'nginx', 'the router — splits by host and by path')}
 
             <!-- A router fans out: one arrow per destination. -->
-            ${arrow('a-user c2 r10', 'path')}
-            ${arrow('a-user c4 r10', 'path')}
-            ${arrow('a-agent c5 r10', 'MCP · /mcp')}
+            ${arrow('a-user s1 r10', 'path')}
+            ${arrow('a-user s2 r10', 'path')}
+            ${arrow('a-agent s3 r10', 'MCP · /mcp')}
 
-            ${box('b-app c2 r11', 'home', '/', '/')}
-            ${box('b-app c4 r11', 'quiz', '/cloud-developer-quiz/', '/cloud-developer-quiz/')}
-            ${box('b-app c5 r11', 'vmcp', '/vmcp/ · MCP gateway', '/vmcp/')}
+            ${box('b-app s1 r11', 'home', '/', '/')}
+            ${box('b-app s2 r11', 'quiz', '/cloud-developer-quiz/', '/cloud-developer-quiz/')}
+            ${box('b-app s3 r11', 'vmcp', '/vmcp/ · MCP gateway', '/vmcp/')}
 
-            <!-- One plane below the apps, and centred between them: platform-content is mounted into
-                 home AND quiz, so it belongs under the gap rather than in either lane. vmcp-db sits
-                 on the same plane, under the gateway that owns it. -->
-            ${box('b-vol c3 r12', 'platform-content', 'PersistentVolume — mounted into home + quiz')}
-            ${box('b-vol c5 r12 db', 'vmcp-db', 'PersistentVolume')}
+            <!-- MOUNTS ARE NOT TRAFFIC. A volume is attached to a pod; nothing flows along it, so it
+                 gets a plain line and no arrowhead. The gateway's link to its database IS traffic —
+                 queries go one way, rows come back — so that one gets an arrow. -->
+            <div class="mount m-home" aria-hidden="true"></div>
+            <div class="mount m-quiz" aria-hidden="true"></div>
+            ${arrow('a-user s3 r12 short', 'SQL')}
 
-            <!-- The gateway's line to the tool server runs down the RIGHT EDGE of the column, PAST
-                 the database rather than through it — which is what lets vmcp sit over its db AND
-                 still draw a genuinely straight vertical arrow to rs-mcp-server. The db is trimmed on
-                 that side to give the line its lane. -->
-            <div class="vm-rail" aria-hidden="true"><span class="vm-rail-l">MCP over SSE</span></div>
+            ${box('b-vol pc r13', 'platform-content', 'PersistentVolume — mounted into home + quiz')}
+            ${box('b-vol s3 r13 db', 'vmcp-db', 'PersistentVolume')}
 
-            ${box('b-infra c2 r13', 'fvt-traffic', 'replays the suite through the gateway, on a timer')}
-            <!-- fvt-traffic calls the gateway, so it gets an arrow that says so: along, then up, into
-                 vmcp's flank. It is the only thing here that talks UP the stack. -->
+            ${box('b-infra s1 r14', 'fvt-traffic', 'replays the suite through the gateway, on a timer')}
             <div class="fvt-elbow" aria-hidden="true"><i class="fvt-head"></i></div>
 
-            ${box('b-infra c5 r14', 'rs-mcp-server', '17 RuneScape tools')}
+            <!-- Down the right edge of the gateway's column, PAST the database rather than through
+                 it — which is what lets vmcp sit over its db and still draw a straight line here. -->
+            <div class="vm-rail" aria-hidden="true"><span class="vm-rail-l">MCP over SSE</span></div>
 
-            <!-- OUTSIDE the cluster, and outside the machine: these are other people's servers on the
-                 internet. The arrow leaves rs-mcp-server and only rs-mcp-server — it is the one thing
-                 in here that talks to the outside world — and it crosses the boundary to get there. -->
-            ${arrow('a-user c5 r16', 'outbound HTTPS')}
-            <div class="arch-box b-ext arch-ext-box c5 r17">
+            ${box('b-infra s3 r15', 'rs-mcp-server', '17 RuneScape tools')}
+
+            <!-- The cluster's bottom padding: without a row of its own, the boxes press against the
+                 frame's wall. -->
+            <div class="pad r16" aria-hidden="true"></div>
+
+            <!-- OUTSIDE the machine: other people's servers, on the internet. The arrow leaves
+                 rs-mcp-server and only rs-mcp-server, and it crosses the boundary to get there. -->
+            ${arrow('a-user s3 r17', 'outbound HTTPS')}
+            <div class="arch-box b-ext arch-ext-box s3 r18">
               <span class="arch-name">Public APIs</span>
               <table class="arch-tbl">
                 ${OUTBOUND.map(([n, w]) => `<tr><th>${n}</th><td>${w}</td></tr>`).join('')}

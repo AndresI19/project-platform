@@ -573,7 +573,7 @@ section { margin-bottom: 30px; }
 
 .arch-diagram {
   margin: 22px 0 0;
-  padding: 24px 14px 10px;
+  padding: 22px 30px 10px;
   border-top: 1px solid var(--line);
   background: var(--panel-2);
   border-radius: 14px;
@@ -581,46 +581,60 @@ section { margin-bottom: 30px; }
 }
 
 /* ── The grid ─────────────────────────────────────────────────────────────────────────────────
-   col 1 vault · 2 home · 3 platform-content · 4 quiz · 5 vmcp/db/rs-mcp
-   Both callers sit on row 1. The agent's old right-hand lane cost ~170px of dead width down the
-   diagram's entire height and bought nothing — it takes the same road as the browser.            */
+   col 1 = the vault. Columns 2-7 are the content: each service spans TWO of them (home 2-3,
+   quiz 4-5, vmcp 6-7) so the three of them fill the width; platform-content spans 3-4 — the
+   OVERLAP — so it sits under the gap between home and quiz and shares a column with each of them.
+   That shared column is what lets a plain straight line join a volume to the pod it is mounted
+   into: no elbow, because with a fine enough grid there is no offset to bridge.                  */
 .arch-grid {
   display: grid;
-  grid-template-columns: 46px repeat(4, 1fr);
-  column-gap: 14px;
+  grid-template-columns: 40px repeat(6, 1fr);
+  column-gap: 10px;
   row-gap: 2px;
   grid-auto-rows: min-content;
   align-items: center;
 }
 .arch-grid > * { position: relative; z-index: 1; }
 
-.r1{grid-row:1}   .r2{grid-row:2}   .r3{grid-row:3}   .r4{grid-row:4}
+.r1{grid-row:1}   .r2{grid-row:2}   .r3{grid-row:3}
 .r5{grid-row:5}   .r6{grid-row:6}   .r7{grid-row:7}   .r8{grid-row:8}
 .r9{grid-row:9}   .r10{grid-row:10} .r11{grid-row:11} .r12{grid-row:12}
-.r13{grid-row:13} .r14{grid-row:14} .r16{grid-row:16} .r17{grid-row:17}
-.c2{grid-column:2} .c3{grid-column:3} .c4{grid-column:4} .c5{grid-column:5}
+.r13{grid-row:13} .r14{grid-row:14} .r15{grid-row:15} .r16{grid-row:16}
+.r17{grid-row:17} .r18{grid-row:18}
 
-/* The trunk — Cloudflare, cloudflared, nginx — spans every app column: everything passes through. */
-.wide { grid-column: 2 / 6; }
-.a-user:not(.c2):not(.c4):not(.c5) { grid-column: 2 / 6; }
+/* The three services, each two columns wide. */
+.s1 { grid-column: 2 / 4; }   /* home, fvt-traffic */
+.s2 { grid-column: 4 / 6; }   /* quiz */
+.s3 { grid-column: 6 / 8; }   /* vmcp, its db, rs-mcp-server, the outbound APIs */
+.pc { grid-column: 3 / 5; }   /* platform-content — the overlap of home and quiz */
 
-/* Row 1: the two callers, each over the half of the front door they arrive at. */
-.b-you   { grid-column: 2 / 4; justify-self: center; width: 100%; max-width: 260px; }
-.b-agent { grid-column: 4 / 6; justify-self: center; width: 100%; max-width: 260px; }
-.u1 { grid-column: 2 / 4; }
-.u2 { grid-column: 4 / 6; }
+/* The trunk spans every content column: everything passes through it. */
+.w { grid-column: 2 / 8; }
+.right { grid-column: 6 / 8; }
+
+/* "You" centres on the front door it enters, and its arrow is centred on the same span — which is
+   what reconnects the two. The agent sits over its own half. */
+.b-you   { grid-column: 2 / 8; justify-self: center; width: 100%; max-width: 270px; }
+.b-agent { grid-column: 6 / 8; justify-self: center; width: 100%; max-width: 270px; }
+
+/* The tunnel arrows PIERCE the frames. Stopped at row 4 they died on the workstation's wall, as
+   though the traffic never got inside. It does — it lands on cloudflared. */
+.pierce { grid-row: 4 / 7; align-self: stretch; }
+
+/* The cluster's bottom padding. Without a row of its own the boxes press on the frame's wall. */
+.pad { height: 16px; }
 
 /* ── Boxes ───────────────────────────────────────────────────────────────────────────────────── */
 .arch-box {
   display: flex; flex-direction: column; align-items: center; gap: 2px;
-  padding: 11px 13px;
+  padding: 9px 11px;
   border: 2px solid var(--line);
-  border-radius: 11px;
+  border-radius: 10px;
   background: var(--panel);
   text-align: center;
 }
-.arch-name { font-weight: 800; font-size: 13px; color: var(--ink); letter-spacing: -.1px; }
-.arch-meta { color: var(--muted); font-size: 11px; line-height: 1.35; }
+.arch-name { font-weight: 800; font-size: 12.5px; color: var(--ink); letter-spacing: -.1px; }
+.arch-meta { color: var(--muted); font-size: 10.5px; line-height: 1.35; }
 .arch-link { text-decoration: none; transition: transform .12s ease, box-shadow .12s ease; }
 .arch-link:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
 
@@ -654,20 +668,37 @@ section { margin-bottom: 30px; }
 .b-ext   { border-color: color-mix(in srgb, var(--muted) 50%, var(--line)); border-style: dashed; background: transparent; }
 .b-ext .arch-name { color: var(--muted); }
 
-/* Trimmed on the right, so the gateway's line to the tool server has a lane to run down. */
-.db { margin-right: 34px; }
+/* NARROWED, properly this time — the rail and its label need a lane of their own beside the box,
+   and 34px was not one. */
+.db { margin-right: 78px; }
 
 .vault {
   grid-column: 1;
-  grid-row: 7 / 15;
+  grid-row: 7 / 16;
   align-self: stretch;
   justify-content: center;
   padding: 8px 2px;
 }
 .vault-t {
   writing-mode: vertical-rl; transform: rotate(180deg);
-  font-weight: 800; font-size: 11.5px; letter-spacing: .3px; white-space: nowrap;
+  font-weight: 800; font-size: 11px; letter-spacing: .3px; white-space: nowrap;
 }
+
+/* A MOUNT IS NOT TRAFFIC. A volume is attached to a pod; nothing flows along it. So it gets a plain
+   line and no arrowhead — an arrow would assert a direction that does not exist. (The gateway's link
+   to its database is different: queries go down and rows come back, so that one is an arrow.)
+   Each line sits in the column its two boxes SHARE, so it is straight rather than an elbow. */
+.mount {
+  grid-row: 12;
+  align-self: stretch;
+  justify-self: center;
+  width: 2px;
+  z-index: 0;
+  background: repeating-linear-gradient(180deg,
+    color-mix(in srgb, var(--exp) 80%, transparent) 0 5px, transparent 5px 10px);
+}
+.m-home { grid-column: 3; }   /* shared by home (2-3) and platform-content (3-4) */
+.m-quiz { grid-column: 4; }   /* shared by platform-content (3-4) and quiz (4-5) */
 
 /* ── Arrows ──────────────────────────────────────────────────────────────────────────────────── */
 /* Bolder, and the dashes MARCH — the direction of flow is the one thing a static arrowhead states
@@ -675,6 +706,7 @@ section { margin-bottom: 30px; }
 @keyframes arch-flow { to { background-position-y: 14px; } }
 
 .arch-arrow { height: 38px; position: relative; }
+.arch-arrow.short { height: 30px; }
 .arch-arrow::before {                       /* shaft */
   content: '';
   position: absolute; top: 0; bottom: 9px; left: 50%;
@@ -715,12 +747,12 @@ section { margin-bottom: 30px; }
 
 /* The gateway's line to the tool server: straight down the right of column 5, past the database. */
 .vm-rail {
-  grid-column: 5;
-  grid-row: 12 / 14;
+  grid-column: 6 / 8;
+  grid-row: 12 / 15;
   justify-self: end;
   align-self: stretch;
   width: 3px;
-  margin-right: 12px;
+  margin-right: 22px;
   background-image: repeating-linear-gradient(180deg,
     color-mix(in srgb, var(--muted) 75%, var(--ink)) 0 8px, transparent 8px 14px);
   background-size: 100% 14px;
@@ -746,15 +778,19 @@ section { margin-bottom: 30px; }
    along the bottom, then up into the gateway's flank. Spanning columns 2→5 and rows 11→14 means the
    corners land on real cells rather than on numbers I guessed. */
 .fvt-elbow {
-  grid-column: 2 / 5;
-  grid-row: 11 / 14;
+  /* Rows 12→15, NOT 11→15. Starting at row 11 put the elbow's top inside vmcp's own band — and the
+     elbow paints at z-index 0 (it has to pass behind the boxes it runs alongside), so everything it
+     drew up there was covered by vmcp and simply vanished, arrowhead included. Starting a row lower
+     puts its top exactly at vmcp's bottom edge, in the gap, where it can be seen. */
+  grid-column: 2 / 6;
+  grid-row: 12 / 15;
   align-self: stretch;
   z-index: 0;
   pointer-events: none;
 }
 .fvt-elbow::before {                        /* along — leaving fvt's RIGHT EDGE, not its middle */
   content: '';
-  position: absolute; bottom: 26px; left: 32%; right: -7px; height: 3px;
+  position: absolute; bottom: 26px; left: 49%; right: -6px; height: 3px;
   background-image: repeating-linear-gradient(90deg, var(--slate) 0 8px, transparent 8px 14px);
   background-size: 14px 100%;
   animation: fvt-along .9s linear infinite;
@@ -770,15 +806,15 @@ section { margin-bottom: 30px; }
    dashes here read as one more dashed border, of which this picture already has several. */
 @keyframes fvt-along { to { background-position-x: 14px; } }
 @keyframes fvt-up    { to { background-position-y: -14px; } }
-.fvt-head {                                 /* into vmcp's flank */
-  position: absolute; top: 24px; right: -19px;
-  border: 8px solid transparent; border-right: 0;
-  border-left-color: var(--slate);
+.fvt-head {                                 /* up, into vmcp's underside */
+  position: absolute; top: -2px; right: -10px;
+  border: 8px solid transparent; border-top: 0;
+  border-bottom-color: var(--slate);
 }
 
 /* ── Enclosures ──────────────────────────────────────────────────────────────────────────────── */
 .arch-frame {
-  grid-column: 1 / 6;
+  grid-column: 1 / 8;
   z-index: 0;
   pointer-events: none;
   border-radius: 16px;
@@ -789,19 +825,19 @@ section { margin-bottom: 30px; }
 }
 /* The frames bleed OUTWARD past the content, which is what gives the vault and the right-hand column
    room to breathe inside the cluster instead of pressing against its border. */
-.arch-hw  { grid-row: 5 / 16; margin: 0 -22px; border: 2px solid color-mix(in srgb, var(--slate) 60%, var(--line)); background: color-mix(in srgb, var(--slate) 6%, transparent); }
-.arch-k8s { grid-row: 6 / 16; margin: 0 -12px; border: 2px dashed color-mix(in srgb, var(--accent) 60%, var(--line)); background: color-mix(in srgb, var(--accent) 5%, transparent); }
+.arch-hw  { grid-row: 5 / 17; margin: 0 -18px; border: 2px solid color-mix(in srgb, var(--slate) 60%, var(--line)); background: color-mix(in srgb, var(--slate) 6%, transparent); }
+.arch-k8s { grid-row: 6 / 17; margin: 0 -9px; border: 2px dashed color-mix(in srgb, var(--accent) 60%, var(--line)); background: color-mix(in srgb, var(--accent) 5%, transparent); }
 
 /* Tags are SIBLINGS of the frames — a child of a z-index:0 frame cannot paint above the boxes. */
 .arch-tag {
-  grid-column: 1 / 4;
+  grid-column: 1 / 5;
   justify-self: start; align-self: center;
   z-index: 2;
   padding: 3px 11px; border-radius: 999px;
   font-size: 10px; font-weight: 750; letter-spacing: .2px; white-space: nowrap;
 }
-.arch-tag-hw  { background: var(--slate); color: #fff; margin-left: -16px; }
-.arch-tag-k8s { background: var(--accent); color: var(--accent-ink); margin-left: -6px; }
+.arch-tag-hw  { background: var(--slate); color: #fff; margin-left: -14px; }
+.arch-tag-k8s { background: var(--accent); color: var(--accent-ink); margin-left: -5px; }
 
 /* ── The outbound box (outside the cluster, outside the machine) ──────────────────────────────── */
 .arch-ext-box { text-align: left; align-items: stretch; }
@@ -825,51 +861,54 @@ section { margin-bottom: 30px; }
 
 /* ── One column on a phone ───────────────────────────────────────────────────────────────────────
    Several boxes SHARE a row on desktop because they are columns of it. Collapsed to one column,
-   "row 11" would mean three different things: they would land in the same cell and stack, and two of
-   them would vanish. So the mobile map addresses each box by WHAT IT IS, not by where it sat. It
-   also cannot fall back to flex — the frames span rows, and only grid can draw them. */
+   "row 11" would mean three different things: they would land in the same cell, stack, and two of
+   them would vanish. So the mobile map addresses each box by WHAT IT IS, not by where it sat.
+   It also cannot fall back to flex — the frames span rows, and only grid can draw them. */
 @media (max-width: 900px) {
   .arch-grid { grid-template-columns: 1fr; column-gap: 0; }
   .arch-grid > * { grid-column: 1 !important; }
 
-  .b-you   { grid-row: 1; max-width: none; }
-  .a-user.u1 { grid-row: 2; }
-  .b-agent { grid-row: 3; max-width: none; }
-  .a-agent.u2 { grid-row: 4; }
-  .b-edge.r3 { grid-row: 5; }
-  .a-user.r4 { grid-row: 6; }
+  .b-you        { grid-row: 1; max-width: none; }
+  .a-user.r2    { grid-row: 2; }
+  .b-agent      { grid-row: 3; max-width: none; }
+  .a-agent.r2   { grid-row: 4; }
+  .b-edge.r3    { grid-row: 5; }
+  .a-user.pierce { grid-row: 6; align-self: center; }
   .arch-tag-hw  { grid-row: 7; }
   .arch-tag-k8s { grid-row: 8; }
-  .b-edge.r7 { grid-row: 9; }
-  .a-user.r8 { grid-row: 10; }
-  .b-net.r9  { grid-row: 11; }
+  .b-edge.r7    { grid-row: 9; }
+  .a-user.r8    { grid-row: 10; }
+  .b-net.r9     { grid-row: 11; }
 
   /* The agent's parallel arrows have no second lane to run down, so they would sit on top of the
      browser's. One arrow into the gateway still says where the agent ends up. */
-  .a-agent.r4, .a-agent.r8, .a-user.c2, .a-user.c4 { display: none; }
-  .a-agent.c5 { grid-row: 12; }
+  .a-agent.pierce, .a-agent.r8, .a-user.s1, .a-user.s2 { display: none; }
+  .a-agent.s3 { grid-row: 12; }
 
-  .b-app.c2   { grid-row: 13; }   /* home */
-  .b-app.c4   { grid-row: 14; }   /* quiz */
-  .b-vol.c3   { grid-row: 15; }   /* platform-content */
-  .b-app.c5   { grid-row: 16; }   /* vmcp */
-  .b-vol.db   { grid-row: 17; margin-right: 0; }
-  .vault      { grid-row: 18; align-self: auto; padding: 11px 13px; }
-  .b-infra.c5 { grid-row: 19; }   /* rs-mcp-server */
-  .b-infra.c2 { grid-row: 20; }   /* fvt-traffic */
-  .a-user.c5  { grid-row: 21; }   /* outbound */
-  .b-ext.c5   { grid-row: 22; }
+  .b-app.s1     { grid-row: 13; }   /* home */
+  .b-app.s2     { grid-row: 14; }   /* quiz */
+  .b-vol.pc     { grid-row: 15; }   /* platform-content */
+  .b-app.s3     { grid-row: 16; }   /* vmcp */
+  .a-user.short { grid-row: 17; }   /* SQL */
+  .b-vol.db     { grid-row: 18; margin-right: 0; }
+  .vault        { grid-row: 19; align-self: auto; padding: 9px 11px; }
+  .b-infra.s3   { grid-row: 20; }   /* rs-mcp-server */
+  .b-infra.s1   { grid-row: 21; }   /* fvt-traffic */
+  .pad          { grid-row: 22; }
+  .a-user.r17   { grid-row: 23; }   /* outbound */
+  .b-ext.s3     { grid-row: 24; }
 
   .vault-t { writing-mode: horizontal-tb; transform: none; }
-  .vm-rail, .fvt-elbow { display: none; }   /* nothing to run past, and nothing to run along */
+  /* Nothing to run past, nothing to run along, and no shared column to join through. */
+  .vm-rail, .fvt-elbow, .mount { display: none; }
 
-  .arch-hw  { grid-row: 7 / 21; margin: 0 -8px; }
-  .arch-k8s { grid-row: 8 / 21; margin: 0 -3px; }
+  .arch-hw  { grid-row: 7 / 23; margin: 0 -8px; }
+  .arch-k8s { grid-row: 8 / 23; margin: 0 -3px; }
   .arch-tag { grid-column: 1; margin-left: 0; }
 
   /* A long label offset beside an arrow runs off a phone. Wrap it — the diagram must never be the
      thing that makes the page scroll sideways. */
   .arch-arrow-l { left: calc(50% + 11px); max-width: 44vw; white-space: normal; line-height: 1.2; }
-  .arch-diagram { padding: 18px 10px 8px; }
+  .arch-diagram { padding: 18px 12px 8px; }
   .arch-foot { justify-content: center; }
 }
