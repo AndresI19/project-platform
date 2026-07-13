@@ -59,14 +59,21 @@ const arrow = (cls: string, label = ''): string =>
   `<div class="arch-arrow ${cls}" aria-hidden="true">${label ? `<span class="arch-arrow-l">${label}</span>` : ''}</div>`;
 
 export function architecturePanel(): string {
-  // Six content columns (plus the vault's), because three services across four columns always left a
-  // dead one. Each service spans two — home 2-3, quiz 4-5, vmcp 6-7 — so they fill the width; and
-  // platform-content spans 3-4, the OVERLAP, so it sits under the gap between home and quiz.
+  // TWELVE content columns, and every relationship in the picture is expressed as a span of them —
+  // no pixel offsets, so nothing drifts when the viewport changes.
   //
-  // That finer grid also buys the mount connectors for free: home occupies columns 2-3 and
-  // platform-content occupies 3-4, so they share column 3 — a straight line there joins them, with
-  // no elbow needed. The offset that would have demanded one simply does not exist once the grid is
-  // fine enough to say what it means.
+  //   home 2-5 · quiz 6-9 · vmcp 10-13    — four columns each, so the three services fill the width
+  //   platform-content 4-7                — the OVERLAP of home and quiz, so it sits under the gap
+  //   vmcp-db 11-12                       — the middle two of vmcp's four: centred and narrower,
+  //                                         leaving column 10 and column 13 free as LANES
+  //
+  // Those two lanes are the point. fvt-traffic rises up column 10 into the gateway; the MCP-over-SSE
+  // line descends column 13 to rs-mcp-server. One line either side of the database, each a real flow,
+  // and both stay aligned at any width because they are columns rather than offsets.
+  //
+  // The mounts come free from the same idea: home occupies 2-5 and platform-content 4-7, so they
+  // SHARE column 4 — a straight line there joins them, and no elbow is needed, because with a grid
+  // fine enough to say what it means there is no offset left to bridge.
   //
   // Row map (keep in step with styles.css):
   //   1 callers        7 cloudflared    13 volumes

@@ -588,7 +588,7 @@ section { margin-bottom: 30px; }
    into: no elbow, because with a fine enough grid there is no offset to bridge.                  */
 .arch-grid {
   display: grid;
-  grid-template-columns: 40px repeat(6, 1fr);
+  grid-template-columns: 40px repeat(12, 1fr);
   column-gap: 10px;
   row-gap: 2px;
   grid-auto-rows: min-content;
@@ -602,20 +602,21 @@ section { margin-bottom: 30px; }
 .r13{grid-row:13} .r14{grid-row:14} .r15{grid-row:15} .r16{grid-row:16}
 .r17{grid-row:17} .r18{grid-row:18}
 
-/* The three services, each two columns wide. */
-.s1 { grid-column: 2 / 4; }   /* home, fvt-traffic */
-.s2 { grid-column: 4 / 6; }   /* quiz */
-.s3 { grid-column: 6 / 8; }   /* vmcp, its db, rs-mcp-server, the outbound APIs */
-.pc { grid-column: 3 / 5; }   /* platform-content — the overlap of home and quiz */
+/* The three services, each FOUR columns wide — enough sub-division to put a lane either side of the
+   database without inventing pixel offsets. */
+.s1 { grid-column: 2 / 6; }    /* home, fvt-traffic */
+.s2 { grid-column: 6 / 10; }   /* quiz */
+.s3 { grid-column: 10 / 14; }  /* vmcp, rs-mcp-server, the outbound APIs */
+.pc { grid-column: 4 / 8; }    /* platform-content — the overlap of home and quiz */
 
 /* The trunk spans every content column: everything passes through it. */
-.w { grid-column: 2 / 8; }
-.right { grid-column: 6 / 8; }
+.w { grid-column: 2 / 14; }
+.right { grid-column: 10 / 14; }
 
 /* "You" centres on the front door it enters, and its arrow is centred on the same span — which is
    what reconnects the two. The agent sits over its own half. */
-.b-you   { grid-column: 2 / 8; justify-self: center; width: 100%; max-width: 270px; }
-.b-agent { grid-column: 6 / 8; justify-self: center; width: 100%; max-width: 270px; }
+.b-you   { grid-column: 2 / 14; justify-self: center; width: 100%; max-width: 270px; }
+.b-agent { grid-column: 10 / 14; justify-self: center; width: 100%; max-width: 270px; }
 
 /* The tunnel arrows PIERCE the frames. Stopped at row 4 they died on the workstation's wall, as
    though the traffic never got inside. It does — it lands on cloudflared. */
@@ -668,22 +669,18 @@ section { margin-bottom: 30px; }
 .b-ext   { border-color: color-mix(in srgb, var(--muted) 50%, var(--line)); border-style: dashed; background: transparent; }
 .b-ext .arch-name { color: var(--muted); }
 
-/* The database is TRIMMED on its right, and the rail lives in the lane that trim opens up. The two
-   numbers are a pair: shrink the box, and the line that has to pass it moves inward by the same
-   logic. */
-.db { margin-right: 124px; }
+/* The database is the MIDDLE TWO of the gateway's four columns. Centred and narrower by
+   construction, not by a margin — and the two columns it leaves over, 10 and 13, are the lanes the
+   connectors run in. No trimming, no offsets, nothing to re-tune when the viewport changes. */
+.db { grid-column: 11 / 13; }
 
-/* fvt-traffic drops away from platform-content's border — the two boxes are on adjacent rows and
-   overlap in column 3, so with no margin they touch. */
+/* fvt-traffic drops away from platform-content's border — they sit on adjacent rows and overlap in
+   column 4, so with no margin they touch. */
 .b-infra.s1 { margin-top: 16px; }
 
-/* quiz is trimmed on its right to open a lane for fvt-traffic's elbow. The elbow ran in a 10px
-   gutter, which is not a gap so much as a coincidence. */
-.b-app.s2 { margin-right: 26px; }
-
-/* rs-mcp-server drops too — not for looks, but because the rail's arrowhead is drawn BELOW the
-   rail's end, which lands in this box's row. Both are grid children at z-index 1 and this one comes
-   later in the DOM, so it painted straight over the arrowhead. An arrowhead needs a gap to land in. */
+/* rs-mcp-server drops too — not for looks. The rail's arrowhead is drawn BELOW the rail's end, which
+   lands in this box's row; both are grid children at z-index 1 and this one comes later in the DOM,
+   so it painted straight over the head. An arrowhead needs a gap to land in. */
 .b-infra.s3 { margin-top: 18px; }
 
 .vault {
@@ -711,8 +708,8 @@ section { margin-bottom: 30px; }
   background: repeating-linear-gradient(180deg,
     color-mix(in srgb, var(--exp) 80%, transparent) 0 5px, transparent 5px 10px);
 }
-.m-home { grid-column: 3; }   /* shared by home (2-3) and platform-content (3-4) */
-.m-quiz { grid-column: 4; }   /* shared by platform-content (3-4) and quiz (4-5) */
+.m-home { grid-column: 4; }   /* shared by home (2-5) and platform-content (4-7) */
+.m-quiz { grid-column: 7; }   /* shared by platform-content (4-7) and quiz (6-9) */
 
 /* ── Arrows ──────────────────────────────────────────────────────────────────────────────────── */
 /* Bolder, and the dashes MARCH — the direction of flow is the one thing a static arrowhead states
@@ -759,14 +756,14 @@ section { margin-bottom: 30px; }
   .arch-arrow::before, .vm-rail, .fvt-elbow::before, .fvt-elbow::after { animation: none; }
 }
 
-/* The gateway's line to the tool server: straight down the right of column 5, past the database. */
+/* THE RIGHT LANE — column 13. The gateway's line to the tool server, running down beside the
+   database rather than through it. It is a column, not an offset, so it stays put at any width. */
 .vm-rail {
-  grid-column: 6 / 8;
+  grid-column: 13 / 14;
   grid-row: 12 / 15;
-  justify-self: end;
+  justify-self: center;
   align-self: stretch;
   width: 3px;
-  margin-right: 58px;
   background-image: repeating-linear-gradient(180deg,
     color-mix(in srgb, var(--muted) 75%, var(--ink)) 0 8px, transparent 8px 14px);
   background-size: 100% 14px;
@@ -780,55 +777,53 @@ section { margin-bottom: 30px; }
   border-top-color: color-mix(in srgb, var(--muted) 75%, var(--ink));
 }
 .vm-rail-l {
-  /* Vertical, hugging the rail. Laid horizontally it had nowhere to go: to its left is the database
-     and to its right is the cluster's border, so it printed over one or the other. */
   position: absolute; top: 50%; left: 7px;
   transform: translateY(-50%);
   writing-mode: vertical-rl;
   white-space: nowrap; font-size: 10px; font-weight: 700; color: var(--muted);
 }
 
-/* fvt-traffic is the only thing here that talks UP the stack, so it gets an elbow that says so:
-   along the bottom, then up into the gateway's flank. Spanning columns 2→5 and rows 11→14 means the
-   corners land on real cells rather than on numbers I guessed. */
+/* THE LEFT LANE — column 10. fvt-traffic is the only thing here that talks UP the stack, so it comes
+   in under the gateway and rises into it.
+   The horizontal reaches back to fvt-traffic with `left: calc(-400% - 40px)`. That looks like a magic
+   number and is not: this element is exactly one column wide, so 100% IS a column — four columns and
+   four gutters back is precisely fvt-traffic's right edge, at any viewport width. */
 .fvt-elbow {
-  /* Rows 12→15, NOT 11→15. Starting at row 11 put the elbow's top inside vmcp's own band — and the
-     elbow paints at z-index 0 (it has to pass behind the boxes it runs alongside), so everything it
-     drew up there was covered by vmcp and simply vanished, arrowhead included. Starting a row lower
-     puts its top exactly at vmcp's bottom edge, in the gap, where it can be seen. */
-  grid-column: 2 / 6;
+  grid-column: 10 / 11;
   grid-row: 12 / 15;
   align-self: stretch;
   z-index: 0;
   pointer-events: none;
 }
-.fvt-elbow::before {                        /* along — leaving fvt's RIGHT EDGE, not its middle */
+.fvt-elbow::before {                        /* along, out to fvt-traffic */
   content: '';
-  position: absolute; bottom: 26px; left: 49%; right: -6px; height: 3px;
+  position: absolute; bottom: 26px; left: calc(-400% - 40px); right: 50%; height: 3px;
   background-image: repeating-linear-gradient(90deg, var(--slate) 0 8px, transparent 8px 14px);
   background-size: 14px 100%;
   animation: fvt-along .9s linear infinite;
 }
-.fvt-elbow::after {                         /* then up */
+.fvt-elbow::after {                         /* then up, stopping under vmcp */
   content: '';
-  position: absolute; right: -7px; bottom: 26px; top: 30px; width: 3px;
+  position: absolute; left: 50%; transform: translateX(-50%);
+  top: 6px; bottom: 26px; width: 3px;
   background-image: repeating-linear-gradient(180deg, var(--slate) 0 8px, transparent 8px 14px);
   background-size: 100% 14px;
   animation: fvt-up .9s linear infinite;
 }
-/* It marches the way the traffic goes: rightwards along the bottom, then UP into the gateway. Static
-   dashes here read as one more dashed border, of which this picture already has several. */
+/* It marches the way the traffic goes: rightwards along the bottom, then UP into the gateway. */
 @keyframes fvt-along { to { background-position-x: 14px; } }
 @keyframes fvt-up    { to { background-position-y: -14px; } }
+
 .fvt-head {                                 /* up, into vmcp's underside */
-  position: absolute; top: -2px; right: -10px;
+  position: absolute; left: 50%; top: -2px;
+  transform: translateX(-50%);
   border: 8px solid transparent; border-top: 0;
   border-bottom-color: var(--slate);
 }
 
 /* ── Enclosures ──────────────────────────────────────────────────────────────────────────────── */
 .arch-frame {
-  grid-column: 1 / 8;
+  grid-column: 1 / 14;
   z-index: 0;
   pointer-events: none;
   border-radius: 16px;
@@ -844,7 +839,7 @@ section { margin-bottom: 30px; }
 
 /* Tags are SIBLINGS of the frames — a child of a z-index:0 frame cannot paint above the boxes. */
 .arch-tag {
-  grid-column: 1 / 5;
+  grid-column: 1 / 8;
   justify-self: start; align-self: center;
   z-index: 2;
   padding: 3px 11px; border-radius: 999px;
@@ -904,7 +899,7 @@ section { margin-bottom: 30px; }
   .b-vol.pc     { grid-row: 15; }   /* platform-content */
   .b-app.s3     { grid-row: 16; }   /* vmcp */
   .a-user.short { grid-row: 17; }   /* SQL */
-  .b-vol.db     { grid-row: 18; margin-right: 0; }
+  .b-vol.db     { grid-row: 18; }
   .vault        { grid-row: 19; align-self: auto; padding: 9px 11px; }
   .b-infra.s3   { grid-row: 20; }   /* rs-mcp-server */
   .b-infra.s1   { grid-row: 21; }   /* fvt-traffic */
