@@ -59,10 +59,13 @@
    past ~95 characters the eye loses its place on the return sweep. So the bio holds a measure and
    centres, which keeps its edges in line with the contact row beneath rather than tucking it inside
    something wider. Both are centred; they read as siblings. */
-.mast-bio { color: var(--ink); font-size: 16.5px; line-height: 1.55; margin: 14px auto 0; max-width: 900px; }
+.mast-bio { color: var(--ink); font-size: 16.5px; line-height: 1.55; margin: 14px auto 0; max-width: 1020px; }
 /* The closer sits on its own line — it is the turn from "who I am" to "and here is the thing
    itself", so it gets the weight of a separate statement rather than trailing the paragraph. */
-.mast-bio.coda { margin: 10px auto 16px; font-weight: 650; max-width: 900px; }
+/* Wider than the paragraph above it needs to be, on purpose: at 900px this line broke as
+   "…running right / here." — one word alone on a line, which reads as a mistake. The extra room lets
+   it close on a full line. */
+.mast-bio.coda { margin: 10px auto 16px; font-weight: 650; max-width: 1020px; }
 
 /* Contact: each link shows its own value (handle / address) beside an icon, not a category name. */
 .contact { display: flex; flex-wrap: wrap; justify-content: center; gap: 7px; }
@@ -138,7 +141,19 @@ section { margin-bottom: 30px; }
 @media (prefers-reduced-motion: reduce) {
   .feat, .feat:hover, .exp, .exp:hover { transition: none; transform: none; }
 }
-.feat-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.feat-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+
+/* Every status badge — live, work-in-progress, archived, featured — sits in the SAME corner of the
+   thing it describes: top-right, in one group. They used to be scattered (live top-right of a card,
+   its tag on a line of its own below it, and all three trailing the name inline in the list rows),
+   which meant the reader had three places to look for one kind of information.
+   margin-left:auto is what pins the group right, whatever sits to its left. */
+.badges {
+  display: inline-flex; align-items: center; gap: 8px; flex: none;
+  margin-left: auto; white-space: nowrap;
+}
+/* Inside the group a tag is just another badge: no self-alignment, no top margin of its own. */
+.badges .tag { margin-top: 0; align-self: center; }
 .feat h3 { margin: 0; font-size: 18px; font-weight: 750; }
 .tech { color: var(--muted); font-size: 12px; font-weight: 650; margin-top: 2px; }
 .feat-blurb { color: var(--muted); font-size: 14.5px; margin: 10px 0 14px; flex: 1; }

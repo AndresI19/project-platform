@@ -50,6 +50,23 @@ export function liveBadge(p: Project): string {
   return `<span class="live checking" data-live="${slug(p.name)}"><span class="dot"></span><span class="lt">checking…</span></span>`;
 }
 
+/**
+ * The status badges of an entry, as one right-aligned group.
+ *
+ * Every badge answers the same kind of question — is it live, is it finished, is it featured — so
+ * they all belong in the same corner of whatever they describe. They used to be scattered: `live`
+ * sat top-right of a featured card while its `work in progress` tag sat on a line of its own
+ * underneath, and in the list rows all three trailed the project name inline. Same information,
+ * three different places to look for it.
+ *
+ * `featured` is only meaningful in the list (the banner IS the featured set), so the banner cards
+ * pass it over.
+ */
+function badges(...chips: string[]): string {
+  const shown = chips.filter(Boolean);
+  return shown.length ? `<span class="badges">${shown.join('')}</span>` : '';
+}
+
 /** Render a link as a button. `data-resolve-*` marks the ones whose href is fixed up at runtime. */
 export function btn(l: Link, cls = 'btn'): string {
   const res = l.resolve ? ` data-resolve="${esc(l.resolve.from)}" data-slug="${esc(l.resolve.slug)}"` : '';
@@ -62,10 +79,9 @@ export function featCard(p: Project): string {
   return `<article class="feat lux${p.diagram === 'docker' ? ' wide' : ''}">
     <div class="feat-top">
       <h3>${esc(p.name)}</h3>
-      ${liveBadge(p)}
+      ${badges(tagChip(p), liveBadge(p))}
     </div>
     <div class="tech">${esc(p.tech)}</div>
-    ${tagChip(p)}
     <p class="feat-blurb">${esc(p.blurb)}</p>
     ${media(p)}
     ${p.links.length ? `<div class="feat-actions">${p.links.map((l) => btn(l)).join('')}</div>` : ''}
@@ -83,7 +99,7 @@ export function memberPanels(members: Project[], linkCls: string): string {
         <div class="member-head">
           <span class="member-name">${esc(m.name)}</span>
           <span class="tech-inline">${esc(m.tech)}</span>
-          ${liveBadge(m)}
+          ${badges(liveBadge(m))}
         </div>
         <p class="member-blurb">${esc(m.blurb)}</p>
         <div class="member-actions">${m.links.map((l) => btn(l, linkCls)).join('')}</div>
@@ -99,7 +115,7 @@ function groupBody(g: Group, linkCls: string, extra: string): string {
   return `<div class="proj-head">
       <span class="proj-name">${esc(g.name)}</span>
       <span class="grouped">${g.members.length} repos</span>
-      ${extra}
+      ${badges(extra)}
     </div>
     <p class="proj-blurb">${esc(g.blurb)}</p>
     <div class="members">${memberPanels(g.members, linkCls)}</div>`;
@@ -133,9 +149,7 @@ export function projRow(p: Project): string {
       <div class="proj-head">
         <span class="proj-name">${esc(p.name)}</span>
         <span class="tech-inline">${esc(p.tech)}</span>
-        ${featuredChip(p)}
-        ${tagChip(p)}
-        ${liveBadge(p)}
+        ${badges(featuredChip(p), tagChip(p), liveBadge(p))}
       </div>
       <p class="proj-blurb">${esc(p.blurb)}</p>
       <div class="proj-links">${p.links.map((l) => btn(l, 'chip')).join('')}</div>
