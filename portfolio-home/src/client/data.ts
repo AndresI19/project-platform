@@ -115,6 +115,9 @@ export interface Group {
   featured?: boolean;
   /** A logo/wordmark identifying the group at a glance, drawn on a plate above the members. */
   logo?: string;
+  /** A drawn schematic, for a group whose identity is better shown than logo'd. Mutually useful
+   *  with `logo`; a group can have either. */
+  diagram?: Project['diagram'];
   members: Project[];
 }
 
@@ -128,16 +131,49 @@ export const ENTRIES: Entry[] = [
     // First, and featured: it is the page you are on, and the source of truth for @platform/ui —
     // the design system every other front end here builds from. It used to sit unfeatured near the
     // bottom, which undersold the one project that literally renders everything above it.
-    name: 'portfolio-home',
+    // A monorepo, so a group: the page you are on and the identity service behind it live in one
+    // repository because they version together — the home page renders identities the auth service
+    // issues. First and featured, because it is the foundation everything else here is built on.
+    name: 'project-platform',
     date: '2026-07-13',
     featured: true,
-    tech: 'Vanilla TS · Vite · Express',
-    // Reaching this page at all means the server answered, so its own health probe is honest.
-    live: { type: 'health', url: '/api/health' },
     blurb:
-      "You're looking at it. Vanilla TypeScript rendered from one data file, an Express server behind the platform's reverse proxy — and the home of @platform/ui, the design tokens and shared server middleware this site and the quiz both build from.",
+      'The platform monorepo: the home page you are on, and the identity service behind it. Two subprojects, one repository — because they are two halves of one platform that version together.',
     diagram: 'platformui',
-    links: [{ label: 'Repository', href: `${GITHUB_ORG}/portfolio-home`, external: true }],
+    members: [
+      {
+        name: 'portfolio-home',
+        date: '2026-07-13',
+        tech: 'Vanilla TS · Vite · Express',
+        // Reaching this page at all means the server answered, so its own health probe is honest.
+        live: { type: 'health', url: '/api/health' },
+        blurb:
+          "You're looking at it. Rendered from one data file, behind the platform's reverse proxy — and the home of @platform/ui, the design tokens and shared server middleware this site and the quiz both build from.",
+        links: [
+          {
+            label: 'Repository →',
+            href: `${GITHUB_ORG}/project-platform/tree/feat/auth-experiment/portfolio-home`,
+            primary: true,
+            external: true,
+          },
+        ],
+      },
+      {
+        name: 'platform-auth',
+        date: '2026-07-13',
+        tech: 'TS · Express · Postgres · jose',
+        blurb:
+          'The identity service. A username you pick, a 7-character code the server issues, and an RS256-signed token — no passwords, and nothing sensitive stored behind the code.',
+        links: [
+          {
+            label: 'Repository →',
+            href: `${GITHUB_ORG}/project-platform/tree/feat/auth-experiment/platform-auth`,
+            primary: true,
+            external: true,
+          },
+        ],
+      },
+    ],
   },
   {
     name: 'Cloud Developer Quiz',

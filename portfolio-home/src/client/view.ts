@@ -130,6 +130,8 @@ export function featGroupCard(g: Group): string {
   // so the blurb still leads and the mark reads as a mark.
   const logo = g.logo
     ? `<div class="media logo"><img src="${esc(g.logo)}" alt="${esc(g.name)}" loading="lazy"></div>`
+    : g.diagram
+    ? `<div class="media diagram ${esc(g.diagram)}">${DIAGRAMS[g.diagram]}</div>`
     : '';
   return `<article class="feat wide lux">
     <div class="feat-top">
