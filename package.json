@@ -9,17 +9,23 @@
     "build": "vite build",
     "start": "cross-env NODE_ENV=production tsx src/server/index.ts",
     "serve": "npm run build && npm start",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "publish:ui": "git subtree push --prefix packages/platform-ui platform-ui main"
   },
   "dependencies": {
+    "@platform/ui": "file:packages/platform-ui",
     "cross-env": "^7.0.3",
     "express": "^4.21.2"
   },
   "devDependencies": {
     "@types/express": "^4.17.21",
     "@types/node": "^22.10.5",
+    "happy-dom": "^15.11.7",
     "tsx": "^4.19.2",
     "typescript": "^5.7.3",
-    "vite": "^5.4.11"
+    "vite": "^5.4.11",
+    "vitest": "^2.1.9"
   }
 }

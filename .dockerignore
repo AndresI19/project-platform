@@ -1,4 +1,18 @@
-node_modules
-dist
-.git
+# Keep the build context small. NOTE: packages/ is deliberately NOT ignored — it holds @platform/ui,
+# which package.json resolves `file:packages/platform-ui` against, so `npm ci` fails without it.
+node_modules/
+packages/*/node_modules/
+dist/
+coverage/
+.git/
+.github/
+.vite/
+
+# Not needed at runtime
+*.md
+.env
+.env.*
 *.log
+.DS_Store
+.idea/
+.vscode/

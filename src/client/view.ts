@@ -1,0 +1,216 @@
+// Every builder that turns data into HTML. Pure: data in, string out — no DOM, no fetch, no state.
+// That is the whole reason it is its own module. These were unreachable to a test before, because
+// main.ts rendered the page and started a poll as an import side effect.
+import {
+  BIO, BIO_CODA, CONTACTS, ENTRIES, EXPERIENCE, NAME, TITLE, isGroup,
+  type Contact, type Entry, type Experience, type Group, type Link, type Project,
+} from './data.js';
+import { DIAGRAMS } from './diagrams.js';
+import { DOC_ICON, ICONS, STAR_ICON, TAG_ICONS } from './icons.js';
+import { esc, fmtDate, slug, tab } from './util.js';
+
+/** A pill: a mark and a word. tagChip and featuredChip emitted this same markup independently. */
+const chip = (cls: string, icon: string, label: string): string =>
+  `<span class="tag ${cls}">${icon}<span>${esc(label)}</span></span>`;
+
+/** Contact chip: the icon plus the value itself (the handle/address), not a category name. */
+export function contactChip(c: Contact): string {
+  // The icon name doubles as the colour class (.cx.github, .cx.resume, …).
+  return `<a class="cx ${esc(c.icon)}" href="${esc(c.url)}" title="${esc(c.title)}" aria-label="${esc(c.title)}"${tab(c.external)}>
+    <span class="cx-ico">${ICONS[c.icon]}</span><span class="cx-val">${esc(c.value)}</span>
+  </a>`;
+}
+
+/** Status badge — how finished a project is (work-in-progress, archived). */
+export function tagChip(p: Project): string {
+  return p.tag ? chip(p.tag.icon, TAG_ICONS[p.tag.icon], p.tag.label) : '';
+}
+
+/** "Featured" badge for the list rows, marking the entries that also lead the banner above — so a
+    reader scanning only the list can still tell which ones I'd point at first. */
+export function featuredChip(e: Entry): string {
+  return e.featured ? chip('featured', STAR_ICON, 'Featured') : '';
+}
+
+/** The artwork that fills a featured card's empty space — image(s), or a drawn schematic. */
+export function media(p: Project): string {
+  if (p.images) {
+    return `<div class="media stack">
+      ${p.images.map((src) => `<img src="${esc(src)}" alt="" loading="lazy">`).join('')}
+    </div>`;
+  }
+  if (p.image) return `<div class="media"><img src="${esc(p.image)}" alt="" loading="lazy"></div>`;
+  if (p.diagram) return `<div class="media diagram ${esc(p.diagram)}">${DIAGRAMS[p.diagram]}</div>`;
+  return '';
+}
+
+/** Live/offline pill (dot + "live") for projects with a liveliness probe; starts as "checking". */
+export function liveBadge(p: Project): string {
+  if (!p.live) return '';
+  return `<span class="live checking" data-live="${slug(p.name)}"><span class="dot"></span><span class="lt">checking…</span></span>`;
+}
+
+/** Render a link as a button. `data-resolve-*` marks the ones whose href is fixed up at runtime. */
+export function btn(l: Link, cls = 'btn'): string {
+  const res = l.resolve ? ` data-resolve="${esc(l.resolve.from)}" data-slug="${esc(l.resolve.slug)}"` : '';
+  return `<a class="${cls} ${l.primary ? 'primary' : 'ghost'}" href="${esc(l.href)}"${tab(l.external)}${res}>${esc(l.label)}</a>`;
+}
+
+/** Featured card for a single project. The `docker ps` table needs the full width to avoid
+    wrapping its columns, so a card carrying it gets the same width as a group card. */
+export function featCard(p: Project): string {
+  return `<article class="feat lux${p.diagram === 'docker' ? ' wide' : ''}">
+    <div class="feat-top">
+      <h3>${esc(p.name)}</h3>
+      ${liveBadge(p)}
+    </div>
+    <div class="tech">${esc(p.tech)}</div>
+    ${tagChip(p)}
+    <p class="feat-blurb">${esc(p.blurb)}</p>
+    ${media(p)}
+    ${p.links.length ? `<div class="feat-actions">${p.links.map((l) => btn(l)).join('')}</div>` : ''}
+  </article>`;
+}
+
+/** The member sub-panels of a group. The banner card and the list row draw these identically and
+    differ only in how their links are styled — a button in the card, a chip in the row — so the
+    panel itself is defined once. It was previously copied verbatim into both, which meant the two
+    could quietly disagree about what a member looks like. */
+export function memberPanels(members: Project[], linkCls: string): string {
+  return members
+    .map(
+      (m) => `<div class="member">
+        <div class="member-head">
+          <span class="member-name">${esc(m.name)}</span>
+          <span class="tech-inline">${esc(m.tech)}</span>
+          ${liveBadge(m)}
+        </div>
+        <p class="member-blurb">${esc(m.blurb)}</p>
+        <div class="member-actions">${m.links.map((l) => btn(l, linkCls)).join('')}</div>
+      </div>`,
+    )
+    .join('');
+}
+
+/** The head and body of a group — its name, its repo count, its blurb, and its members. The banner
+    card and the list row wrap this in different elements but say the same thing inside; they used to
+    build it separately, which is the same drift memberPanels() was extracted to prevent, one level up. */
+function groupBody(g: Group, linkCls: string, extra: string): string {
+  return `<div class="proj-head">
+      <span class="proj-name">${esc(g.name)}</span>
+      <span class="grouped">${g.members.length} repos</span>
+      ${extra}
+    </div>
+    <p class="proj-blurb">${esc(g.blurb)}</p>
+    <div class="members">${memberPanels(g.members, linkCls)}</div>`;
+}
+
+/** Featured card for a group: one card, one shared blurb, then each member as a sub-panel —
+    so a reader sees at a glance that the members are parts of a single project. */
+export function featGroupCard(g: Group): string {
+  const members = memberPanels(g.members, 'btn sm');
+  // The wordmark is flavour, not a headline — it sits under the description rather than above it,
+  // so the blurb still leads and the mark reads as a mark.
+  const logo = g.logo
+    ? `<div class="media logo"><img src="${esc(g.logo)}" alt="${esc(g.name)}" loading="lazy"></div>`
+    : '';
+  return `<article class="feat wide lux">
+    <div class="feat-top">
+      <h3>${esc(g.name)}</h3>
+      <span class="grouped">${g.members.length} repos</span>
+    </div>
+    <p class="feat-blurb">${esc(g.blurb)}</p>
+    ${logo}
+    <div class="members">${members}</div>
+  </article>`;
+}
+
+/** One row in the detailed all-projects list. */
+export function projRow(p: Project): string {
+  return `<li class="lux">
+    <time>${esc(fmtDate(p.date))}</time>
+    <div class="proj-body">
+      <div class="proj-head">
+        <span class="proj-name">${esc(p.name)}</span>
+        <span class="tech-inline">${esc(p.tech)}</span>
+        ${featuredChip(p)}
+        ${tagChip(p)}
+        ${liveBadge(p)}
+      </div>
+      <p class="proj-blurb">${esc(p.blurb)}</p>
+      <div class="proj-links">${p.links.map((l) => btn(l, 'chip')).join('')}</div>
+    </div>
+  </li>`;
+}
+
+/** A group occupies a single row, with its members nested inside it. */
+export function groupRow(g: Group): string {
+  return `<li class="lux group-row">
+    <time>${esc(fmtDate(g.date))}</time>
+    <div class="proj-body">
+      ${groupBody(g, 'chip', featuredChip(g))}
+    </div>
+  </li>`;
+}
+
+export function expCard(e: Experience): string {
+  // Raised, filled bubbles rather than plain underlined text: these are shipped IBM products a
+  // reader can go read about, which is the strongest evidence on the card — it should not look
+  // like a footnote.
+  const links = e.links
+    .map(
+      (l) => `<a class="exp-fab" href="${esc(l.url)}" target="_blank" rel="noopener">
+        <span class="fab-ico">${DOC_ICON}</span><span>${esc(l.label)}</span><span class="fab-out">↗</span>
+      </a>`,
+    )
+    .join('');
+  return `<article class="exp">
+    <div class="exp-head">
+      <span class="exp-role">${esc(e.role)}</span>
+      <span class="exp-org">${esc(e.org)}</span>
+      <time class="exp-dates">${esc(e.dates)}</time>
+    </div>
+    <p class="exp-blurb">${esc(e.blurb)}</p>
+    <div class="exp-links">${links}</div>
+  </article>`;
+}
+
+/** The whole page, as a string. Pure — the caller is what puts it in the document. */
+export function pageHtml(version: string): string {
+  return `
+    <div class="wrap">
+      <header class="masthead">
+        <h1>${esc(NAME)}</h1>
+        <div class="mast-title">${esc(TITLE)}</div>
+        <p class="mast-bio">${esc(BIO)}</p>
+        <p class="mast-bio coda">${esc(BIO_CODA)}</p>
+        <nav class="contact">${CONTACTS.map(contactChip).join('')}</nav>
+      </header>
+
+      <section>
+        <div class="lab">Featured</div>
+        <div class="feat-banner">
+          ${ENTRIES.filter((e) => e.featured)
+            .map((e) => (isGroup(e) ? featGroupCard(e) : featCard(e)))
+            .join('')}
+        </div>
+      </section>
+
+      <section>
+        <div class="lab exp-lab">Professional experience</div>
+        <div class="exp-list">${EXPERIENCE.map(expCard).join('')}</div>
+      </section>
+
+      <section>
+        <div class="lab proj-lab">All projects</div>
+        <ol class="projects">
+          ${ENTRIES.map((e) => (isGroup(e) ? groupRow(e) : projRow(e))).join('')}
+        </ol>
+      </section>
+
+      <footer class="foot">
+        Built with Vanilla TypeScript + Vite · served behind an nginx reverse proxy.
+      </footer>
+    </div>
+    <div class="vertag" title="Version, from package.json">v${esc(version)}</div>`;
+}

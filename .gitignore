@@ -1,4 +1,23 @@
+# Dependencies
 node_modules/
+packages/*/node_modules/
+
+# Build output
 dist/
-*.log
+
+# Test / tool caches
+coverage/
+.vite/
+*.tsbuildinfo
+
+# Local environment. DISCORD_WEBHOOK_URL is a real credential — anyone holding that URL can post to
+# the channel — so a stray .env must never be committable.
+.env
+.env.*
+!.env.example
+
+# Editor / OS noise
 .DS_Store
+.idea/
+.vscode/
+*.log

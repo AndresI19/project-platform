@@ -1,54 +1,102 @@
-/* Theme tokens copied verbatim from the quiz (flashcards-app game.css) so the two sites match. */
+/* Surfaces, text, lines, the navy accent and the page wash all come from @platform/ui — imported in
+   main.ts, ahead of this file. What is left here is what only the home page has an opinion about.
+   (--good and --gold used to be declared here too; they were inherited by the original copy-paste
+   and never used by a single rule, so they are gone.) */
 :root {
-  --bg: #eceef5; --panel: #ffffff; --panel-2: #f2f4fb; --ink: #161922; --muted: #5c6576;
-  --line: #e5e8f1; --accent: #5a67f2; --accent2: #1fb6d0; --accent-ink: #fff; --chip: #f2f4fb;
-  --good: #12a150; --gold: #f5b301; --live: #e11d48;
-  --shadow: 0 1px 2px rgba(22, 30, 60, .025), 0 6px 18px rgba(22, 30, 60, .035);
-  --shadow-lg: 0 4px 14px rgba(22, 30, 60, .04), 0 14px 40px rgba(22, 30, 60, .055);
+  /* The content column. A fixed 1080px left a 1920px monitor 44% empty; capping at 1440 puts the
+     page at ~75% of a common desktop. The 92vw term is what stops it touching the edges on anything
+     narrower — on a 1440px laptop the column becomes 1325px rather than pinning to the frame. */
+  --wrap-max: min(1440px, 92vw);
+  --wrap-pad: 0 14px 96px;
+
+  --live: #e11d48;
+  /* The old indigo, kept as its own token: the platform is navy now, but the greeting dialog is the
+     one surface that should not look like the rest of the page — it is an interruption, and it reads
+     as one by being a different blue from everything behind it. */
+  --indigo: #5a67f2; --indigo-2: #7d87ff;
+  /* Per-destination brand colours for the contact chips, plus one hue per section so the page reads
+     as three distinct kinds of thing: navy (--accent) for featured work, green (--exp) for
+     employment history, amber (--proj) for the full project list. Each is muted rather than
+     saturated — they sit stacked down one page, so they have to be restful, not loud.
+     --wip is a separate orange: the work-in-progress badge lives *inside* the amber section, so it
+     cannot also be amber or it would vanish into its own background. */
+  --brand-gh: #24292f; --brand-li: #0a66c2; --brand-em: #0d9488;
+  --exp: #2f9e6a; --exp-2: #1e7a51; --slate: #64748b;
+  --proj: #c08a12; --proj-2: #8a610a;
+  --wip: #e2660c;
 }
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #0c0e15; --panel: #161a24; --panel-2: #1e2330; --ink: #edf0f7; --muted: #98a2b6;
-    --line: #28303f; --accent: #818cff; --accent2: #3ad4e6; --chip: #1e2330; --live: #ff5d78;
-    --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 8px 22px rgba(0, 0, 0, .2);
-    --shadow-lg: 0 5px 18px rgba(0, 0, 0, .24), 0 18px 46px rgba(0, 0, 0, .26);
+    --live: #ff5d78;
+    --indigo: #818cff; --indigo-2: #a3abff;
+    /* Brand marks need lifting off the dark panels — GitHub's near-black would vanish. */
+    --brand-gh: #e6edf3; --brand-li: #5aa9f0; --brand-em: #2dd4bf;
+    --exp: #4cc38a; --exp-2: #7fdcaf; --slate: #94a3b8;
+    --proj: #e8b23c; --proj-2: #f2cd77;
+    --wip: #ff8c42;
   }
 }
 
-* { box-sizing: border-box; }
-html { scroll-behavior: smooth; }
-body {
-  margin: 0; color: var(--ink); line-height: 1.5; -webkit-font-smoothing: antialiased; min-height: 100vh;
-  font-family: -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  background:
-    radial-gradient(1100px 560px at 12% -8%, color-mix(in srgb, var(--accent) 13%, transparent), transparent 58%),
-    radial-gradient(900px 520px at 104% 4%, color-mix(in srgb, var(--accent2) 12%, transparent), transparent 54%),
-    radial-gradient(760px 700px at 50% 120%, color-mix(in srgb, var(--accent) 7%, transparent), transparent 60%),
-    var(--bg);
-  background-attachment: fixed;
-}
-.wrap { max-width: 860px; margin: 0 auto; padding: 0 22px 96px; }
-
-/* Masthead banner that hangs from the top edge — mirrors the quiz's .masthead. */
+/* Masthead banner that hangs from the top edge — mirrors the quiz's .masthead. It spans the full
+   content column rather than an inset one, so the bio's edges line up with the project cards and
+   experience rows below instead of sitting tucked inside them. */
 .masthead {
-  position: relative; margin: 0 auto 26px; max-width: 640px; text-align: center;
+  position: relative; margin: 0 auto 26px; text-align: center;
   background: linear-gradient(180deg, var(--panel), var(--panel-2));
   border: 1px solid var(--line); border-top: none; border-radius: 0 0 22px 22px;
   padding: 26px 34px 22px; box-shadow: 0 10px 26px rgba(22, 30, 60, .12);
 }
+/* The masthead type is sized for the column it now sits in. When the content column was 1080px these
+   were in proportion; at 1440px they read as small print in a large frame. */
 .masthead h1 {
-  margin: 0 0 4px; font-size: 30px; letter-spacing: -.6px; font-weight: 820;
+  margin: 0 0 4px; font-size: 34px; letter-spacing: -.7px; font-weight: 820;
   background: linear-gradient(96deg, var(--accent), var(--accent2));
   -webkit-background-clip: text; background-clip: text; color: transparent;
 }
-.mast-title { color: var(--muted); font-size: 14px; font-weight: 650; }
-.mast-bio { color: var(--ink); font-size: 14.5px; margin: 12px auto 14px; max-width: 520px; }
+.mast-title { color: var(--muted); font-size: 15.5px; font-weight: 650; }
+/* The masthead panel now runs to the full width of the column, but the PROSE does not follow it out
+   there: past ~80 characters a line is measurably harder to read, because the eye loses its place on
+   the return sweep. So the bio holds a measure and centres — which lines it up with the contact row
+   below it rather than tucking it inside something wider. Both are centred; they read as siblings. */
+/* Wider and larger than the body text elsewhere: this is the one paragraph anyone actually reads, and
+   at 14.5px/80ch it filled 645px of a 1412px masthead — small print in a big frame. 900px is still
+   inside the comfortable measure at this size (~95 characters), and it is centred, so its edges stay
+   in line with the contact row beneath rather than tucking inside it. */
+.mast-bio { color: var(--ink); font-size: 16.5px; line-height: 1.55; margin: 14px auto 0; max-width: 900px; }
+/* The closer sits on its own line — it is the turn from "who I am" to "and here is the thing
+   itself", so it gets the weight of a separate statement rather than trailing the paragraph. */
+.mast-bio.coda { margin: 10px auto 16px; font-weight: 650; max-width: 900px; }
 
-/* Contact: plain hyperlinked text (not buttons), middot-separated. */
-.contact { font-size: 13.5px; }
-.contact a { color: var(--accent); text-decoration: none; font-weight: 600; }
-.contact a:hover { text-decoration: underline; }
-.contact a:not(:last-child)::after { content: "·"; color: var(--muted); margin: 0 8px; text-decoration: none; display: inline-block; }
+/* Contact: each link shows its own value (handle / address) beside an icon, not a category name. */
+.contact { display: flex; flex-wrap: wrap; justify-content: center; gap: 7px; }
+.cx {
+  display: inline-flex; align-items: center; gap: 6px; text-decoration: none;
+  color: var(--muted); background: var(--panel-2); border: 1px solid var(--line);
+  border-radius: 999px; padding: 5px 11px 5px 9px; font-size: 12.5px; font-weight: 650;
+  transition: color .13s, border-color .13s, background .13s, transform .13s cubic-bezier(.2, .8, .2, 1);
+}
+.cx:hover { transform: translateY(-1px); }
+/* Icons inherit the link colour via currentColor, so they always match their chip. */
+.cx-ico { display: inline-flex; color: inherit; }
+.cx-ico svg { width: 14px; height: 14px; fill: currentColor; display: block; }
+
+/* Each contact carries its own brand colour, so the row reads as four distinct destinations
+   rather than four identical grey pills. The résumé is the one we most want clicked, so it is
+   the only *filled* chip — it outranks the others by weight, not just by hue. */
+.cx.github { color: var(--brand-gh); border-color: color-mix(in srgb, var(--brand-gh) 30%, var(--line)); background: color-mix(in srgb, var(--brand-gh) 7%, var(--panel-2)); }
+.cx.github:hover { border-color: var(--brand-gh); background: color-mix(in srgb, var(--brand-gh) 14%, var(--panel-2)); }
+.cx.email { color: var(--brand-em); border-color: color-mix(in srgb, var(--brand-em) 34%, var(--line)); background: color-mix(in srgb, var(--brand-em) 8%, var(--panel-2)); }
+.cx.email:hover { border-color: var(--brand-em); background: color-mix(in srgb, var(--brand-em) 16%, var(--panel-2)); }
+.cx.linkedin { color: var(--brand-li); border-color: color-mix(in srgb, var(--brand-li) 34%, var(--line)); background: color-mix(in srgb, var(--brand-li) 8%, var(--panel-2)); }
+.cx.linkedin:hover { border-color: var(--brand-li); background: color-mix(in srgb, var(--brand-li) 16%, var(--panel-2)); }
+.cx.resume {
+  color: var(--accent-ink); border-color: transparent; font-weight: 750;
+  background: linear-gradient(96deg, var(--accent), var(--accent2));
+  box-shadow: 0 2px 10px color-mix(in srgb, var(--accent) 32%, transparent);
+}
+.cx.resume:hover { box-shadow: 0 5px 16px color-mix(in srgb, var(--accent) 42%, transparent); }
+/* Addresses can be long — let them shrink on narrow screens instead of overflowing the masthead. */
+.cx-val { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 46vw; }
 
 /* Section label — reuses the quiz's .lab style. */
 .lab {
@@ -74,10 +122,24 @@ section { margin-bottom: 30px; }
 }
 .feat-banner::-webkit-scrollbar { height: 7px; }
 .feat-banner::-webkit-scrollbar-thumb { background: var(--line); border-radius: 99px; }
+/* Featured cards borrow what makes the experience rows look good: a coloured left rail, a wash of
+   the section's own hue, and a lift on hover. Before, the projects — the things the page exists to
+   show — were flatter than the employment history sitting under them. The rail is indigo here and
+   green there, so the two sections still read as different kinds of thing. */
 .feat {
   flex: none; width: 290px; scroll-snap-align: start; overflow: hidden;
-  background: var(--panel); border: 1px solid var(--line); border-radius: 16px;
-  box-shadow: var(--shadow); padding: 16px 16px 15px; display: flex; flex-direction: column;
+  background: color-mix(in srgb, var(--accent) 5%, var(--panel));
+  border: 1px solid color-mix(in srgb, var(--accent) 22%, var(--line));
+  border-left: 3px solid var(--accent);
+  border-radius: 16px; box-shadow: var(--shadow); padding: 16px 16px 15px;
+  display: flex; flex-direction: column;
+  transition: transform .16s cubic-bezier(.2, .8, .2, 1), box-shadow .16s, border-color .16s;
+}
+.feat:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
+.exp { transition: transform .16s cubic-bezier(.2, .8, .2, 1), box-shadow .16s; }
+.exp:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
+@media (prefers-reduced-motion: reduce) {
+  .feat, .feat:hover, .exp, .exp:hover { transition: none; transform: none; }
 }
 .feat-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .feat h3 { margin: 0; font-size: 16.5px; font-weight: 750; }
@@ -96,6 +158,162 @@ section { margin-bottom: 30px; }
 }
 .btn.ghost { color: var(--ink); border: 1px solid var(--line); background: var(--panel-2); }
 .btn.ghost:hover { border-color: var(--accent); color: var(--accent); }
+.btn.sm { font-size: 11.5px; padding: 6px 11px; border-radius: 9px; }
+
+/* Grouped entries — several repos that are one project, drawn inside a single card / row. The
+   group card is wider than a plain featured card because it stacks its members vertically. */
+.feat.wide { width: 380px; }
+/* Deliberately grey, not accented: "2 repos" is a count, not a status. Tinting it would put it in
+   the same visual class as the live/featured/WIP badges it sits beside, which all mean something. */
+.grouped {
+  flex: none; color: var(--slate);
+  background: color-mix(in srgb, var(--slate) 13%, var(--panel));
+  border: 1px solid color-mix(in srgb, var(--slate) 34%, var(--line));
+  border-radius: 999px; padding: 2px 8px; font-size: 10.5px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .4px;
+}
+.members { display: flex; flex-direction: column; gap: 8px; }
+/* The left accent rail is what signals "these belong to the entry above". */
+.member {
+  background: var(--panel-2); border: 1px solid var(--line);
+  border-left: 3px solid color-mix(in srgb, var(--accent) 55%, var(--line));
+  border-radius: 10px; padding: 10px 12px;
+}
+.member-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.member-name { font-size: 13.5px; font-weight: 720; }
+.member-blurb { color: var(--muted); font-size: 12.5px; margin: 5px 0 9px; }
+.member-actions { display: flex; flex-wrap: wrap; gap: 7px; }
+
+/* Card artwork — a GIF, or the inline schematic. Sits between the blurb and the actions, so it
+   takes up the slack in cards whose blurb is short. */
+.media { margin: 0 0 12px; border-radius: 10px; overflow: hidden; border: 1px solid var(--line); }
+.media img { display: block; width: 100%; height: 118px; object-fit: cover; }
+.media.diagram { background: var(--panel-2); padding: 8px 6px; display: flex; }
+
+/* Two graphics, two frames. Sharing one frame made them read as a single image with the garden
+   lying on top of the question — the screenshot carries its own rounded corners and drop shadow, so
+   butting the garden against it looked like an overlap. Each gets its own border and a real gap
+   instead; the wrapper itself is frameless so it does not draw a third box around them. */
+.media.stack {
+  display: flex; flex-direction: column; gap: 9px;
+  border: none; background: none; border-radius: 0; overflow: visible;
+}
+.media.stack img { border: 1px solid var(--line); border-radius: 10px; }
+/* The question is *contained*, not covered — a cropped question is an unreadable question, and the
+   point of this image is that a visitor can read "fill in" and see a real card. Auto height lets
+   the image set its own size so nothing is sliced off the edges. */
+.media.stack img:first-child { height: auto; object-fit: contain; background: #fbfbfe; }
+/* The garden keeps its original full 118px — the question sits above it rather than eating into it,
+   which is the whole reason the two are separately framed. */
+.media.stack img:last-child { height: 118px; object-fit: cover; }
+
+/* The wordmark just rests on the card — no plate, no border, no box. It is a logo, not a
+   screenshot, and framing it made it look like a piece of UI rather than a mark. Contained so it
+   is never cropped; its alpha channel means the card colour shows through in both themes. */
+.media.logo {
+  background: none; border: none; border-radius: 0;
+  padding: 2px 0; margin: 0 0 12px;
+}
+.media.logo img { height: 46px; object-fit: contain; }
+.dgm { width: 100%; height: auto; color: var(--muted); }
+.dgm-line path { fill: none; stroke: currentColor; stroke-width: 1.4; }
+.dgm-box rect { fill: var(--panel); stroke: var(--line); stroke-width: 1.4; }
+/* The gateway is the subject of the drawing, so it is the only box in the accent colour. */
+.dgm-box rect.hub {
+  fill: color-mix(in srgb, var(--accent) 12%, var(--panel));
+  stroke: var(--accent);
+}
+.dgm-t text {
+  fill: var(--ink); font-size: 10px; font-weight: 650; text-anchor: middle;
+  font-family: inherit; dominant-baseline: middle;
+}
+.dgm-t text.hub-t { fill: var(--accent); font-weight: 800; font-size: 13px; }
+.dgm-t text.sub { fill: var(--muted); font-size: 8px; font-weight: 600; }
+/* "You" is the one actor in the drawing, so it is deliberately unboxed — everything below it is
+   infrastructure. The edge labels carry the transport. */
+.dgm-t text.you { fill: var(--ink); font-size: 11px; font-weight: 800; }
+.dgm-t text.edge { fill: var(--muted); font-size: 7.5px; font-weight: 700; letter-spacing: .3px; }
+
+/* The `docker ps` mock — a terminal window with real chrome. Its palette is fixed dark in BOTH
+   themes: a terminal that turns white in light mode stops looking like a terminal. */
+.media.docker { background: none; padding: 0; border: none; }
+/* The terminal is a flex item of .media.diagram, and a flex item's default (flex: 0 1 auto) sizes
+   it to its *content* — so it collapsed to the intrinsic width of the `docker ps` table and pooled
+   every spare pixel against the right edge. Growing it to fill the card is what evens the gutters.
+   (The vMCP card never had this problem only because .dgm already sets width: 100%.) */
+.media.docker .term { flex: 1; min-width: 0; }
+.term {
+  --t-bg: #14161d; --t-bar: #1f2230; --t-ink: #e6e9f2; --t-dim: #7c86a0;
+  --t-green: #46d17f; --t-cyan: #43c9e0; --t-purple: #a78bfa;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 10.5px; border-radius: 10px; overflow: hidden;
+  border: 1px solid #2b3040; box-shadow: 0 6px 18px rgba(0, 0, 0, .28);
+}
+.term-bar {
+  display: flex; align-items: center; gap: 6px; background: var(--t-bar);
+  padding: 7px 10px; border-bottom: 1px solid #2b3040;
+}
+.tl { width: 9px; height: 9px; border-radius: 50%; flex: none; }
+.tl.r { background: #ff5f57; } .tl.y { background: #febc2e; } .tl.g { background: #28c840; }
+.term-title { margin-left: 6px; color: var(--t-dim); font-size: 9.5px; font-weight: 600; }
+.term-body { background: var(--t-bg); padding: 9px 11px 10px; }
+.term-cmd { color: var(--t-ink); margin-bottom: 8px; white-space: nowrap; }
+.term-cmd .p { color: var(--t-green); font-weight: 700; }
+.term-cmd .d { color: var(--t-cyan); }
+.term-cmd .c { color: var(--t-ink); font-weight: 700; }
+.term-cmd.last { margin: 8px 0 0; }
+/* A blinking block cursor on the trailing prompt — the detail that sells it as a live shell. */
+.cur {
+  display: inline-block; width: 6px; height: 12px; background: var(--t-purple);
+  vertical-align: -2px; animation: blink 1.1s step-end infinite;
+}
+@keyframes blink { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .cur { animation: none; } }
+
+.ps { width: 100%; border-collapse: collapse; }
+.ps th {
+  text-align: left; color: var(--t-dim); font-weight: 700; font-size: 9px; letter-spacing: .5px;
+  padding: 0 12px 5px 0; border-bottom: 1px solid #2b3040;
+}
+.ps td { padding: 3px 12px 3px 0; white-space: nowrap; }
+/* The trailing column's right padding would otherwise stack on top of .term-body's, leaving the
+   right gutter wider than the left. PORTS is the widest column, so it takes the slack instead. */
+.ps th:last-child, .ps td:last-child { padding-right: 0; width: 100%; }
+.ps tr:first-child td { padding-top: 6px; }
+.ps td.n { color: var(--t-ink); font-weight: 700; }
+.ps td.up { color: var(--t-green); font-weight: 700; }
+.ps td.up .dot {
+  display: inline-block; width: 5px; height: 5px; border-radius: 50%;
+  background: var(--t-green); margin-right: 5px; vertical-align: 1px;
+}
+.ps td.pt { color: var(--t-dim); }
+
+/* Status badges. Amber "work in progress" reads as caution; slate "archived" reads as inert —
+   the point is that a visitor can tell at a glance which is which without reading the word. */
+.tag {
+  display: inline-flex; align-items: center; gap: 5px; align-self: flex-start; margin-top: 7px;
+  border-radius: 999px; padding: 2px 9px 2px 7px;
+  font-size: 10.5px; font-weight: 750; letter-spacing: .2px; white-space: nowrap;
+}
+/* Orange, not amber: this badge sits inside the amber project list, so sharing its hue would make
+   the warning disappear into the row it is warning about. */
+.tag.wip {
+  color: var(--wip); background: color-mix(in srgb, var(--wip) 12%, var(--panel));
+  border: 1px solid color-mix(in srgb, var(--wip) 45%, var(--line));
+}
+.tag.archived {
+  color: var(--slate); background: color-mix(in srgb, var(--slate) 10%, var(--panel));
+  border: 1px solid color-mix(in srgb, var(--slate) 35%, var(--line));
+}
+/* Navy inside the amber list: it points back at the navy banner above, which is exactly what the
+   badge means — "this one is up there too". */
+.tag.featured {
+  color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, var(--panel));
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, var(--line));
+}
+.tag svg { width: 12px; height: 12px; display: block; }
+/* In a list row the tag sits inline with the name, so it needs no top margin. */
+.proj-head .tag { margin-top: 0; }
 
 /* Live/offline indicator: red dot + text when up; muted when offline/checking. */
 .live { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 750; letter-spacing: .2px; }
@@ -110,41 +328,191 @@ section { margin-bottom: 30px; }
   100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--live) 0%, transparent); }
 }
 
-/* Professional experience. */
+/* Professional experience — deliberately teal, where every project surface is indigo. Employment
+   history is a different kind of thing from a side project, and the colour says so before the
+   heading is read. The left rail and tinted panel carry the distinction. */
+.exp-lab { color: var(--exp); }
 .exp-list { display: flex; flex-direction: column; gap: 12px; }
 .exp {
-  background: var(--panel); border: 1px solid var(--line); border-radius: 14px;
-  box-shadow: var(--shadow); padding: 15px 17px; overflow: hidden;
+  background: color-mix(in srgb, var(--exp) 6%, var(--panel));
+  border: 1px solid color-mix(in srgb, var(--exp) 24%, var(--line));
+  border-left: 3px solid var(--exp);
+  border-radius: 14px; box-shadow: var(--shadow); padding: 15px 17px; overflow: hidden;
 }
 .exp-head { display: flex; align-items: baseline; gap: 9px; flex-wrap: wrap; }
 .exp-role { font-size: 15px; font-weight: 730; }
-.exp-org { font-size: 13px; font-weight: 650; color: var(--accent); }
+.exp-org { font-size: 13px; font-weight: 750; color: var(--exp-2); }
 .exp-dates { font-size: 12px; color: var(--muted); margin-left: auto; font-variant-numeric: tabular-nums; }
 .exp-blurb { color: var(--muted); font-size: 13px; margin: 8px 0 10px; }
-.exp-links { display: flex; flex-wrap: wrap; gap: 8px 14px; }
-.exp-links a { color: var(--accent); font-size: 12.5px; font-weight: 650; text-decoration: none; }
-.exp-links a:hover { text-decoration: underline; }
-
-/* All projects — detailed dated list. */
-.projects { list-style: none; margin: 0; padding: 0; }
-.projects li {
-  display: flex; gap: 16px; padding: 14px 6px; border-bottom: 1px solid var(--line); border-radius: 10px;
+/* The doc links are FAB bubbles: raised, filled, floating off the panel. These point at shipped IBM
+   products — the strongest evidence on the card — and as underlined text they read as a footnote.
+   The lift on hover is what sells them as buttons rather than chips. */
+.exp-links { display: flex; flex-wrap: wrap; gap: 10px; padding: 2px 0 4px; }
+.exp-fab {
+  display: inline-flex; align-items: center; gap: 8px; text-decoration: none;
+  color: #fff; font-size: 12.5px; font-weight: 750; letter-spacing: .1px;
+  background: linear-gradient(140deg, var(--exp), var(--exp-2));
+  border-radius: 999px; padding: 7px 13px 7px 7px;
+  box-shadow:
+    0 2px 6px color-mix(in srgb, var(--exp) 40%, transparent),
+    0 8px 20px color-mix(in srgb, var(--exp) 26%, transparent);
+  transition: transform .15s cubic-bezier(.2, .8, .2, 1), box-shadow .15s;
 }
-.projects li:last-child { border-bottom: none; }
+.exp-fab:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 4px 10px color-mix(in srgb, var(--exp) 48%, transparent),
+    0 14px 30px color-mix(in srgb, var(--exp) 34%, transparent);
+}
+.exp-fab:active { transform: translateY(0); }
+/* The icon disc is what makes it read as a FAB rather than a pill — a mark, then a label. */
+.exp-fab .fab-ico {
+  display: inline-flex; align-items: center; justify-content: center; flex: none;
+  width: 24px; height: 24px; border-radius: 50%; background: rgba(255, 255, 255, .22);
+}
+.exp-fab .fab-ico svg { width: 13px; height: 13px; fill: #fff; display: block; }
+.exp-fab .fab-out { opacity: .75; font-weight: 700; }
+@media (prefers-reduced-motion: reduce) {
+  .exp-fab, .exp-fab:hover { transition: none; transform: none; }
+}
+
+/* All projects — detailed dated list, and the page's third hue. Featured work is indigo, employment
+   is green, and the full archive is amber: three sections, three colours, so a reader can tell
+   which one they are in without reading the heading. Same rail-plus-wash-plus-lift construction as
+   the other two, so they read as siblings rather than three unrelated designs. */
+.proj-lab { color: var(--proj-2); }
+.projects { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.projects li {
+  display: flex; gap: 16px; padding: 14px 16px;
+  background: color-mix(in srgb, var(--proj) 6%, var(--panel));
+  border: 1px solid color-mix(in srgb, var(--proj) 26%, var(--line));
+  border-left: 3px solid var(--proj);
+  border-radius: 14px; box-shadow: var(--shadow); overflow: hidden;
+  transition: transform .16s cubic-bezier(.2, .8, .2, 1), box-shadow .16s;
+}
+.projects li:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
+@media (prefers-reduced-motion: reduce) {
+  .projects li, .projects li:hover { transition: none; transform: none; }
+}
 .projects time {
-  flex: none; width: 96px; color: var(--muted); font-size: 12.5px; font-weight: 650;
+  flex: none; width: 96px; color: var(--proj-2); font-size: 12.5px; font-weight: 700;
   font-variant-numeric: tabular-nums; padding-top: 2px;
 }
+/* Inside an amber row, the indigo chips and rails would be a second theme fighting the first —
+   so every accent-coloured part of a row is restated in amber. */
+.projects .proj-name:hover { color: var(--proj-2); }
+.projects .member {
+  /* The default .member plate is the blue-grey --panel-2, which reads as a blue box dropped into an
+     amber card. Warm it so the nesting looks intentional.
+     border-color must precede border-left-color — the shorthand resets all four sides, so setting
+     it afterwards would wipe the rail this rule is trying to keep. */
+  background: color-mix(in srgb, var(--proj) 5%, var(--panel));
+  border-color: color-mix(in srgb, var(--proj) 22%, var(--line));
+  border-left-color: color-mix(in srgb, var(--proj) 55%, var(--line));
+}
+.projects .chip.primary {
+  color: var(--proj-2); background: color-mix(in srgb, var(--proj) 12%, var(--panel));
+  border: 1px solid color-mix(in srgb, var(--proj) 42%, var(--line));
+}
+.projects .chip.primary:hover { background: color-mix(in srgb, var(--proj) 20%, var(--panel)); }
+.projects .chip.ghost:hover { color: var(--proj-2); border-color: var(--proj); }
 .proj-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .proj-name { color: var(--ink); font-size: 15px; font-weight: 720; text-decoration: none; }
 .proj-name:hover { color: var(--accent); text-decoration: underline; }
 .tech-inline { color: var(--muted); font-size: 12px; }
+/* Chips are the list-row equivalent of .btn — same primary/ghost split, smaller. */
 .chip {
-  color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, var(--panel));
-  border: 1px solid color-mix(in srgb, var(--accent) 40%, var(--line)); border-radius: 9px;
-  padding: 3px 9px; font-size: 11.5px; font-weight: 700; text-decoration: none;
+  display: inline-flex; align-items: center; border-radius: 9px; padding: 3px 9px;
+  font-size: 11.5px; font-weight: 700; text-decoration: none;
 }
-.chip:hover { background: color-mix(in srgb, var(--accent) 18%, var(--panel)); }
+.chip.primary {
+  color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, var(--panel));
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, var(--line));
+}
+.chip.primary:hover { background: color-mix(in srgb, var(--accent) 18%, var(--panel)); }
+.chip.ghost { color: var(--muted); background: var(--panel); border: 1px solid var(--line); }
+.chip.ghost:hover { color: var(--accent); border-color: var(--accent); }
 .proj-blurb { color: var(--muted); font-size: 13px; margin: 4px 0 0; }
+.proj-links { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 9px; }
+.proj-body { min-width: 0; flex: 1; }
+/* A group row nests .member panels, which already carry their own borders. */
+.group-row .members { margin-top: 10px; }
 
 .foot { color: var(--muted); font-size: 12px; text-align: center; margin-top: 40px; font-style: italic; }
+
+/* Build version, pinned bottom-right. Fixed rather than in the footer so it is legible without
+   scrolling to the end — it is a "what am I looking at" affordance, not a credit. */
+.vertag {
+  position: fixed; right: 12px; bottom: 10px; z-index: 2;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 10.5px; font-weight: 650; letter-spacing: .3px;
+  color: var(--muted); background: color-mix(in srgb, var(--panel) 82%, transparent);
+  border: 1px solid var(--line); border-radius: 999px; padding: 3px 9px;
+  backdrop-filter: blur(4px); pointer-events: none;
+}
+
+/* First-visit greeting. A native <dialog>, so focus trapping, Esc-to-close and the top layer come
+   from the platform rather than from JS. Identification is optional, and the dialog is styled to
+   say so: Skip is a real button beside Send, not a dismissal ✕ tucked in a corner. */
+.hello {
+  border: 1px solid var(--line); border-radius: 18px; padding: 0; max-width: 430px; width: calc(100% - 32px);
+  background: linear-gradient(180deg, var(--panel), var(--panel-2));
+  color: var(--ink); box-shadow: var(--shadow-lg);
+}
+.hello::backdrop { background: rgba(10, 13, 22, .45); backdrop-filter: blur(3px); }
+.hello-card { padding: 22px 22px 18px; }
+/* The greeting keeps the old indigo while the site around it is navy — it is a modal interruption,
+   and reading as a different blue from the page behind it is the point. */
+.hello h2 {
+  margin: 0; font-size: 21px; font-weight: 800; letter-spacing: -.3px;
+  background: linear-gradient(96deg, var(--indigo), var(--indigo-2));
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.hello .hello-in:focus {
+  border-color: var(--indigo);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--indigo) 18%, transparent);
+}
+.hello .hello-opt {
+  border-left-color: color-mix(in srgb, var(--indigo) 50%, var(--line));
+  background: color-mix(in srgb, var(--indigo) 6%, transparent);
+}
+.hello .btn.primary {
+  background: linear-gradient(180deg, var(--indigo), color-mix(in srgb, var(--indigo) 78%, #000));
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--indigo) 26%, transparent);
+}
+.hello-sub { color: var(--muted); font-size: 13.5px; margin: 7px 0 14px; }
+.hello-lab {
+  display: block; font-size: 11px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase;
+  color: var(--muted); margin: 0 0 5px 2px;
+}
+.hello-in + .hello-lab { margin-top: 12px; }
+.hello-in {
+  width: 100%; font: inherit; font-size: 14px; color: var(--ink);
+  background: var(--panel); border: 1px solid var(--line); border-radius: 11px; padding: 10px 12px;
+  transition: border-color .13s, box-shadow .13s;
+}
+.hello-in::placeholder { color: var(--muted); opacity: .75; }
+.hello-in:focus {
+  outline: none; border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent);
+}
+/* The optionality notice is the one piece of copy that must not be missed, so it gets the
+   accent rail rather than being set as fine print under the buttons. */
+.hello-opt {
+  color: var(--muted); font-size: 12px; line-height: 1.45; margin: 11px 0 16px;
+  border-left: 3px solid color-mix(in srgb, var(--accent) 45%, var(--line));
+  background: color-mix(in srgb, var(--accent) 5%, transparent);
+  border-radius: 0 8px 8px 0; padding: 8px 10px;
+}
+.hello-opt strong { color: var(--ink); font-weight: 750; }
+.hello-actions { display: flex; justify-content: flex-end; align-items: center; gap: 6px; }
+.hello-actions .btn { border: 1px solid transparent; cursor: pointer; font-family: inherit; }
+/* Skip is deliberately the lightest thing in the dialog — no fill, no border — so Send is the only
+   button with weight and pops off the card. Skipping stays one obvious click, it just does not
+   compete for the eye. */
+.hello-skip {
+  background: none; border: none; cursor: pointer; font-family: inherit;
+  color: var(--muted); font-size: 12.5px; font-weight: 650; border-radius: 9px; padding: 8px 12px;
+  transition: color .13s, background .13s;
+}
+.hello-skip:hover { color: var(--ink); background: var(--chip); }

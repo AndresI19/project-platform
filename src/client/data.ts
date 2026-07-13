@@ -4,18 +4,57 @@
 export const NAME = 'Andres Irarragorri';
 export const TITLE = 'Software Engineer / Devops';
 
-// EDIT ME — a one-line bio about what you build and care about.
 export const BIO =
-  'EDIT ME — I build data-driven web apps, developer tooling, and small platforms. This is where my projects live.';
+  "Hey — glad you stopped by. I'm a back-end and DevOps developer. My degree is in physics, so I " +
+  "had to learn the craft fast and on the fly. Now I'm helping launch IBM's agentic capabilities " +
+  'for ETL flow creation to the cloud, from the platform side.';
 
-export const LINKS = {
-  github: 'https://github.com/AndresI19',
-  email: 'mailto:andres.m.irarragorri@gmail.com',
-  // EDIT ME — replace with your real LinkedIn profile URL.
-  linkedin: 'https://www.linkedin.com/in/EDIT-ME',
-  // Résumé PDF, served from this app's public/ (moved here from the quiz).
-  resume: '/resume.pdf',
-};
+/** The closer, on its own line — it is the turn from "who I am" to "and here is the thing itself". */
+export const BIO_CODA =
+  'Having learned how to launch a platform: welcome to mine. Everything below is built, hosted, ' +
+  'and running right here.';
+
+const GITHUB_USER = 'AndresI19';
+const EMAIL = 'andres.m.irarragorri@gmail.com';
+
+const LINKEDIN = 'https://www.linkedin.com/in/andresirarragorri';
+
+// Local to this file — every consumer is a link below, not another module.
+const GITHUB_ORG = `https://github.com/${GITHUB_USER}`;
+
+/** A contact link. The visible text is the value itself (handle / address), not a category name. */
+export interface Contact {
+  /** Selects the inline SVG mark drawn beside the value. */
+  icon: 'github' | 'email' | 'linkedin' | 'resume';
+  /** The literal value shown to the reader. */
+  value: string;
+  url: string;
+  /** Accessible name, since the visible text is a bare value with no label. */
+  title: string;
+  external?: boolean;
+}
+
+/** `in/<handle>` — the value a reader recognises, pulled from whatever URL is configured. */
+const linkedinHandle = (url: string): string =>
+  `in/${(url.split('/in/')[1] ?? '').replace(/\/+$/, '')}`;
+
+// Annotated before the .filter(), not after: chaining off a bare array literal drops the
+// contextual type, widening each `icon` back to `string` and failing to match Contact.
+const ALL_CONTACTS: Contact[] = [
+  { icon: 'github', value: GITHUB_USER, url: GITHUB_ORG, title: 'GitHub profile', external: true },
+  { icon: 'email', value: EMAIL, url: `mailto:${EMAIL}`, title: 'Email me' },
+  {
+    icon: 'linkedin',
+    value: linkedinHandle(LINKEDIN),
+    url: LINKEDIN,
+    title: 'LinkedIn profile',
+    external: true,
+  },
+  { icon: 'resume', value: 'Résumé (PDF)', url: '/resume.pdf', title: 'Résumé', external: true },
+];
+
+// Drop any contact still holding a placeholder, so the page never ships a dead link.
+export const CONTACTS: Contact[] = ALL_CONTACTS.filter((c) => !c.url.includes('EDIT-ME'));
 
 /** Liveliness probe for a project, polled from the browser through the reverse proxy. */
 export interface Live {
@@ -26,81 +65,199 @@ export interface Live {
   slug?: string;
 }
 
+/** A button on a project card. */
+export interface Link {
+  label: string;
+  /** Fallback destination. Overwritten at runtime when `resolve` is set. */
+  href: string;
+  /** Renders as the filled call-to-action rather than a ghost button. */
+  primary?: boolean;
+  /** Off-platform destination — opens in a new tab. */
+  external?: boolean;
+  /** Resolve `href` in the browser instead of hard-coding it. 'vmcp' looks `slug` up in the
+   *  gateway registry and rewrites href to /vmcp/servers/<uuid>. The UUID is assigned by the
+   *  database at seed time and changes whenever the DB is reseeded, so it must never be baked
+   *  into this file; if the lookup fails the fallback `href` above still works. */
+  resolve?: { from: 'vmcp'; slug: string };
+}
+
 export interface Project {
   name: string;
   /** Last-commit date (YYYY-MM or YYYY-MM-DD). */
   date: string;
   blurb: string;
-  repo: string;
   tech: string;
-  /** Root-relative path to the live front-end behind the proxy, when one exists. */
-  frontend?: string;
-  /** Featured projects appear in the top horizontal-scroll banner. */
+  links: Link[];
+  /** Featured entries appear in the top horizontal-scroll banner. */
   featured?: boolean;
   /** When set, the card shows a live/offline indicator polled every minute. */
   live?: Live;
+  /** Artwork filling the featured card's empty space; a path under public/. */
+  image?: string;
+  /** Two stacked images instead of one. Use when a single graphic misrepresents the project —
+   *  the quiz's garden alone reads as a game, so the question it asks is shown above it. */
+  images?: [string, string];
+  /** An inline schematic drawn in place of an image. 'vmcp' shows a user reaching two MCP
+   *  servers through the gateway; 'docker' is a mock `docker ps` of the running stack. */
+  diagram?: 'vmcp' | 'docker';
+  /** Status badge — how finished this is, so a visitor does not misjudge it. */
+  tag?: { label: string; icon: 'wip' | 'archived' };
 }
 
-// Featured: the quiz, vMCP, RS-Agent-Planning, and rs-mcp-server lead the banner; the rest follow
-// in the full list. Dates are last-commit dates.
-export const PROJECTS: Project[] = [
+/** Several projects that are really one body of work — rendered inside a single card and a
+ *  single list row, because splitting them across elements hides the fact that they pertain
+ *  to each other. */
+export interface Group {
+  name: string;
+  blurb: string;
+  /** Most recent last-commit date across the members. */
+  date: string;
+  featured?: boolean;
+  /** A logo/wordmark identifying the group at a glance, drawn on a plate above the members. */
+  logo?: string;
+  members: Project[];
+}
+
+export type Entry = Project | Group;
+
+export const isGroup = (e: Entry): e is Group => 'members' in e;
+
+// Featured entries lead the banner; the rest follow in the full list. Dates are last-commit dates.
+export const ENTRIES: Entry[] = [
   {
     name: 'Cloud Developer Quiz',
     date: '2026-07',
     featured: true,
     tech: 'Vanilla TS · Vite',
-    frontend: '/cloud-developer-quiz/',
-    repo: 'https://github.com/AndresI19/cloud-developer-quiz',
     live: { type: 'health', url: '/cloud-developer-quiz/api/health' },
     blurb:
       'A data-driven flashcard quiz for cloud & system-design interview prep, with an isometric garden you grow by answering correctly.',
+    // The question first, the garden second. Led by the garden alone, the card reads as a game and
+    // the word "quiz" gets lost — so an actual fill-in-the-blank card carries the top slot.
+    images: ['/quiz-sharding.png', '/home-page-garden.gif'],
+    links: [
+      { label: 'Check out! →', href: '/cloud-developer-quiz/', primary: true },
+      { label: 'Repository', href: `${GITHUB_ORG}/data-driven-quiz-server`, external: true },
+    ],
   },
   {
     name: 'open-vMCP',
     date: '2026-07-09',
     featured: true,
     tech: 'TypeScript · Carbon',
-    frontend: '/vmcp/',
-    repo: 'https://github.com/AndresI19/open-vMCP',
     live: { type: 'health', url: '/vmcp/api/servers' },
     blurb:
-      'A virtual-MCP gateway that fronts MCP servers with a data-driven registry, mocked identity/RBAC, and a Carbon dashboard.',
+      'A reverse proxy for MCP: one endpoint in front of every MCP server, with a data-driven registry, mocked identity/RBAC, and a Carbon dashboard recording each call that crosses it.',
+    diagram: 'vmcp',
+    links: [
+      { label: 'Check out! →', href: '/vmcp/', primary: true },
+      { label: 'Repository', href: `${GITHUB_ORG}/open-vMCP`, external: true },
+    ],
   },
   {
-    name: 'RS-Agent-Planning',
+    // The server and its planning repo are one project — the planning drives the server.
+    name: 'RuneScape Research Assistant',
     date: '2026-07-09',
     featured: true,
-    tech: 'Docs · Architecture',
-    repo: 'https://github.com/AndresI19/RS-Agent-Planning',
     blurb:
-      'Architecture, infrastructure, and task planning for a RuneScape research assistant (MCP server + Discord bot).',
+      'A RuneScape research assistant: an MCP server exposing wiki search, Grand Exchange prices, and player hiscores as callable tools — plus the planning repo that drives it.',
+    logo: '/runescape.png',
+    members: [
+      {
+        name: 'rs-mcp-server',
+        date: '2026-06-22',
+        tech: 'Python · MCP',
+        // "Live" = registered + enabled in the vMCP gateway it is fronted by.
+        live: { type: 'vmcp', url: '/vmcp/api/servers', slug: 'rs-mcp' },
+        blurb:
+          'The MCP server itself — RuneScape wiki search, GE prices, and hiscores, fronted by open-vMCP.',
+        links: [
+          {
+            label: 'View tools',
+            // Fallback is the server list; resolved to the exact server's detail page at runtime.
+            href: '/vmcp/servers',
+            primary: true,
+            resolve: { from: 'vmcp', slug: 'rs-mcp' },
+          },
+          { label: 'Repository', href: `${GITHUB_ORG}/rs-mcp-server`, external: true },
+        ],
+      },
+      {
+        name: 'RS-Agent-Planning',
+        date: '2026-07-09',
+        tech: 'Docs · Architecture',
+        blurb:
+          'Architecture, infrastructure, and task planning — and the issue tracker the server is built from.',
+        // No repository link: the board is the useful view of this repo, and it links back to the
+        // issues (and therefore the repo) itself.
+        links: [
+          {
+            label: 'Project board →',
+            href: 'https://github.com/users/AndresI19/projects/5',
+            primary: true,
+            external: true,
+          },
+        ],
+      },
+    ],
   },
   {
-    name: 'rs-mcp-server',
-    date: '2026-06-22',
+    // The platform this page is served by — worth featuring, since it is the thing tying the
+    // other projects together into one host.
+    name: 'platform-orchestration',
+    date: '2026-07-12',
     featured: true,
-    tech: 'Python · MCP',
-    repo: 'https://github.com/AndresI19/rs-mcp-server',
-    // "Live" = registered + enabled in the vMCP gateway it feeds.
-    live: { type: 'vmcp', url: '/vmcp/api/servers', slug: 'rs-mcp' },
+    tech: 'Docker Compose · nginx · k8s',
+    // If this page answered at all, nginx routed to `home` — so the stack it orchestrates is up.
+    // Reaching the home page IS the liveliness signal for the thing that serves the home page.
+    live: { type: 'health', url: '/api/health' },
     blurb:
-      'An MCP server exposing RuneScape wiki search, Grand Exchange prices, and player hiscores as callable tools — fronted by open-vMCP.',
+      'The platform everything here runs on: an nginx reverse proxy fronting every app on one port, a Compose stack that builds them from their own repos, and a minikube scaffold for later.',
+    diagram: 'docker',
+    // No repository yet — this repo has no GitHub remote. Add the link here once it is pushed:
+    //   { label: 'Repository', href: `${GITHUB_ORG}/platform-orchestration`, external: true },
+    links: [],
+  },
+  {
+    // Deliberately not featured: it is a small site, and the banner is for the things worth arriving
+    // for. It is still live-probed, because the page claiming to be up while being down would be a
+    // funnier bug than it is worth.
+    name: 'portfolio-home',
+    date: '2026-07-12',
+    tech: 'Vanilla TS · Vite · Express',
+    // Reaching this page at all means the server answered, so its own health probe is honest.
+    live: { type: 'health', url: '/api/health' },
+    blurb:
+      "You're looking at the page! Vanilla TypeScript rendered from one data file, an Express server behind the platform's reverse proxy — and the home of @platform/ui, the design tokens this site and the quiz both build from.",
+    links: [{ label: 'Repository', href: `${GITHUB_ORG}/portfolio-home`, external: true }],
   },
   {
     name: 'Job-Search-Go',
     date: '2026-06-30',
     tech: 'Go',
-    repo: 'https://github.com/AndresI19/Job-Search-Go',
+    tag: { label: 'Work in progress', icon: 'wip' },
     blurb:
       'A Go pipeline that ingests job listings, verifies them with ATS matching + Claude, and emits a scored, ranked CSV.',
+    links: [{ label: 'Repository', href: `${GITHUB_ORG}/Job-Search-Go`, external: true }],
   },
   {
     name: 'Claude-Project-Tooling',
     date: '2026-06-21',
     tech: 'Python · Shell',
-    repo: 'https://github.com/AndresI19/Claude-Project-Tooling',
     blurb:
       'Dev-environment docs and shared tooling: PR creation, session recording, and token-usage automation scripts.',
+    links: [
+      { label: 'Repository', href: `${GITHUB_ORG}/Claude-Project-Tooling`, external: true },
+    ],
+  },
+  {
+    name: 'Lux-Strike',
+    date: '2020-12-02',
+    tech: 'Python · Pygame',
+    tag: { label: 'Archived', icon: 'archived' },
+    blurb:
+      'A hand-rolled 2D game engine on a hexagonal grid — camera, dialog, drops, enemies, and a built-in world creator for authoring maps.',
+    links: [{ label: 'Repository', href: `${GITHUB_ORG}/Lux-Strike`, external: true }],
   },
 ];
 
