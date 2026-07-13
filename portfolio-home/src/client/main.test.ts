@@ -162,7 +162,7 @@ describe('professional experience', () => {
 describe('version badge', () => {
   test('shows the version injected at build time', async () => {
     await mountPage();
-    expect($('.vertag')?.textContent).toBe('v0.0.0-test');
+    expect($('.vertag')?.textContent).toBe('0.0.0-test');
   });
 });
 

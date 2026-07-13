@@ -248,5 +248,5 @@ export function pageHtml(version: string): string {
         Built with Vanilla TypeScript + Vite · served behind an nginx reverse proxy.
       </footer>
     </div>
-    <div class="vertag" title="Version, from package.json">v${esc(version)}</div>`;
+    <div class="vertag" title="Version, from package.json">${esc(version)}</div>`;
 }
