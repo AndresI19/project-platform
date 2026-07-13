@@ -1,9 +1,8 @@
 # @platform/ui
 
-The shared layer behind the project-platform front ends — [portfolio-home](../portfolio-home) and
-[data-driven-quiz-server](https://github.com/AndresI19/data-driven-quiz-server).
+The shared layer behind the project-platform front ends.
 
-It holds only what the two apps must agree on. Everything else stays in the app that uses it.
+It holds only what those apps must **agree on**. Everything else stays in the app that uses it.
 
 | Export | What it is |
 |---|---|
@@ -12,25 +11,53 @@ It holds only what the two apps must agree on. Everything else stays in the app 
 | `@platform/ui/server` | `serveClient(app, opts)` — health probe, static assets with the right cache policy, SPA fallback. |
 | `@platform/ui/tsconfig.base.json` | The compiler options both apps extend. |
 
+## Where this lives
+
+> **If you are reading this on `github.com/AndresI19/platform-ui`, you are reading a generated
+> mirror. Do not edit it.**
+>
+> The source of truth is
+> [`portfolio-home/packages/platform-ui`](https://github.com/AndresI19/portfolio-home/tree/main/packages/platform-ui).
+> Changes are made there and published here with `npm run publish:ui` (a `git subtree push`).
+>
+> Editing the mirror directly would fork the package from its source — which is precisely the drift
+> this package exists to prevent.
+
 ## Why it exists
 
 The home page's stylesheet used to open with a comment saying its tokens were *"copied verbatim from
 the quiz so the two sites match."* That invariant was enforced by copy-paste, and it broke the first
-time one site's accent changed and the other's did not. This package makes that failure impossible:
-the accent is defined once, and both sites move together.
+time one site's accent changed and the other's did not. Defining the tokens once makes that failure
+impossible: change the accent, and both sites move.
 
 It is deliberately small. The apps share roughly a hundred lines — tokens, a page background, and a
-static-file middleware. They do **not** share their components, their state, or their routing,
-because they genuinely do not have those in common, and a shared package that reaches further than
-the shared reality is just a slower way to write two different things.
+static-file middleware. They do **not** share components, state, or routing, because they genuinely do
+not have those in common, and a shared package that reaches further than the shared reality is just a
+slower way to write two different things.
 
-## Using it
+## Consuming it
 
-The apps depend on it by path, as siblings in the workspace:
+**From the source repo** (portfolio-home), directly:
 
 ```json
-"dependencies": { "@platform/ui": "file:../platform-ui" }
+"dependencies": { "@platform/ui": "file:packages/platform-ui" }
 ```
+
+**From any other repo**, as a git submodule of the mirror — this is what
+[data-driven-quiz-server](https://github.com/AndresI19/data-driven-quiz-server) does:
+
+```bash
+git submodule add https://github.com/AndresI19/platform-ui.git vendor/platform-ui
+```
+
+```json
+"dependencies": { "@platform/ui": "file:vendor/platform-ui" }
+```
+
+Either way the package sits **inside** the consuming repo, so `npm ci` resolves it from a fresh clone
+and `docker build .` works with no extra flags. Clone consumers with `--recurse-submodules`.
+
+## Using it
 
 In the client entrypoint, import the shared layers before the app's own stylesheet, so the app can
 override anything it needs to:
@@ -41,46 +68,22 @@ import '@platform/ui/base.css';
 import './styles.css';
 ```
 
-In the server, mount the client last — `serveClient` registers a catch-all for the SPA fallback, so
+In the server, mount the client **last** — `serveClient` ends in a catch-all for the SPA fallback, so
 any route added after it would be shadowed by `index.html`:
 
 ```ts
 import { serveClient } from '@platform/ui/server';
 
-app.get('/api/whatever', handler);          // app routes first
+app.get('/api/whatever', handler);            // app routes first
 serveClient(app, { clientDir: CLIENT_DIR, base: '/', appName: 'portfolio-home' });
 ```
 
 There is no build step. The package ships TypeScript and CSS source, which Vite bundles and `tsx`
-transpiles directly — both apps set `"moduleResolution": "bundler"`, which resolves the `exports`
-map above straight to source.
-
-## Containers
-
-Each app's Docker build context is its own directory, so this package is passed in as a **named
-build context** rather than being copied from a parent directory:
-
-```yaml
-build:
-  context: ../portfolio-home
-  additional_contexts:
-    platform-ui: ../platform-ui
-```
-
-and, in the app's Dockerfile, before `npm ci`:
-
-```dockerfile
-COPY --from=platform-ui . /platform-ui
-```
-
-`file:../platform-ui` in `package.json` then resolves to `/platform-ui` inside the image, matching
-the layout on a developer's machine. This keeps each app's build context small and lets the apps
-stay separate repositories.
+transpiles directly — both apps set `"moduleResolution": "bundler"`, which resolves the `exports` map
+above straight to source.
 
 ## Adding a token
 
 Add it here only if **both** apps need it. A token one app consumes is not a design system, it is a
 global variable — put it in that app's stylesheet instead. The quiz's correct/incorrect greens and
 reds, and the home page's per-section hues, are all correctly app-local for exactly this reason.
-
-<!-- published from portfolio-home/packages/platform-ui via `npm run publish:ui` -->
