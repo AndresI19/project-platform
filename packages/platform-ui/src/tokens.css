@@ -1,0 +1,53 @@
+/* The platform's design tokens. Imported by every front end; this file is the single definition of
+   what the platform looks like.
+ *
+ * It exists because "the two sites match" used to be enforced by copy-paste — the home page's
+ * stylesheet literally said its tokens were "copied verbatim from the quiz". That held right up
+ * until the accent moved to navy on one site and not the other, and the two silently stopped
+ * matching. A shared file makes that failure impossible: change a colour here and both sites move.
+ *
+ * What belongs here: values that MUST be identical across apps (surfaces, text, lines, the accent,
+ * elevation). What does not: anything one app alone has an opinion about — the quiz's correct/wrong
+ * greens and reds, the home page's per-section hues (green for employment, amber for the archive)
+ * and its brand-coloured contact chips. Those live in the app that uses them. A token nothing else
+ * consumes is not a design system, it is a global variable.
+ */
+:root {
+  --bg: #eceef5;
+  --panel: #ffffff;
+  --panel-2: #f2f4fb;
+  --ink: #161922;
+  --muted: #5c6576;
+  --line: #e5e8f1;
+
+  /* The platform accent: navy. Both front ends key off this — buttons, rails, links, the page wash,
+     and the gradient wordmark. It is the one token most likely to be reached for by an app that
+     wants to look different; resist that, and add a named app-level token instead. */
+  --accent: #1e3a8a;
+  --accent2: #1fb6d0;
+  --accent-ink: #fff;
+  --chip: #f2f4fb;
+
+  --shadow: 0 1px 2px rgba(22, 30, 60, .025), 0 6px 18px rgba(22, 30, 60, .035);
+  --shadow-lg: 0 4px 14px rgba(22, 30, 60, .04), 0 14px 40px rgba(22, 30, 60, .055);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0c0e15;
+    --panel: #161a24;
+    --panel-2: #1e2330;
+    --ink: #edf0f7;
+    --muted: #98a2b6;
+    --line: #28303f;
+
+    /* Navy at its light-mode value would vanish into a dark panel, so the dark theme carries a
+       lifted navy — same hue family, enough luminance to sit on #161a24. */
+    --accent: #6d8ad6;
+    --accent2: #3ad4e6;
+    --chip: #1e2330;
+
+    --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 8px 22px rgba(0, 0, 0, .2);
+    --shadow-lg: 0 5px 18px rgba(0, 0, 0, .24), 0 18px 46px rgba(0, 0, 0, .26);
+  }
+}
