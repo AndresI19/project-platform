@@ -1,10 +1,11 @@
 // Shared platform layers first, this app's stylesheet last — so anything here can override them.
 import '@platform/ui/tokens.css';
 import '@platform/ui/base.css';
+import '@platform/ui/gate.css';
 import './styles.css';
 
+import { mountAccountFab, mountGate, needsGate } from '@platform/ui/gate';
 import { architectureToggle } from './architecture.js';
-import { greet } from './greet.js';
 import { loadConfig, refreshLiveness } from './liveness.js';
 import { pageHtml } from './view.js';
 
@@ -20,9 +21,20 @@ declare const __APP_VERSION__: string;
  */
 export function mount(): void {
   document.getElementById('app')!.innerHTML = pageHtml(__APP_VERSION__);
-  greet();
   // After pageHtml, because it binds to the button that markup just created.
   architectureToggle();
+
+  // Identity, shared with every other front end — the gate, the account FAB and sign-out all live in
+  // @platform/ui so the three apps cannot grow three different opinions about what signing out means.
+  //
+  // The greeting used to be a dialog that ambushed you on arrival (greet.ts, now retired). It is an
+  // OPTIONAL second page of the gate instead: asked once, after the account exists, and entirely
+  // skippable. Same relay endpoint, same fire-and-forget, but now it says where the answer goes.
+  if (needsGate()) {
+    mountGate({ greetUrl: '/api/hello', onDone: () => mountAccountFab() });
+  } else {
+    mountAccountFab();
+  }
 
   // The config tells the probes which origin to ask, so it has to land before the first poll.
   void loadConfig().then(() => {

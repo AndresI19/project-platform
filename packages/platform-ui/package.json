@@ -8,7 +8,10 @@
     "./tokens.css": "./src/tokens.css",
     "./base.css": "./src/base.css",
     "./server": "./src/server.ts",
-    "./tsconfig.base.json": "./tsconfig.base.json"
+    "./tsconfig.base.json": "./tsconfig.base.json",
+    "./auth": "./src/auth.ts",
+    "./gate": "./src/gate.ts",
+    "./gate.css": "./src/gate.css"
   },
   "files": [
     "src",
