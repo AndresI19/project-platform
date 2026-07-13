@@ -11,8 +11,7 @@
     "serve": "npm run build && npm start",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "test:watch": "vitest",
-    "publish:ui": "git subtree push --prefix packages/platform-ui platform-ui main"
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@platform/ui": "file:packages/platform-ui",

@@ -13,15 +13,12 @@ It holds only what those apps must **agree on**. Everything else stays in the ap
 
 ## Where this lives
 
-> **If you are reading this on `github.com/AndresI19/platform-ui`, you are reading a generated
-> mirror. Do not edit it.**
->
-> The source of truth is
-> [`portfolio-home/packages/platform-ui`](https://github.com/AndresI19/portfolio-home/tree/main/packages/platform-ui).
-> Changes are made there and published here with `npm run publish:ui` (a `git subtree push`).
->
-> Editing the mirror directly would fork the package from its source — which is precisely the drift
-> this package exists to prevent.
+This package lives in **[portfolio-home](https://github.com/AndresI19/portfolio-home)**, at
+`packages/platform-ui`. That is the only copy: it is edited here, and consumed from here.
+
+There is deliberately no published mirror. A mirror is one more artefact that can fall out of step
+with the thing it mirrors — and falling out of step is the entire failure this package exists to
+prevent.
 
 ## Why it exists
 
@@ -43,16 +40,19 @@ slower way to write two different things.
 "dependencies": { "@platform/ui": "file:packages/platform-ui" }
 ```
 
-**From any other repo**, as a git submodule of the mirror — this is what
+**From any other repo**, by vendoring portfolio-home as a submodule — this is what
 [data-driven-quiz-server](https://github.com/AndresI19/data-driven-quiz-server) does:
 
 ```bash
-git submodule add https://github.com/AndresI19/platform-ui.git vendor/platform-ui
+git submodule add https://github.com/AndresI19/portfolio-home.git vendor/portfolio-home
 ```
 
 ```json
-"dependencies": { "@platform/ui": "file:vendor/platform-ui" }
+"dependencies": { "@platform/ui": "file:vendor/portfolio-home/packages/platform-ui" }
 ```
+
+Use `.dockerignore` to keep only `vendor/portfolio-home/packages/` in the build context, so the
+consumer does not ship the whole home page to get ~100 lines of CSS.
 
 Either way the package sits **inside** the consuming repo, so `npm ci` resolves it from a fresh clone
 and `docker build .` works with no extra flags. Clone consumers with `--recurse-submodules`.

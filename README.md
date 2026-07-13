@@ -96,19 +96,22 @@ of those in common.
 
 ### How other repos get it
 
-This repo consumes it directly (`file:packages/platform-ui`). Other repos consume it from a published
-mirror at [`AndresI19/platform-ui`](https://github.com/AndresI19/platform-ui) — for instance
-[data-driven-quiz-server](https://github.com/AndresI19/data-driven-quiz-server) vendors that mirror as
-a git submodule.
+This repo consumes it directly (`file:packages/platform-ui`). Other repos vendor **this repo** as a
+git submodule and resolve the package inside it — there is no separate published copy, so there is
+nothing that can drift from the source.
 
-**The mirror is generated, never edited.** Publish a change from here:
+[data-driven-quiz-server](https://github.com/AndresI19/data-driven-quiz-server) does exactly that:
 
 ```bash
-npm run publish:ui     # git subtree push --prefix packages/platform-ui platform-ui main
+git submodule add https://github.com/AndresI19/portfolio-home.git vendor/portfolio-home
 ```
 
-Consumers then bump their submodule. Editing the mirror directly would recreate exactly the drift the
-package exists to prevent.
+```json
+"dependencies": { "@platform/ui": "file:vendor/portfolio-home/packages/platform-ui" }
+```
+
+Its `.dockerignore` keeps only `vendor/portfolio-home/packages/`, so it does not ship the rest of this
+site to get ~100 lines of shared CSS. To roll out a change here, consumers bump their submodule.
 
 ---
 
