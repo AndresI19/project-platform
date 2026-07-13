@@ -2,16 +2,29 @@
  *
  * Imported AFTER tokens.css and BEFORE an app's own stylesheet, so an app can override any of it.
  *
- * The two knobs below are the only things the apps legitimately disagreed about — the width and the
- * padding of the content column. They are variables rather than a copied rule, so the shared page
- * background (which they DID agree about, down to the pixel geometry of all three radial washes)
- * can be stated once instead of twice.
+ * THE CONTENT COLUMN IS SHARED, and this is the only place it is defined.
+ *
+ * It did not used to be. The apps were each allowed their own width — 1080px here, 940px in the quiz
+ * — on the theory that a quiz card reads better tight than a grid of project cards. That was
+ * defensible right up until the home page moved to a FLUID column and the quiz did not: the two then
+ * differed in kind rather than in degree, and on a wide monitor a 940px quiz sat inside a 1440px
+ * home page with visibly different gutters. Two knobs is how they drifted; one knob is how they stop.
+ *
+ * An app that genuinely needs a tighter measure for prose should reach for --wrap-max-reading below,
+ * not re-declare --wrap-max. Re-declaring it is what caused this.
  */
 :root {
-  /* Width of the centred content column. The home page runs wide (1080px) to fit its project cards;
-     the quiz is narrower (940px) because a column of prose and a quiz card read better tight. */
-  --wrap-max: 1080px;
+  /* Fluid, not fixed. The 1440px cap stops the column sprawling on an ultrawide (a fixed 1080px left
+     a 1920px monitor 44% empty); the 92vw term is what keeps it off the edges on everything narrower
+     — on a 1440px laptop the column becomes 1325px rather than pinning to the frame, and on a phone
+     it is simply 92% of the screen. One formula covers every viewport, which is why there are no
+     width media queries anywhere. */
+  --wrap-max: min(1440px, 92vw);
   --wrap-pad: 0 14px 96px;
+
+  /* For long-form reading, where line length matters more than filling the screen. Same fluid shape,
+     tighter cap — so it still behaves identically on a phone. */
+  --wrap-max-reading: min(940px, 92vw);
 }
 
 * { box-sizing: border-box; }

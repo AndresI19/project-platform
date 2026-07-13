@@ -5,6 +5,7 @@ import {
   BIO, BIO_CODA, CONTACTS, ENTRIES, EXPERIENCE, NAME, TITLE, isGroup,
   type Contact, type Entry, type Experience, type Group, type Link, type Project,
 } from './data.js';
+import { architecturePanel } from './architecture.js';
 import { DIAGRAMS } from './diagrams.js';
 import { DOC_ICON, ICONS, STAR_ICON, TAG_ICONS } from './icons.js';
 import { esc, fmtDate, slug, tab } from './util.js';
@@ -199,9 +200,23 @@ export function pageHtml(version: string): string {
         <p class="mast-bio">${esc(BIO)}</p>
         <p class="mast-bio coda">${esc(BIO_CODA)}</p>
         <nav class="contact">${CONTACTS.map(contactChip).join('')}</nav>
+
+        <!-- The diagram lives INSIDE the banner and the banner grows to fit it. The bio's closing
+             line is a claim — "everything below is built, hosted, and running right here" — and this
+             is the evidence for it, so it belongs in the same frame rather than in a dialog floating
+             over the page. -->
+        ${architecturePanel()}
+
+        <!-- The pull-down tab sits on the banner's bottom edge, straddling the border, so it reads
+             as a handle attached to the banner rather than a button parked beneath it. -->
+        <button class="arch-pull" data-act="architecture" type="button"
+                aria-expanded="false" aria-controls="arch-panel">
+          <span class="arch-pull-t">Show me the platform architecture</span>
+          <span class="arch-pull-c" aria-hidden="true">▾</span>
+        </button>
       </header>
 
-      <section>
+      <section class="feat-section">
         <div class="lab">Featured</div>
         <div class="feat-banner">
           ${ENTRIES.filter((e) => e.featured)

@@ -3,6 +3,7 @@ import '@platform/ui/tokens.css';
 import '@platform/ui/base.css';
 import './styles.css';
 
+import { architectureToggle } from './architecture.js';
 import { greet } from './greet.js';
 import { loadConfig, refreshLiveness } from './liveness.js';
 import { pageHtml } from './view.js';
@@ -20,6 +21,8 @@ declare const __APP_VERSION__: string;
 export function mount(): void {
   document.getElementById('app')!.innerHTML = pageHtml(__APP_VERSION__);
   greet();
+  // After pageHtml, because it binds to the button that markup just created.
+  architectureToggle();
 
   // The config tells the probes which origin to ask, so it has to land before the first poll.
   void loadConfig().then(() => {
