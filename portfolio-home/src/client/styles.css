@@ -602,21 +602,28 @@ section { margin-bottom: 30px; }
 .r13{grid-row:13} .r14{grid-row:14} .r15{grid-row:15} .r16{grid-row:16}
 .r17{grid-row:17} .r18{grid-row:18}
 
-/* The three services, each FOUR columns wide — enough sub-division to put a lane either side of the
-   database without inventing pixel offsets. */
-.s1 { grid-column: 2 / 6; }    /* home, fvt-traffic */
-.s2 { grid-column: 6 / 10; }   /* quiz */
-.s3 { grid-column: 10 / 14; }  /* vmcp, rs-mcp-server, the outbound APIs */
-.pc { grid-column: 4 / 8; }    /* platform-content — the overlap of home and quiz */
+/* FOUR services now, each THREE columns wide (home 2-4, quiz 5-7, vmcp 8-10, platform-auth 11-13).
+   vmcp still has a lane either side of its database — the fvt line rises the left one, the MCP-over-SSE
+   line drops the right one — just one column narrower than before. */
+/* home 2-4, quiz 5-7, platform-auth 8-10, vmcp 11-13. vmcp stays on the RIGHT EDGE, where its whole
+   stack already lives — the agent's road down the right, the database in its middle column, fvt up the
+   left lane, the SSE line down the right — so none of that has to move. platform-auth is the new peer
+   dropped into the freed middle slot. (The agent box must stay far-right too: pulled inward it
+   collides with the full-width "You" box above it.) */
+.s1 { grid-column: 2 / 5; }    /* home, fvt-traffic */
+.s2 { grid-column: 5 / 8; }    /* quiz */
+.s4 { grid-column: 8 / 11; }   /* platform-auth, platform-db */
+.s3 { grid-column: 11 / 14; }  /* vmcp, rs-mcp-server, the outbound APIs */
+.pc { grid-column: 4 / 6; }    /* platform-content — the overlap of home and quiz */
 
 /* The trunk spans every content column: everything passes through it. */
 .w { grid-column: 2 / 14; }
-.right { grid-column: 10 / 14; }
+.right { grid-column: 11 / 14; }
 
 /* "You" centres on the front door it enters, and its arrow is centred on the same span — which is
-   what reconnects the two. The agent sits over its own half. */
+   what reconnects the two. The agent sits over vmcp, the server it drives, on the far right. */
 .b-you   { grid-column: 2 / 14; justify-self: center; width: 100%; max-width: 270px; }
-.b-agent { grid-column: 10 / 14; justify-self: center; width: 100%; max-width: 270px; }
+.b-agent { grid-column: 11 / 14; justify-self: center; width: 100%; max-width: 270px; }
 
 /* The tunnel arrows PIERCE the frames. Stopped at row 4 they died on the workstation's wall, as
    though the traffic never got inside. It does — it lands on cloudflared. */
@@ -661,6 +668,10 @@ section { margin-bottom: 30px; }
 .b-infra { border-color: color-mix(in srgb, var(--muted) 60%, var(--line)); }
 .b-app   { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 14%, var(--panel)); }
 .b-app .arch-name { color: var(--accent); }
+/* platform-auth wears the identity colour — the same rose the /auth flow uses in the second diagram
+   and in the sign-in gate — so it reads as "the thing that knows who you are", not just another app. */
+.b-auth  { border-color: var(--live); background: color-mix(in srgb, var(--live) 11%, var(--panel)); }
+.b-auth .arch-name { color: var(--live); }
 /* Volumes are the only things here that SURVIVE a pod — the distinction most worth seeing. */
 .b-vol   { border-color: var(--exp); border-style: dashed; background: color-mix(in srgb, var(--exp) 13%, var(--panel)); }
 .b-vol .arch-name { color: var(--exp-2); }
@@ -669,10 +680,12 @@ section { margin-bottom: 30px; }
 .b-ext   { border-color: color-mix(in srgb, var(--muted) 50%, var(--line)); border-style: dashed; background: transparent; }
 .b-ext .arch-name { color: var(--muted); }
 
-/* The database is the MIDDLE TWO of the gateway's four columns. Centred and narrower by
-   construction, not by a margin — and the two columns it leaves over, 10 and 13, are the lanes the
-   connectors run in. No trimming, no offsets, nothing to re-tune when the viewport changes. */
-.db { grid-column: 11 / 13; }
+/* vmcp-db is the MIDDLE column of the gateway's three (col 9). The two it leaves over, 8 and 10, are
+   the lanes the connectors run in — fvt up the left, the SSE line down the right. Narrower by
+   construction, not by a margin, so nothing needs re-tuning when the viewport changes.
+   platform-db sits under platform-auth (s4) with no lanes to reserve, so it takes the full width. */
+.db { grid-column: 12 / 13; }
+.authdb { grid-column: 8 / 11; }
 
 /* fvt-traffic drops away from platform-content's border — they sit on adjacent rows and overlap in
    column 4, so with no margin they touch. */
@@ -708,8 +721,8 @@ section { margin-bottom: 30px; }
   background: repeating-linear-gradient(180deg,
     color-mix(in srgb, var(--exp) 80%, transparent) 0 5px, transparent 5px 10px);
 }
-.m-home { grid-column: 4; }   /* shared by home (2-5) and platform-content (4-7) */
-.m-quiz { grid-column: 7; }   /* shared by platform-content (4-7) and quiz (6-9) */
+.m-home { grid-column: 4; }   /* shared by home (2-4) and platform-content (4-5) */
+.m-quiz { grid-column: 5; }   /* shared by platform-content (4-5) and quiz (5-7) */
 
 /* ── Arrows ──────────────────────────────────────────────────────────────────────────────────── */
 /* Bolder, and the dashes MARCH — the direction of flow is the one thing a static arrowhead states
@@ -783,13 +796,13 @@ section { margin-bottom: 30px; }
   white-space: nowrap; font-size: 10px; font-weight: 700; color: var(--muted);
 }
 
-/* THE LEFT LANE — column 10. fvt-traffic is the only thing here that talks UP the stack, so it comes
-   in under the gateway and rises into it.
-   The horizontal reaches back to fvt-traffic with `left: calc(-400% - 40px)`. That looks like a magic
-   number and is not: this element is exactly one column wide, so 100% IS a column — four columns and
-   four gutters back is precisely fvt-traffic's right edge, at any viewport width. */
+/* THE LEFT LANE — column 11, the left lane of vmcp (11-13). fvt-traffic is the only thing here that
+   talks UP the stack, so it comes in under the gateway and rises into it.
+   The horizontal reaches back to fvt-traffic with `left: calc(-600% - 60px)`. That looks like a magic
+   number and is not: this element is exactly one column wide, so 100% IS a column — SIX columns and
+   six gutters back is precisely fvt-traffic's right edge (it sits under home, 2-4), at any width. */
 .fvt-elbow {
-  grid-column: 10 / 11;
+  grid-column: 11 / 12;
   grid-row: 12 / 15;
   align-self: stretch;
   z-index: 0;
@@ -797,7 +810,7 @@ section { margin-bottom: 30px; }
 }
 .fvt-elbow::before {                        /* along, out to fvt-traffic */
   content: '';
-  position: absolute; bottom: 26px; left: calc(-400% - 40px); right: 50%; height: 3px;
+  position: absolute; bottom: 26px; left: calc(-600% - 60px); right: 50%; height: 3px;
   background-image: repeating-linear-gradient(90deg, var(--slate) 0 8px, transparent 8px 14px);
   background-size: 14px 100%;
   animation: fvt-along .9s linear infinite;
@@ -867,6 +880,124 @@ section { margin-bottom: 30px; }
 .k-agent { border-color: var(--agent); border-style: dotted; color: var(--agent); }
 .arch-more { font-size: 12.5px; font-weight: 700; color: var(--accent); text-decoration: none; }
 .arch-more:hover { text-decoration: underline; }
+.arch-chip.b-auth { color: var(--live); }
+
+/* ── The slider — two diagrams, paged ────────────────────────────────────────────────────────────
+   A transform track rather than a scroll container, because the two diagrams are different heights:
+   the VIEWPORT owns the height and animates to the live slide, so switching to the shorter one does
+   not leave a lake of empty space under it. The height is set in JS (it cannot be known in CSS). */
+.arch-slider { margin-top: 22px; }
+.arch-tabs {
+  display: flex; gap: 6px; justify-content: center;
+  padding: 5px; margin: 0 auto 14px;
+  background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
+  width: max-content; max-width: 100%;
+}
+.arch-tab {
+  appearance: none; border: none; cursor: pointer;
+  font: inherit; font-size: 12.5px; font-weight: 700; color: var(--muted);
+  padding: 7px 16px; border-radius: 8px; background: transparent;
+  transition: background .18s ease, color .18s ease;
+}
+.arch-tab:hover { color: var(--ink); }
+.arch-tab.is-active {
+  color: var(--accent-ink);
+  background: linear-gradient(96deg, var(--accent), var(--accent2));
+}
+.arch-tab:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.arch-viewport { overflow: hidden; transition: height .4s cubic-bezier(.2,.8,.2,1); }
+.arch-track { display: flex; align-items: flex-start; transition: transform .4s cubic-bezier(.2,.8,.2,1); }
+.arch-slide { flex: 0 0 100%; min-width: 0; }
+/* The diagram no longer owns the top margin — the slider does. */
+.arch-slider .arch-diagram { margin-top: 0; }
+@media (prefers-reduced-motion: reduce) {
+  .arch-viewport, .arch-track { transition: none; }
+}
+
+/* ── Diagram 2 — auth & the browser: two stacked pictures ────────────────────────────────────────
+   TOP is the miss path (the browser's gate gets a token); BOTTOM is validation (a pod checks one).
+   Consuming services on the left, the identity service on the right, arrows between. Each picture is a
+   three-part row — consumer | connectors | provider — with an explanation beneath it. */
+.arch-auth { max-width: 860px; margin: 0 auto; }
+.auth-panel-h { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+.auth-panel-h h4 { margin: 0; font-size: 15px; color: var(--ink); font-weight: 750; }
+.auth-badge {
+  font-size: 10px; font-weight: 800; letter-spacing: .5px; text-transform: uppercase;
+  padding: 3px 10px; border-radius: 999px; white-space: nowrap;
+}
+.auth-badge.miss { color: var(--live); background: color-mix(in srgb, var(--live) 13%, transparent); }
+.auth-badge.met  { color: var(--exp-2); background: color-mix(in srgb, var(--exp) 16%, transparent); }
+
+.auth-flow {
+  display: grid;
+  grid-template-columns: 1fr minmax(150px, 0.9fr) 1fr;
+  align-items: center; gap: 12px;
+}
+.auth-col { display: flex; flex-direction: column; gap: 9px; align-items: stretch; }
+.au-cbox { text-align: center; }
+.auth-tag {
+  font-size: 11px; color: var(--muted); line-height: 1.45;
+  padding: 6px 10px; border-radius: 8px; background: var(--panel); border: 1px solid var(--line);
+}
+.auth-tag.met  { border-color: color-mix(in srgb, var(--exp) 38%, var(--line)); }
+.auth-tag.miss { border-color: color-mix(in srgb, var(--live) 32%, var(--line)); }
+.auth-tag code { font-size: 10px; }
+
+/* The middle column: two horizontal arrows, one each way, with the label riding above the shaft. */
+.auth-conn { display: flex; flex-direction: column; gap: 26px; padding: 6px 0; }
+.auth-h { position: relative; height: 3px; }
+.auth-h::before {                                     /* shaft */
+  content: ''; position: absolute; top: 0; left: 7px; right: 7px; height: 3px;
+  background-image: repeating-linear-gradient(90deg, color-mix(in srgb, var(--muted) 75%, var(--ink)) 0 8px, transparent 8px 14px);
+  background-size: 14px 100%; animation: auth-flow-x .9s linear infinite;
+}
+.auth-h::after {                                      /* head */
+  content: ''; position: absolute; top: 50%; transform: translateY(-50%);
+  border: 7px solid transparent; border-top: 0; border-bottom: 0;
+}
+.auth-h.fwd::after  { right: 0; border-left: 8px solid color-mix(in srgb, var(--muted) 75%, var(--ink)); }
+.auth-h.back::after { left: 0;  border-right: 8px solid color-mix(in srgb, var(--muted) 75%, var(--ink)); }
+.auth-h.back::before { animation-direction: reverse; }
+@keyframes auth-flow-x { to { background-position-x: 14px; } }
+.auth-h-l {
+  position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%);
+  white-space: nowrap; font-size: 10px; font-weight: 700; color: var(--muted);
+  background: var(--panel-2); padding: 0 5px;
+}
+/* rose = a token being issued/returned; key = a public-key (JWKS) fetch. */
+.auth-h.rose::before { background-image: repeating-linear-gradient(90deg, var(--live) 0 8px, transparent 8px 14px); }
+.auth-h.rose::after  { border-left-color: var(--live); border-right-color: var(--live); }
+.auth-h.rose .auth-h-l { color: var(--live); }
+.auth-h.key::before  { background-image: repeating-linear-gradient(90deg, var(--accent2) 0 7px, transparent 7px 13px); }
+.auth-h.key.fwd::after  { border-left-color: var(--accent2); }
+.auth-h.key.back::after { border-right-color: var(--accent2); }
+.auth-h.key .auth-h-l { color: var(--accent2); }
+
+/* The provider column's internal platform-auth → platform-db link (vertical, with its own label). */
+.auth-v { position: relative; height: 28px; }
+.auth-v::before {
+  content: ''; position: absolute; top: 0; bottom: 8px; left: 50%; transform: translateX(-50%); width: 3px;
+  background-image: repeating-linear-gradient(180deg, color-mix(in srgb, var(--muted) 75%, var(--ink)) 0 8px, transparent 8px 14px);
+  background-size: 100% 14px; animation: arch-flow .9s linear infinite;
+}
+.auth-v::after {
+  content: ''; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);
+  border: 7px solid transparent; border-bottom: 0; border-top-color: color-mix(in srgb, var(--muted) 75%, var(--ink));
+}
+.auth-v-l { position: absolute; top: 50%; left: calc(50% + 10px); transform: translateY(-50%); white-space: nowrap; font-size: 10px; font-weight: 700; color: var(--muted); }
+
+.auth-expl { font-size: 13px; color: var(--muted); line-height: 1.6; margin: 18px 0 0; }
+.auth-expl strong { color: var(--ink); font-weight: 650; }
+.auth-expl code { font-size: 11.5px; }
+
+/* The divider that separates the two pictures — and names the seam: "then, on every request…". */
+.auth-divider {
+  display: flex; align-items: center; gap: 14px; margin: 30px 0;
+  color: var(--muted); font-size: 11px; font-weight: 700; letter-spacing: .2px;
+}
+.auth-divider::before, .auth-divider::after { content: ''; flex: 1; height: 1px; background: var(--line); }
+.au-chip-verify { border-color: var(--accent2) !important; border-style: dashed !important; color: var(--accent2); }
 
 /* ── One column on a phone ───────────────────────────────────────────────────────────────────────
    Several boxes SHARE a row on desktop because they are columns of it. Collapsed to one column,
@@ -891,28 +1022,31 @@ section { margin-bottom: 30px; }
 
   /* The agent's parallel arrows have no second lane to run down, so they would sit on top of the
      browser's. One arrow into the gateway still says where the agent ends up. */
-  .a-agent.pierce, .a-agent.r8, .a-user.s1, .a-user.s2 { display: none; }
+  .a-agent.pierce, .a-agent.r8, .a-user.s1, .a-user.s2, .a-user.s4.r10 { display: none; }
   .a-agent.s3 { grid-row: 12; }
 
-  .b-app.s1     { grid-row: 13; }   /* home */
-  .b-app.s2     { grid-row: 14; }   /* quiz */
-  .b-vol.pc     { grid-row: 15; }   /* platform-content */
-  .b-app.s3     { grid-row: 16; }   /* vmcp */
-  .a-user.short { grid-row: 17; }   /* SQL */
-  .b-vol.db     { grid-row: 18; }
-  .vault        { grid-row: 19; align-self: auto; padding: 9px 11px; }
-  .b-infra.s3   { grid-row: 20; }   /* rs-mcp-server */
-  .b-infra.s1   { grid-row: 21; }   /* fvt-traffic */
-  .pad          { grid-row: 22; }
-  .a-user.r17   { grid-row: 23; }   /* outbound */
-  .b-ext.s3     { grid-row: 24; }
+  .b-app.s1           { grid-row: 13; }   /* home */
+  .b-app.s2           { grid-row: 14; }   /* quiz */
+  .b-vol.pc           { grid-row: 15; }   /* platform-content */
+  .b-app.s3           { grid-row: 16; }   /* vmcp */
+  .a-user.s3.short    { grid-row: 17; }   /* vmcp SQL */
+  .b-vol.db           { grid-row: 18; }   /* vmcp-db */
+  .b-auth.s4          { grid-row: 19; }   /* platform-auth */
+  .a-user.short.authq { grid-row: 20; }   /* platform-auth SQL */
+  .b-vol.authdb       { grid-row: 21; }   /* platform-db */
+  .vault              { grid-row: 22; align-self: auto; padding: 9px 11px; }
+  .b-infra.s3         { grid-row: 23; }   /* rs-mcp-server */
+  .b-infra.s1         { grid-row: 24; }   /* fvt-traffic */
+  .pad                { grid-row: 25; }
+  .a-user.r17         { grid-row: 26; }   /* outbound */
+  .b-ext.s3           { grid-row: 27; }
 
   .vault-t { writing-mode: horizontal-tb; transform: none; }
   /* Nothing to run past, nothing to run along, and no shared column to join through. */
   .vm-rail, .fvt-elbow, .mount { display: none; }
 
-  .arch-hw  { grid-row: 7 / 23; margin: 0 -8px; }
-  .arch-k8s { grid-row: 8 / 23; margin: 0 -3px; }
+  .arch-hw  { grid-row: 7 / 26; margin: 0 -8px; }
+  .arch-k8s { grid-row: 8 / 26; margin: 0 -3px; }
   .arch-tag { grid-column: 1; margin-left: 0; }
 
   /* A long label offset beside an arrow runs off a phone. Wrap it — the diagram must never be the
@@ -920,4 +1054,13 @@ section { margin-bottom: 30px; }
   .arch-arrow-l { left: calc(50% + 11px); max-width: 44vw; white-space: normal; line-height: 1.2; }
   .arch-diagram { padding: 18px 12px 8px; }
   .arch-foot { justify-content: center; }
+
+  /* Diagram 2: each picture's three-part row (consumer | arrows | provider) stacks into one column.
+     The horizontal arrows have no width to run across, so their shafts/heads are dropped and each
+     label becomes a plain centred caption between the boxes it used to join. */
+  .auth-flow { grid-template-columns: 1fr; gap: 8px; }
+  .auth-conn { flex-direction: column; gap: 6px; padding: 2px 0; }
+  .auth-h { height: auto; }
+  .auth-h::before, .auth-h::after { display: none; }
+  .auth-h-l { position: static; transform: none; display: block; text-align: center; background: none; }
 }

@@ -78,14 +78,12 @@ describe('featured banner', () => {
     expect($$('.feat-banner .feat')).toHaveLength(featured.length);
   });
 
-  test('the kubectl terminal lists every pod in the stack', async () => {
+  test('the kubectl terminal lists the core-tier pods', async () => {
     await mountPage();
-    // The mock is hand-kept in sync with the Deployments under k8s/base/. If a service is added
-    // there and not here, the graphic is lying about what is running — this is the test that says so.
+    // A curated core subset, not the full pod list — see diagrams.ts for why (tile height). The
+    // command carries `-l tier=core`, so showing four pods is honest rather than a stale omission.
     const names = $$('.term .ps td.n').map((td) => td.textContent);
-    expect(names).toEqual([
-      'nginx', 'home', 'quiz', 'vmcp', 'vmcp-db', 'rs-mcp-server', 'platform-auth', 'fvt-traffic',
-    ]);
+    expect(names).toEqual(['nginx', 'home', 'vmcp', 'platform-auth']);
     expect($$('.term .ps td.up')).toHaveLength(names.length);
   });
 
