@@ -668,9 +668,23 @@ section { margin-bottom: 30px; }
 .b-ext   { border-color: color-mix(in srgb, var(--muted) 50%, var(--line)); border-style: dashed; background: transparent; }
 .b-ext .arch-name { color: var(--muted); }
 
-/* NARROWED, properly this time — the rail and its label need a lane of their own beside the box,
-   and 34px was not one. */
-.db { margin-right: 78px; }
+/* The database is TRIMMED on its right, and the rail lives in the lane that trim opens up. The two
+   numbers are a pair: shrink the box, and the line that has to pass it moves inward by the same
+   logic. */
+.db { margin-right: 124px; }
+
+/* fvt-traffic drops away from platform-content's border — the two boxes are on adjacent rows and
+   overlap in column 3, so with no margin they touch. */
+.b-infra.s1 { margin-top: 16px; }
+
+/* quiz is trimmed on its right to open a lane for fvt-traffic's elbow. The elbow ran in a 10px
+   gutter, which is not a gap so much as a coincidence. */
+.b-app.s2 { margin-right: 26px; }
+
+/* rs-mcp-server drops too — not for looks, but because the rail's arrowhead is drawn BELOW the
+   rail's end, which lands in this box's row. Both are grid children at z-index 1 and this one comes
+   later in the DOM, so it painted straight over the arrowhead. An arrowhead needs a gap to land in. */
+.b-infra.s3 { margin-top: 18px; }
 
 .vault {
   grid-column: 1;
@@ -752,7 +766,7 @@ section { margin-bottom: 30px; }
   justify-self: end;
   align-self: stretch;
   width: 3px;
-  margin-right: 22px;
+  margin-right: 58px;
   background-image: repeating-linear-gradient(180deg,
     color-mix(in srgb, var(--muted) 75%, var(--ink)) 0 8px, transparent 8px 14px);
   background-size: 100% 14px;
