@@ -39,29 +39,30 @@ export const VMCP_DIAGRAM = `<svg class="dgm" viewBox="0 0 300 176" role="img" a
 
 // The orchestration repo has no screenshot to show, so it shows its own output: the running stack
 // as the cluster reports it. There is no docker-compose any more — the platform runs on minikube —
-// so this is `kubectl -n platform get pods`, the interface you actually drive it through. Kept in
-// sync by hand with the Deployments under k8s/base/.
+// so this is `kubectl -n platform get pods`, the interface you actually drive it through.
+//
+// This is a CURATED CORE SUBSET, not the full pod list, and deliberately so: this card equalises to
+// the height of the tallest featured tile, and the full eight-pod listing made it the tallest, which
+// stretched every other card to match. Four load-bearing pods — the router, the two front doors, and
+// the identity service — say "a cluster is running here" without the height. Do not restore the
+// dropped pods (quiz, vmcp-db, rs-mcp-server, fvt-traffic) to "match the deployments"; the omission
+// is the feature. The `-l tier=core` flag on the command is what makes the short list honest.
 export const POD_ROWS: { name: string; ready: string }[] = [
   { name: 'nginx', ready: '1/1' },
   { name: 'home', ready: '1/1' },
-  { name: 'quiz', ready: '1/1' },
   { name: 'vmcp', ready: '1/1' },
-  { name: 'vmcp-db', ready: '1/1' },
-  { name: 'rs-mcp-server', ready: '1/1' },
   { name: 'platform-auth', ready: '1/1' },
-  // Runs no server — it only makes outbound MCP calls through the gateway, on a timer.
-  { name: 'fvt-traffic', ready: '1/1' },
 ];
 
 // Drawn as an actual terminal window — chrome, traffic lights, dark body — rather than a table on
 // the page background, so it reads as a screenshot of the live cluster at a glance.
-export const K8S_DIAGRAM = `<div class="term" role="img" aria-label="A terminal showing kubectl -n platform get pods with eight running pods: nginx, home, quiz, vmcp, vmcp-db, rs-mcp-server, platform-auth and fvt-traffic.">
+export const K8S_DIAGRAM = `<div class="term" role="img" aria-label="A terminal showing kubectl -n platform get pods for the core tier: four running pods — nginx, home, vmcp and platform-auth.">
   <div class="term-bar">
     <span class="tl r"></span><span class="tl y"></span><span class="tl g"></span>
     <span class="term-title">platform — kubectl</span>
   </div>
   <div class="term-body">
-    <div class="term-cmd"><span class="p">➜</span> <span class="d">~/platform-orchestration</span> <span class="c">kubectl -n platform get pods</span></div>
+    <div class="term-cmd"><span class="p">➜</span> <span class="d">~/platform-orchestration</span> <span class="c">kubectl -n platform get pods -l tier=core</span></div>
     <table class="ps">
       <thead><tr><th>NAME</th><th>READY</th><th>STATUS</th></tr></thead>
       <tbody>

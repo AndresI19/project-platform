@@ -161,6 +161,10 @@ export const ENTRIES: Entry[] = [
         name: 'platform-auth',
         date: '2026-07-13',
         tech: 'TS · Express · Postgres · jose',
+        // Its public keys ARE its liveness: if JWKS answers, the service is up and signing. Every
+        // other front end already verifies tokens against this exact endpoint, so probing it here is
+        // the same signal they rely on.
+        live: { type: 'health', url: '/.well-known/jwks.json' },
         blurb:
           'The identity service. A username you pick, a 7-character code the server issues, and an RS256-signed token — no passwords, and nothing sensitive stored behind the code.',
         links: [
