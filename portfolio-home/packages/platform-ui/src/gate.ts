@@ -120,10 +120,22 @@ export function mountGate({ onDone, greetUrl }: GateOptions): void {
   host.className = 'pg-host';
   document.body.appendChild(host);
 
+  // Escape — or a keyboard "back" — dismisses the gate and leaves you a guest, the same as clicking
+  // outside the box. The listener is on document (so the key is caught anywhere), which means close()
+  // has to remove it explicitly; the click handler's own listener dies with the host node.
+  let onKey: (e: KeyboardEvent) => void = () => {};
   const close = (): void => {
+    document.removeEventListener('keydown', onKey);
     host.remove();
     onDone(current());
   };
+  onKey = (e) => {
+    if (e.key === 'Escape') {
+      if (!current()) continueAsGuest();
+      close();
+    }
+  };
+  document.addEventListener('keydown', onKey);
   const shell = (inner: string): void => {
     host.innerHTML = `<div class="pg-backdrop"><div class="pg">${inner}</div></div>`;
   };
