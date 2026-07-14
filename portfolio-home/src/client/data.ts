@@ -136,8 +136,7 @@ export const ENTRIES: Entry[] = [
     name: 'project-platform',
     date: '2026-07-13',
     featured: true,
-    blurb:
-      'The home page and the identity service behind it, in one repository because they version together.',
+    blurb: 'The home page and the identity service behind it.',
     members: [
       {
         name: 'portfolio-home',
@@ -210,8 +209,7 @@ export const ENTRIES: Entry[] = [
     name: 'RuneScape Research Assistant',
     date: '2026-07-09',
     featured: true,
-    blurb:
-      'An MCP server exposing RuneScape wiki search, Grand Exchange prices, and player hiscores as callable tools.',
+    blurb: 'An MCP server exposing RuneScape game data as callable tools.',
     logo: '/runescape.png',
     members: [
       {
