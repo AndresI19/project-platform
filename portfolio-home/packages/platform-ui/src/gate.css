@@ -18,7 +18,7 @@
 .pg-door.primary .pg-door-t{color:var(--accent)}
 .pg-door-d{color:var(--muted);font-size:12.5px;line-height:1.45}
 /* The guest warning IS the offer. It gets the weight of a warning, not of fine print. */
-.pg-door-d.warn{color:#e11d48;font-weight:600}
+.pg-door-d.warn{color:var(--muted);font-weight:600}
 .pg-door-d.warn em{font-style:normal;text-decoration:underline}
 
 .pg-label{display:block;margin:12px 0 5px;font-size:12px;font-weight:750;color:var(--muted);
