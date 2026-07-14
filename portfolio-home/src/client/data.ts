@@ -137,7 +137,7 @@ export const ENTRIES: Entry[] = [
     date: '2026-07-13',
     featured: true,
     blurb:
-      'The platform monorepo: the home page you are on, and the identity service behind it. Two subprojects, one repository — because they are two halves of one platform that version together.',
+      'The home page and the identity service behind it, in one repository because they version together.',
     members: [
       {
         name: 'portfolio-home',
@@ -146,11 +146,11 @@ export const ENTRIES: Entry[] = [
         // Reaching this page at all means the server answered, so its own health probe is honest.
         live: { type: 'health', url: '/api/health' },
         blurb:
-          "You're looking at it. Rendered from one data file, behind the platform's reverse proxy — and the home of @platform/ui, the design tokens and shared server middleware this site and the quiz both build from.",
+          'This site, rendered from a single data file — and the home of @platform/ui, the design tokens and server middleware the quiz shares.',
         links: [
           {
             label: 'Repository →',
-            href: `${GITHUB_ORG}/project-platform/tree/feat/auth-experiment/portfolio-home`,
+            href: `${GITHUB_ORG}/project-platform/tree/main/portfolio-home`,
             primary: true,
             external: true,
           },
@@ -165,11 +165,11 @@ export const ENTRIES: Entry[] = [
         // the same signal they rely on.
         live: { type: 'health', url: '/.well-known/jwks.json' },
         blurb:
-          'The identity service. A username you pick, a 7-character code the server issues, and an RS256-signed token — no passwords, and nothing sensitive stored behind the code.',
+          'The identity service: a username, a 7-character code, and an RS256-signed token — no passwords, nothing sensitive stored.',
         links: [
           {
             label: 'Repository →',
-            href: `${GITHUB_ORG}/project-platform/tree/feat/auth-experiment/platform-auth`,
+            href: `${GITHUB_ORG}/project-platform/tree/main/platform-auth`,
             primary: true,
             external: true,
           },
@@ -200,7 +200,7 @@ export const ENTRIES: Entry[] = [
     tech: 'TypeScript · Carbon',
     live: { type: 'health', url: '/vmcp/api/servers' },
     blurb:
-      'A reverse proxy for MCP: one endpoint in front of every MCP server, with a data-driven registry, mocked identity/RBAC, and a Carbon dashboard recording each call that crosses it.',
+      'A reverse proxy for MCP: one endpoint in front of every MCP server, with a data-driven registry, mocked identity/RBAC, and a dashboard recording each call that crosses it.',
     diagram: 'vmcp',
     links: [
       { label: 'Check out! →', href: '/vmcp/', primary: true },
@@ -213,7 +213,7 @@ export const ENTRIES: Entry[] = [
     date: '2026-07-09',
     featured: true,
     blurb:
-      'A RuneScape research assistant: an MCP server exposing wiki search, Grand Exchange prices, and player hiscores as callable tools — plus the planning repo that drives it.',
+      'An MCP server exposing RuneScape wiki search, Grand Exchange prices, and player hiscores as callable tools.',
     logo: '/runescape.png',
     members: [
       {
@@ -222,8 +222,7 @@ export const ENTRIES: Entry[] = [
         tech: 'Python · MCP',
         // "Live" = registered + enabled in the vMCP gateway it is fronted by.
         live: { type: 'vmcp', url: '/vmcp/api/servers', slug: 'rs-mcp' },
-        blurb:
-          'The MCP server itself — RuneScape wiki search, GE prices, and hiscores, fronted by open-vMCP.',
+        blurb: 'RuneScape wiki search, GE prices, and hiscores, fronted by open-vMCP.',
         links: [
           {
             label: 'View tools',
@@ -268,7 +267,7 @@ export const ENTRIES: Entry[] = [
     // Reaching the home page IS the liveliness signal for the thing that serves the home page.
     live: { type: 'health', url: '/api/health' },
     blurb:
-      'The platform everything here runs on: a minikube cluster where nginx fronts every app on one port, published through an outbound Cloudflare tunnel with no open ports, and secrets sealed into the manifests themselves.',
+      'A minikube cluster where nginx fronts every app on one port, published through an outbound Cloudflare tunnel with no open ports, and secrets sealed into the manifests.',
     diagram: 'k8s',
     links: [
       // The wiki is the real documentation — architecture, networking, secrets, backup/restore — so

@@ -1930,6 +1930,95 @@ section {
 .arch-slider .arch-diagram {
   margin-top: 0;
 }
+
+/* ── Diagram 3 — the security matrix ─────────────────────────────────────────────────────────────
+   A plain service × scan table, not a topology: the question ("what is scanned where") is a grid of
+   yes/no, and a grid is the honest shape for it. The service names reuse the topology's colour chips
+   so a row reads as the same thing in both diagrams. */
+.sec-intro {
+  margin: 0 auto 18px;
+  max-width: 64ch;
+  text-align: center;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--muted);
+}
+.sec-intro strong {
+  color: var(--ink);
+  font-weight: 800;
+}
+.sec-wrap {
+  overflow-x: auto;
+}
+.sec-tbl {
+  width: 100%;
+  min-width: 480px;
+  border-collapse: collapse;
+}
+.sec-tbl thead th {
+  padding: 6px 6px 10px;
+  border-bottom: 2px solid var(--line);
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--ink);
+  text-align: center;
+}
+.sec-tbl thead th.sec-svc {
+  text-align: left;
+}
+.sec-tbl tbody th.sec-svc {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  padding: 11px 16px 11px 0;
+  white-space: nowrap;
+}
+.sec-repo {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--muted);
+}
+.sec-tbl tbody td {
+  padding: 11px 6px;
+  text-align: center;
+  border-top: 1px solid var(--line);
+  font-size: 15px;
+}
+.sec-tbl tbody tr:first-child td,
+.sec-tbl tbody tr:first-child th {
+  border-top: 0;
+}
+.sec-y {
+  color: var(--exp);
+  font-weight: 800;
+}
+.sec-n {
+  color: color-mix(in srgb, var(--muted) 45%, transparent);
+}
+/* Service-name chips, matching the topology diagram's colours. (b-auth is already coloured above.) */
+.arch-chip.b-app {
+  color: var(--accent);
+  border-color: color-mix(in srgb, var(--accent) 40%, var(--line));
+}
+.arch-chip.b-infra {
+  color: var(--muted);
+}
+.arch-chip.b-net {
+  color: color-mix(in srgb, var(--accent2) 72%, var(--ink));
+  border-color: color-mix(in srgb, var(--accent2) 40%, var(--line));
+}
+.sec-what {
+  max-width: 520px;
+  margin: 18px auto 0;
+}
+.sec-chip-y {
+  color: var(--exp);
+  border-color: color-mix(in srgb, var(--exp) 40%, var(--line));
+}
+.sec-chip-n {
+  color: var(--muted);
+}
 @media (prefers-reduced-motion: reduce) {
   .arch-viewport,
   .arch-track {

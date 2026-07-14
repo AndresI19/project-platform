@@ -53,11 +53,24 @@
 
 /* ── The account FAB ──────────────────────────────────────────────────────────────────────────── */
 .pg-fab-host{position:fixed;top:14px;right:14px;z-index:8500}
-.pg-fab{display:inline-flex;align-items:center;gap:7px;padding:8px 14px;border-radius:999px;
+/* Roughly 2x the old size, so it reads as a control and not a footnote — a first visitor is meant to
+   notice it (see the red nudge below). */
+.pg-fab{display:inline-flex;align-items:center;gap:11px;padding:14px 24px;border-radius:999px;
+  position:relative;
   border:1px solid var(--line);background:var(--panel);color:var(--ink);box-shadow:var(--shadow);
-  font:inherit;font-size:12.5px;font-weight:750;cursor:pointer}
+  font:inherit;font-size:17px;font-weight:750;cursor:pointer}
 .pg-fab:hover{border-color:var(--accent)}
-.pg-fab-dot{width:8px;height:8px;border-radius:50%;background:var(--muted)}
+.pg-fab.has-alert{border-color:#e11d48}
+.pg-fab-dot{width:11px;height:11px;border-radius:50%;background:var(--muted)}
+/* The nudge: a pulsing red dot on the FAB until a guest opens it (or signs in). */
+.pg-fab-alert{position:absolute;top:-5px;right:-5px;width:15px;height:15px;border-radius:50%;
+  background:#e11d48;border:2.5px solid var(--panel);
+  animation:pg-fab-pulse 1.9s ease-out infinite}
+@keyframes pg-fab-pulse{
+  0%{box-shadow:0 0 0 0 rgba(225,29,72,.5)}
+  70%{box-shadow:0 0 0 10px rgba(225,29,72,0)}
+  100%{box-shadow:0 0 0 0 rgba(225,29,72,0)}}
+@media(prefers-reduced-motion:reduce){.pg-fab-alert{animation:none}}
 .pg-fab-dot.user{background:#12a150}
 .pg-fab-dot.guest{background:#f5b301}
 .pg-badge{margin-left:2px;padding:1px 7px;border-radius:999px;background:var(--accent);
@@ -80,5 +93,6 @@
   .pg{padding:20px 18px 18px}
   .pg-code{font-size:26px;letter-spacing:5px;padding:14px}
   .pg-fab-host{top:10px;right:10px}
+  .pg-fab{padding:11px 18px;font-size:15px;gap:9px}
   .pg-fab-panel{width:min(280px,88vw)}
 }
