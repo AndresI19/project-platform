@@ -1952,38 +1952,42 @@ section {
 }
 .sec-tbl {
   width: 100%;
-  min-width: 480px;
+  min-width: 460px;
   border-collapse: collapse;
 }
+/* Bigger column headers. */
 .sec-tbl thead th {
-  padding: 6px 6px 10px;
+  padding: 6px 4px 12px;
   border-bottom: 2px solid var(--line);
-  font-size: 11px;
+  font-size: 13.5px;
   font-weight: 800;
   color: var(--ink);
   text-align: center;
 }
-.sec-tbl thead th.sec-svc {
+/* The repo name IS the row label now — no chip. Left-aligned, and given a wide column, which pulls
+   the tick columns together (roughly 15% tighter than an even split across all seven). */
+.sec-tbl th.sec-repo-name {
   text-align: left;
-}
-.sec-tbl tbody th.sec-svc {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 3px;
-  padding: 11px 16px 11px 0;
+  width: 34%;
+  padding-right: 14px;
+  font-size: 13.5px;
+  font-weight: 800;
+  color: var(--ink);
   white-space: nowrap;
 }
-.sec-repo {
-  font-size: 10px;
-  font-weight: 600;
-  color: var(--muted);
+/* Row dividers run the FULL width, including the repo column — the border is on the th too, not only
+   the td, which is what made the lines stop short of the repo names before. */
+.sec-tbl tbody th,
+.sec-tbl tbody td {
+  border-top: 1px solid var(--line);
+}
+.sec-tbl tbody th.sec-repo-name {
+  padding: 12px 14px 12px 0;
 }
 .sec-tbl tbody td {
-  padding: 11px 6px;
+  padding: 12px 4px;
   text-align: center;
-  border-top: 1px solid var(--line);
-  font-size: 15px;
+  font-size: 16px;
 }
 .sec-tbl tbody tr:first-child td,
 .sec-tbl tbody tr:first-child th {
@@ -1993,10 +1997,15 @@ section {
   color: var(--exp);
   font-weight: 800;
 }
+/* N/A in a contrasting register to the green tick: small, muted, letter-spaced monospace caps. */
 .sec-n {
-  color: color-mix(in srgb, var(--muted) 45%, transparent);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: color-mix(in srgb, var(--muted) 72%, transparent);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
 }
-/* Service-name chips, matching the topology diagram's colours. (b-auth is already coloured above.) */
+/* Colour the topology legend chips' text to match their fills. (b-auth is coloured above.) */
 .arch-chip.b-app {
   color: var(--accent);
   border-color: color-mix(in srgb, var(--accent) 40%, var(--line));
@@ -2008,9 +2017,17 @@ section {
   color: color-mix(in srgb, var(--accent2) 72%, var(--ink));
   border-color: color-mix(in srgb, var(--accent2) 40%, var(--line));
 }
+/* The scan legend below the matrix — left-aligned, larger, and set off by a bold divider. */
 .sec-what {
-  max-width: 520px;
-  margin: 18px auto 0;
+  max-width: 560px;
+  margin: 20px 0 0;
+  border-top: 2px solid var(--ink);
+  padding-top: 14px;
+}
+.sec-what th,
+.sec-what td {
+  font-size: 12.5px;
+  padding: 4px 14px 4px 0;
 }
 .sec-chip-y {
   color: var(--exp);
