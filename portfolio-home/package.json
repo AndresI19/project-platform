@@ -17,7 +17,8 @@
   "dependencies": {
     "@platform/ui": "file:packages/platform-ui",
     "cross-env": "^7.0.3",
-    "express": "^4.21.2"
+    "express": "^4.21.2",
+    "express-rate-limit": "^8.5.2"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",

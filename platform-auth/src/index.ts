@@ -1,4 +1,5 @@
 import express from 'express';
+import rateLimit from 'express-rate-limit';
 import { env } from './env.js';
 import { authRouter } from './routes/auth.js';
 import { jwks } from './tokens.js';
@@ -10,6 +11,19 @@ const app = express();
 // everybody out.
 app.set('trust proxy', true);
 app.use(express.json({ limit: '8kb' }));
+
+// A coarse global cap, layered over the fine-grained per-identity login limiter in routes/auth.ts —
+// that one defends the login endpoint specifically against credential brute force; this covers every
+// route as defence-in-depth. Per-process (single replica), consistent with that limiter's own
+// deliberate single-replica design.
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 1000,
+  standardHeaders: true,
+  legacyHeaders: false,
+  validate: { trustProxy: false },
+});
+app.use(limiter);
 
 app.get('/health', (_req, res) => {
   res.json({ status: 'ok' });
