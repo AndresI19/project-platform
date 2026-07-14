@@ -8,9 +8,7 @@ import { esc, fmtDate, slug, tab } from './util.js';
 
 describe('esc', () => {
   test('escapes the four characters that break HTML', () => {
-    expect(esc('<a href="x">Tom & Jerry</a>')).toBe(
-      '&lt;a href=&quot;x&quot;&gt;Tom &amp; Jerry&lt;/a&gt;',
-    );
+    expect(esc('<a href="x">Tom & Jerry</a>')).toBe('&lt;a href=&quot;x&quot;&gt;Tom &amp; Jerry&lt;/a&gt;');
   });
 
   test('escapes the ampersand of an already-escaped entity, rather than double-decoding it', () => {

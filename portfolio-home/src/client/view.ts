@@ -1,11 +1,23 @@
+import { architecturePanel } from './architecture.js';
 // Every builder that turns data into HTML. Pure: data in, string out — no DOM, no fetch, no state.
 // That is the whole reason it is its own module. These were unreachable to a test before, because
 // main.ts rendered the page and started a poll as an import side effect.
 import {
-  BIO, BIO_CODA, CONTACTS, ENTRIES, EXPERIENCE, NAME, TITLE, isGroup,
-  type Contact, type Entry, type Experience, type Group, type Link, type Project,
+  BIO,
+  BIO_CODA,
+  CONTACTS,
+  type Contact,
+  ENTRIES,
+  EXPERIENCE,
+  type Entry,
+  type Experience,
+  type Group,
+  type Link,
+  NAME,
+  type Project,
+  TITLE,
+  isGroup,
 } from './data.js';
-import { architecturePanel } from './architecture.js';
 import { DIAGRAMS } from './diagrams.js';
 import { DOC_ICON, ICONS, STAR_ICON, TAG_ICONS } from './icons.js';
 import { esc, fmtDate, slug, tab } from './util.js';
@@ -131,8 +143,8 @@ export function featGroupCard(g: Group): string {
   const logo = g.logo
     ? `<div class="media logo"><img src="${esc(g.logo)}" alt="${esc(g.name)}" loading="lazy"></div>`
     : g.diagram
-    ? `<div class="media diagram ${esc(g.diagram)}">${DIAGRAMS[g.diagram]}</div>`
-    : '';
+      ? `<div class="media diagram ${esc(g.diagram)}">${DIAGRAMS[g.diagram]}</div>`
+      : '';
   return `<article class="feat wide lux">
     <div class="feat-top">
       <h3>${esc(g.name)}</h3>

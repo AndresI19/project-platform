@@ -1,7 +1,7 @@
+import type { Project } from './data.js';
 // The two drawn graphics. Assets, not logic — kept out of the render module so that adding a
 // diagram is an edit to a data file rather than to the code that lays the page out.
 import { esc } from './util.js';
-import type { Project } from './data.js';
 
 // What open-vMCP is, drawn rather than described: one client reaching several MCP servers through
 // a single gateway, stacked top-to-bottom. The edges are labelled with the transport, because

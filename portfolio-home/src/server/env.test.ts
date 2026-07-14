@@ -31,7 +31,9 @@ describe('VMCP_API_BASE', () => {
   });
 
   test('strips a trailing slash — it would otherwise build //api/servers', () => {
-    expect(loadEnv({ VMCP_API_BASE: 'https://api.example.com/' }).vmcpApiBase).toBe('https://api.example.com');
+    expect(loadEnv({ VMCP_API_BASE: 'https://api.example.com/' }).vmcpApiBase).toBe(
+      'https://api.example.com',
+    );
   });
 
   test('rejects a bare hostname, which is the typo that used to fail silently', () => {

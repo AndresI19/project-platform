@@ -35,8 +35,7 @@ export interface Contact {
 }
 
 /** `in/<handle>` — the value a reader recognises, pulled from whatever URL is configured. */
-const linkedinHandle = (url: string): string =>
-  `in/${(url.split('/in/')[1] ?? '').replace(/\/+$/, '')}`;
+const linkedinHandle = (url: string): string => `in/${(url.split('/in/')[1] ?? '').replace(/\/+$/, '')}`;
 
 // Annotated before the .filter(), not after: chaining off a bare array literal drops the
 // contextual type, widening each `icon` back to `string` and failing to match Contact.
@@ -293,9 +292,7 @@ export const ENTRIES: Entry[] = [
     tech: 'Python · Shell',
     blurb:
       'Dev-environment docs and shared tooling: PR creation, session recording, and token-usage automation scripts.',
-    links: [
-      { label: 'Repository', href: `${GITHUB_ORG}/Claude-Project-Tooling`, external: true },
-    ],
+    links: [{ label: 'Repository', href: `${GITHUB_ORG}/Claude-Project-Tooling`, external: true }],
   },
   {
     name: 'Lux-Strike',

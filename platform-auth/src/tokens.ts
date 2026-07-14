@@ -1,5 +1,5 @@
-import { SignJWT, exportJWK, importPKCS8, calculateJwkThumbprint, type JWK, type KeyLike } from "jose";
-import { env } from "./env.js";
+import { type JWK, type KeyLike, SignJWT, calculateJwkThumbprint, exportJWK, importPKCS8 } from 'jose';
+import { env } from './env.js';
 
 /**
  * RS256, with a public JWKS endpoint — not a shared HS256 secret.
@@ -18,18 +18,18 @@ let cached: { key: KeyLike; kid: string; jwk: JWK } | null = null;
 async function signingKey(): Promise<{ key: KeyLike; kid: string; jwk: JWK }> {
   if (cached) return cached;
 
-  const key = await importPKCS8(env.signingKeyPem, "RS256");
+  const key = await importPKCS8(env.signingKeyPem, 'RS256');
 
   // The `kid` is the key's own thumbprint rather than a name we chose. That means it is derived from
   // the key material itself, so two keys can never collide on an id and a rotated key is
   // self-identifying — a verifier holding both can always tell which one signed a given token.
   const pub = await exportJWK(key);
-  const kid = await calculateJwkThumbprint(pub, "sha256");
+  const kid = await calculateJwkThumbprint(pub, 'sha256');
 
   cached = {
     key,
     kid,
-    jwk: { ...pub, kid, alg: "RS256", use: "sig" },
+    jwk: { ...pub, kid, alg: 'RS256', use: 'sig' },
   };
   return cached;
 }
@@ -75,7 +75,7 @@ export async function mint({ sub, username }: Claims): Promise<{ token: string; 
   const admin = env.isAdmin(username);
 
   const token = await new SignJWT({ username, admin })
-    .setProtectedHeader({ alg: "RS256", kid })
+    .setProtectedHeader({ alg: 'RS256', kid })
     .setIssuer(env.issuer)
     .setAudience(env.audience)
     .setSubject(sub)
