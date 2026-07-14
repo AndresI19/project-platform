@@ -2,6 +2,7 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { serveClient } from '@platform/ui/server';
 import express from 'express';
+import rateLimit from 'express-rate-limit';
 import { loadEnv } from './env.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -17,6 +18,18 @@ const app = express();
 // The only body this server ever accepts is one short string, so the limit is deliberately tiny.
 app.use(express.json({ limit: '2kb' }));
 app.set('trust proxy', true); // sits behind the nginx reverse proxy, so req.ip needs the header
+
+// A coarse global cap as defence-in-depth, layered over the finer per-endpoint limiter on /api/hello
+// below. Generous because this process also serves the SPA's static assets; real abuse trips it long
+// before a human browsing does. Per-process (single replica) — resets on restart.
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 1000,
+  standardHeaders: true,
+  legacyHeaders: false,
+  validate: { trustProxy: false },
+});
+app.use(limiter);
 
 // Runtime config for the client. `vmcpApiBase` is where the liveness probes read the gateway
 // registry from: empty means same-origin (/vmcp/api, the local deployment), and in production it is
@@ -44,7 +57,7 @@ function overLimit(ip: string): boolean {
 
 async function notifyDiscord(content: string): Promise<void> {
   if (!DISCORD_WEBHOOK_URL) {
-    console.log(`[hello] (no DISCORD_WEBHOOK_URL set) ${content.replace(/\n/g, ' ')}`);
+    console.log(`[hello] (no DISCORD_WEBHOOK_URL set) ${content.replace(/[\r\n]/g, ' ')}`);
     return;
   }
   try {
