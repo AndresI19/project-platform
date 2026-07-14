@@ -34,7 +34,11 @@ function absoluteOrigin(name: string, raw: string): string {
   try {
     url = new URL(value);
   } catch {
-    return fail(name, value, 'must be an absolute URL (e.g. https://api.example.com), or unset for same-origin');
+    return fail(
+      name,
+      value,
+      'must be an absolute URL (e.g. https://api.example.com), or unset for same-origin',
+    );
   }
   if (url.protocol !== 'https:' && url.protocol !== 'http:') {
     return fail(name, value, `must be http or https, got "${url.protocol}"`);
@@ -56,7 +60,11 @@ function webhook(raw: string): string {
     return fail('DISCORD_WEBHOOK_URL', value, 'must be https — a webhook is a credential in the URL');
   }
   if (!url.pathname.includes('/api/webhooks/')) {
-    return fail('DISCORD_WEBHOOK_URL', value, 'does not look like a Discord webhook (expected /api/webhooks/… in the path)');
+    return fail(
+      'DISCORD_WEBHOOK_URL',
+      value,
+      'does not look like a Discord webhook (expected /api/webhooks/… in the path)',
+    );
   }
   return value;
 }

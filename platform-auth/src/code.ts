@@ -1,4 +1,4 @@
-import { createHmac, randomInt, timingSafeEqual } from "node:crypto";
+import { createHmac, randomInt, timingSafeEqual } from 'node:crypto';
 
 /**
  * The code the user memorises, and the keyed hash we store instead of it.
@@ -18,12 +18,12 @@ import { createHmac, randomInt, timingSafeEqual } from "node:crypto";
  * day at a modest guess rate. Seven base32 characters cost the user exactly the same effort to
  * remember and are ~3,400× harder to guess. The keyspace was free.
  */
-const ALPHABET = "0123456789ABCDEFGHJKMNPQRSTVWXYZ"; // 32 chars: no I, L, O, U
+const ALPHABET = '0123456789ABCDEFGHJKMNPQRSTVWXYZ'; // 32 chars: no I, L, O, U
 const CODE_LEN = 7;
 
 /** A fresh code. randomInt is a CSPRNG — Math.random() is not, and a predictable code is no code. */
 export function generateCode(): string {
-  let out = "";
+  let out = '';
   for (let i = 0; i < CODE_LEN; i++) out += ALPHABET[randomInt(ALPHABET.length)];
   return out;
 }
@@ -56,9 +56,9 @@ export function normaliseCode(input: string): string {
   return input
     .trim()
     .toUpperCase()
-    .replace(/[IL]/g, "1")
-    .replace(/O/g, "0")
-    .replace(/[^0-9A-Z]/g, "");
+    .replace(/[IL]/g, '1')
+    .replace(/O/g, '0')
+    .replace(/[^0-9A-Z]/g, '');
 }
 
 export function isWellFormed(code: string): boolean {
@@ -80,7 +80,7 @@ export function isWellFormed(code: string): boolean {
  * infeasible. Steal the dump and you still have nothing.
  */
 export function codeLookup(code: string, pepper: string): string {
-  return createHmac("sha256", pepper).update(code).digest("base64url");
+  return createHmac('sha256', pepper).update(code).digest('base64url');
 }
 
 /** Compare lookups without leaking, through timing, how much of a value matched. */

@@ -11,7 +11,8 @@
     "serve": "npm run build && npm start",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "lint": "biome check src"
   },
   "dependencies": {
     "@platform/ui": "file:packages/platform-ui",
@@ -19,6 +20,7 @@
     "express": "^4.21.2"
   },
   "devDependencies": {
+    "@biomejs/biome": "^1.9.4",
     "@types/express": "^4.17.21",
     "@types/node": "^22.10.5",
     "happy-dom": "^15.11.7",

@@ -1,4 +1,4 @@
-import { boolean, index, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import { boolean, index, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 
 /**
  * An identity. Three values, and keeping them distinct is the whole design (DESIGN.md §2):
@@ -14,20 +14,20 @@ import { boolean, index, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-c
  * reset — an email would be PII, and this identity is explicitly designed to hold none.
  */
 export const identities = pgTable(
-  "identities",
+  'identities',
   {
-    id: uuid("id").primaryKey().defaultRandom(),
+    id: uuid('id').primaryKey().defaultRandom(),
     /** The public identity, chosen by the user. Stored lowercase — see code.ts for why case-
      *  insensitivity is a security property here and not a nicety. */
-    username: text("username").notNull().unique(),
-    codeLookup: text("code_lookup").notNull().unique(),
-    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-    lastSeen: timestamp("last_seen", { withTimezone: true }).notNull().defaultNow(),
+    username: text('username').notNull().unique(),
+    codeLookup: text('code_lookup').notNull().unique(),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    lastSeen: timestamp('last_seen', { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => ({
     // The login path is a single indexed read on this column. That is only possible because the hash
     // is keyed rather than salted — see code.ts.
-    byLookup: index("identities_code_lookup_idx").on(t.codeLookup),
+    byLookup: index('identities_code_lookup_idx').on(t.codeLookup),
   }),
 );
 
@@ -43,15 +43,15 @@ export const identities = pgTable(
  * plaintext in a table.
  */
 export const authAttempts = pgTable(
-  "auth_attempts",
+  'auth_attempts',
   {
-    id: uuid("id").primaryKey().defaultRandom(),
-    ip: text("ip").notNull(),
-    ok: boolean("ok").notNull(),
-    at: timestamp("at", { withTimezone: true }).notNull().defaultNow(),
+    id: uuid('id').primaryKey().defaultRandom(),
+    ip: text('ip').notNull(),
+    ok: boolean('ok').notNull(),
+    at: timestamp('at', { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => ({
-    byAt: index("auth_attempts_at_idx").on(t.at),
-    byIp: index("auth_attempts_ip_idx").on(t.ip),
+    byAt: index('auth_attempts_at_idx').on(t.at),
+    byIp: index('auth_attempts_ip_idx').on(t.ip),
   }),
 );

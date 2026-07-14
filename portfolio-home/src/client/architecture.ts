@@ -33,8 +33,7 @@ const PERSON = `<svg class="arch-i" viewBox="0 0 24 24" aria-hidden="true"><circ
 const ROBOT = `<svg class="arch-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5v3"/><circle cx="12" cy="2" r="1.2" fill="currentColor" stroke="none"/><rect x="4" y="6" width="16" height="12" rx="3.5"/><circle cx="9" cy="12" r="1.5" fill="currentColor" stroke="none"/><circle cx="15" cy="12" r="1.5" fill="currentColor" stroke="none"/><path d="M2.5 11v3M21.5 11v3"/></svg>`;
 
 const box = (cls: string, name: string, meta = '', href = '', icon = ''): string => {
-  const inner =
-    `${icon}<span class="arch-name">${name}</span>${meta ? `<span class="arch-meta">${meta}</span>` : ''}`;
+  const inner = `${icon}<span class="arch-name">${name}</span>${meta ? `<span class="arch-meta">${meta}</span>` : ''}`;
   return href
     ? `<a class="arch-box ${cls} arch-link" href="${href}">${inner}</a>`
     : `<div class="arch-box ${cls}">${inner}</div>`;

@@ -1,7 +1,7 @@
-import { and, eq, sql } from "drizzle-orm";
-import { Router, type Request } from "express";
-import { jwtVerify, createLocalJWKSet } from "jose";
-import { z } from "zod";
+import { and, eq, sql } from 'drizzle-orm';
+import { type Request, Router } from 'express';
+import { createLocalJWKSet, jwtVerify } from 'jose';
+import { z } from 'zod';
 import {
   codeLookup,
   generateCode,
@@ -9,11 +9,11 @@ import {
   isWellFormed,
   normaliseCode,
   normaliseUsername,
-} from "../code.js";
-import { db } from "../db/client.js";
-import { authAttempts, identities } from "../db/schema.js";
-import { env } from "../env.js";
-import { jwks, mint } from "../tokens.js";
+} from '../code.js';
+import { db } from '../db/client.js';
+import { authAttempts, identities } from '../db/schema.js';
+import { env } from '../env.js';
+import { jwks, mint } from '../tokens.js';
 
 export const authRouter = Router();
 
@@ -34,7 +34,7 @@ function clientIp(req: Request): string {
   // Behind nginx and Cloudflare, so the socket address is a proxy every time. `trust proxy` makes
   // req.ip read X-Forwarded-For — without it every caller shares one bucket and the first
   // brute-forcer locks out the entire internet.
-  return req.ip ?? "unknown";
+  return req.ip ?? 'unknown';
 }
 
 function overLimit(ip: string): boolean {
@@ -49,7 +49,10 @@ function overLimit(ip: string): boolean {
 async function audit(ip: string, ok: boolean): Promise<void> {
   // Records the outcome, never the code that was tried. Logging failed credentials is how one user's
   // typo becomes another user's credential, sitting in plaintext in a table forever.
-  await db.insert(authAttempts).values({ ip, ok }).catch(() => {});
+  await db
+    .insert(authAttempts)
+    .values({ ip, ok })
+    .catch(() => {});
 }
 
 /* ── Sign up ─────────────────────────────────────────────────────────────────────────────────────
@@ -65,24 +68,24 @@ async function audit(ip: string, ok: boolean): Promise<void> {
  */
 const SignUpBody = z.object({ username: z.string().min(1).max(64) });
 
-authRouter.post("/identities", async (req, res) => {
+authRouter.post('/identities', async (req, res) => {
   const ip = clientIp(req);
   if (overLimit(ip)) {
-    res.status(429).json({ error: "too many requests" });
+    res.status(429).json({ error: 'too many requests' });
     return;
   }
 
   const parsed = SignUpBody.safeParse(req.body);
   if (!parsed.success) {
-    res.status(400).json({ error: "provide { username }" });
+    res.status(400).json({ error: 'provide { username }' });
     return;
   }
 
   const username = normaliseUsername(parsed.data.username);
   if (!isValidUsername(username)) {
     res.status(400).json({
-      error: "invalid username",
-      detail: "3–20 characters: lowercase letters, digits, _ and -, not starting or ending with a separator",
+      error: 'invalid username',
+      detail: '3–20 characters: lowercase letters, digits, _ and -, not starting or ending with a separator',
     });
     return;
   }
@@ -109,7 +112,7 @@ authRouter.post("/identities", async (req, res) => {
         .where(eq(identities.username, username))
         .limit(1);
       if (taken) {
-        res.status(409).json({ error: "username taken", username });
+        res.status(409).json({ error: 'username taken', username });
         return;
       }
       continue; // code collision — draw another
@@ -121,12 +124,12 @@ authRouter.post("/identities", async (req, res) => {
       code, //  ← the one and only time this is ever sent
       token,
       expiresIn,
-      warning: "Write this code down. It cannot be recovered, and it is the only way back into this account.",
+      warning: 'Write this code down. It cannot be recovered, and it is the only way back into this account.',
     });
     return;
   }
 
-  res.status(503).json({ error: "could not allocate an identity; try again" });
+  res.status(503).json({ error: 'could not allocate an identity; try again' });
 });
 
 /* ── Check a username before committing to it ─────────────────────────────────────────────────────
@@ -134,8 +137,8 @@ authRouter.post("/identities", async (req, res) => {
  * the dashboard would not. Worth having: discovering your name is taken AFTER being handed a code you
  * were told to write down would be a miserable first experience.
  */
-authRouter.get("/usernames/:name", async (req, res) => {
-  const username = normaliseUsername(req.params.name ?? "");
+authRouter.get('/usernames/:name', async (req, res) => {
+  const username = normaliseUsername(req.params.name ?? '');
   if (!isValidUsername(username)) {
     res.json({ username, valid: false, available: false });
     return;
@@ -157,17 +160,17 @@ const TokenBody = z.object({
   code: z.string().min(1).max(32),
 });
 
-authRouter.post("/token", async (req, res) => {
+authRouter.post('/token', async (req, res) => {
   const ip = clientIp(req);
   if (overLimit(ip)) {
     await audit(ip, false);
-    res.status(429).json({ error: "too many attempts" });
+    res.status(429).json({ error: 'too many attempts' });
     return;
   }
 
   const parsed = TokenBody.safeParse(req.body);
   if (!parsed.success) {
-    res.status(400).json({ error: "provide { username, code }" });
+    res.status(400).json({ error: 'provide { username, code }' });
     return;
   }
 
@@ -181,7 +184,7 @@ authRouter.post("/token", async (req, res) => {
   // through.
   const deny = async () => {
     await audit(ip, false);
-    res.status(401).json({ error: "unknown username or code" });
+    res.status(401).json({ error: 'unknown username or code' });
   };
 
   if (!isValidUsername(username) || !isWellFormed(code)) return void (await deny());
@@ -203,10 +206,10 @@ authRouter.post("/token", async (req, res) => {
 });
 
 /* ── Who am I ─────────────────────────────────────────────────────────────────────────────────── */
-authRouter.get("/me", async (req, res) => {
-  const bearer = /^Bearer (.+)$/i.exec(req.get("authorization") ?? "")?.[1];
+authRouter.get('/me', async (req, res) => {
+  const bearer = /^Bearer (.+)$/i.exec(req.get('authorization') ?? '')?.[1];
   if (!bearer) {
-    res.status(401).set("WWW-Authenticate", "Bearer").json({ error: "no token" });
+    res.status(401).set('WWW-Authenticate', 'Bearer').json({ error: 'no token' });
     return;
   }
 
@@ -220,6 +223,6 @@ authRouter.get("/me", async (req, res) => {
     });
     res.json({ sub: payload.sub, username: payload.username, exp: payload.exp });
   } catch {
-    res.status(401).json({ error: "invalid token" });
+    res.status(401).json({ error: 'invalid token' });
   }
 });

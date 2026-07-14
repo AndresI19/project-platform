@@ -35,7 +35,9 @@ async function mountPage(opts: MountOptions = {}): Promise<void> {
       return new Response(JSON.stringify({ vmcpApiBase: opts.vmcpApiBase ?? '' }), { status: 200 });
     }
     if (url.includes('/api/servers')) {
-      return new Response(JSON.stringify([{ id: 'uuid-rs', slug: 'rs-mcp', enabled: true }]), { status: 200 });
+      return new Response(JSON.stringify([{ id: 'uuid-rs', slug: 'rs-mcp', enabled: true }]), {
+        status: 200,
+      });
     }
     return new Response('{}', { status: 200 });
   });
@@ -129,7 +131,8 @@ describe('member panels are shared between the banner and the list', () => {
   // so they could silently disagree about what a member looks like.
   test('the same members, in the same order, in both places', async () => {
     await mountPage();
-    const namesIn = (root: Element) => [...root.querySelectorAll('.member .member-name')].map((n) => n.textContent);
+    const namesIn = (root: Element) =>
+      [...root.querySelectorAll('.member .member-name')].map((n) => n.textContent);
 
     const bannerCard = $('.feat-banner .feat .members')!.closest('.feat')!;
     const listRow = $('.projects .group-row')!;

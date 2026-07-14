@@ -1,6 +1,6 @@
 // Liveness: ask the gateway what it has registered, then light up the badges. The one part of the
 // page that talks to the network on a timer.
-import { ENTRIES, isGroup, type Project } from './data.js';
+import { ENTRIES, type Project, isGroup } from './data.js';
 import { slug } from './util.js';
 
 /** Every project on the page, groups flattened — the unit that probes and links resolve against. */
@@ -78,4 +78,3 @@ export async function refreshLiveness(): Promise<void> {
 // notification. Answering is entirely optional and the copy says so plainly: the page is
 // identical either way, and skipping is a first-class button, not a hidden ✕.
 // ---------------------------------------------------------------------------
-

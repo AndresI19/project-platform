@@ -1,7 +1,7 @@
-import express from 'express';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { serveClient } from '@platform/ui/server';
+import express from 'express';
 import { loadEnv } from './env.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -66,14 +66,20 @@ const fence = (s: string): string => `\`${s.replace(/`/g, "'")}\``;
 
 app.post('/api/hello', (req, res) => {
   const body = req.body as { who?: unknown; company?: unknown; referrer?: unknown };
-  const who = String(body?.who ?? '').trim().slice(0, 200);
-  const company = String(body?.company ?? '').trim().slice(0, 120);
+  const who = String(body?.who ?? '')
+    .trim()
+    .slice(0, 200);
+  const company = String(body?.company ?? '')
+    .trim()
+    .slice(0, 120);
   // Either field alone is a real answer — "someone from Acme is looking" is worth knowing even
   // without a name — so only a wholly empty submission is rejected.
   if (!who && !company) return res.status(400).json({ ok: false, error: 'nothing to send' });
   if (overLimit(req.ip ?? 'unknown')) return res.status(429).json({ ok: false, error: 'slow down' });
 
-  const referrer = String(body?.referrer ?? '').trim().slice(0, 200);
+  const referrer = String(body?.referrer ?? '')
+    .trim()
+    .slice(0, 200);
   const lines = ['👀 **Someone is curious about your page**'];
   if (who) lines.push(`**Who:**     ${fence(who)}`);
   if (company) lines.push(`**Company:** ${fence(company)}`);
@@ -91,5 +97,7 @@ serveClient(app, { clientDir: CLIENT_DIR, appName: 'portfolio-home' });
 app.listen(env.port, () => {
   console.log(`portfolio-home listening on http://localhost:${env.port}`);
   console.log(`  vMCP API   : ${env.vmcpApiBase || '(same-origin /vmcp/api)'}`);
-  console.log(`  greetings  : ${env.discordWebhookUrl ? 'relayed to Discord' : 'logged to stdout (DISCORD_WEBHOOK_URL unset)'}`);
+  console.log(
+    `  greetings  : ${env.discordWebhookUrl ? 'relayed to Discord' : 'logged to stdout (DISCORD_WEBHOOK_URL unset)'}`,
+  );
 });

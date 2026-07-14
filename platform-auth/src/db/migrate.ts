@@ -1,5 +1,5 @@
-import { sql } from "drizzle-orm";
-import { db, pool } from "./client.js";
+import { sql } from 'drizzle-orm';
+import { db, pool } from './client.js';
 
 /**
  * Migrations, stated as SQL rather than generated.
@@ -31,5 +31,5 @@ await db.execute(sql`
   CREATE INDEX IF NOT EXISTS auth_attempts_ip_idx ON auth_attempts (ip);
 `);
 
-console.log("[auth] migrations applied");
+console.log('[auth] migrations applied');
 await pool.end();

@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from 'zod';
 
 /**
  * Every value resolved and validated once, at import. A missing signing key or pepper is a fatal
@@ -7,10 +7,10 @@ import { z } from "zod";
  */
 const Schema = z.object({
   PORT: z.coerce.number().default(8002),
-  DATABASE_URL: z.string().min(1, "DATABASE_URL is required"),
+  DATABASE_URL: z.string().min(1, 'DATABASE_URL is required'),
 
   /** RSA private key, PKCS#8 PEM. Generated once by `npm run keygen`, then sealed. */
-  AUTH_SIGNING_KEY: z.string().min(1, "AUTH_SIGNING_KEY is required (PKCS#8 PEM)"),
+  AUTH_SIGNING_KEY: z.string().min(1, 'AUTH_SIGNING_KEY is required (PKCS#8 PEM)'),
 
   /**
    * The HMAC key that codes are hashed under. Without it a stolen database dump would be
@@ -18,7 +18,7 @@ const Schema = z.object({
    * between a dump and every user's credential, and it must NEVER be stored alongside the data it
    * protects.
    */
-  AUTH_CODE_PEPPER: z.string().min(32, "AUTH_CODE_PEPPER must be at least 32 chars"),
+  AUTH_CODE_PEPPER: z.string().min(32, 'AUTH_CODE_PEPPER must be at least 32 chars'),
 
   /**
    * The elevated users, as a comma-separated list of usernames. A SECRET, not config — not because
@@ -26,10 +26,10 @@ const Schema = z.object({
    * decision and policy belongs with the thing that enforces it. Changing who is an admin should
    * require the same ceremony as changing a signing key, not a ConfigMap edit anyone can make.
    */
-  AUTH_ADMINS: z.string().default(""),
+  AUTH_ADMINS: z.string().default(''),
 
-  AUTH_ISSUER: z.string().default("https://api-andres.project-platform.me/auth"),
-  AUTH_AUDIENCE: z.string().default("platform"),
+  AUTH_ISSUER: z.string().default('https://api-andres.project-platform.me/auth'),
+  AUTH_AUDIENCE: z.string().default('platform'),
   AUTH_TOKEN_TTL: z.coerce.number().default(86400), // 24h
 
   /** Token attempts allowed per IP per window. The code's ONLY defence — see DESIGN.md §4. */
@@ -39,7 +39,7 @@ const Schema = z.object({
 
 const parsed = Schema.safeParse(process.env);
 if (!parsed.success) {
-  const issues = parsed.error.issues.map((i) => `  ${i.path.join(".")}: ${i.message}`).join("\n");
+  const issues = parsed.error.issues.map((i) => `  ${i.path.join('.')}: ${i.message}`).join('\n');
   throw new Error(`platform-auth: bad configuration\n${issues}`);
 }
 const e = parsed.data;
@@ -47,7 +47,7 @@ const e = parsed.data;
 /** Lowercased and de-duplicated once, at boot. Usernames are stored lowercase, so an entry that
  *  differs only in case would silently never match — a quiet way to lose your own admin rights. */
 const admins = new Set(
-  e.AUTH_ADMINS.split(",")
+  e.AUTH_ADMINS.split(',')
     .map((s2) => s2.trim().toLowerCase())
     .filter(Boolean),
 );
@@ -60,7 +60,7 @@ export const env = {
   adminCount: admins.size,
   databaseUrl: e.DATABASE_URL,
   // The PEM arrives from a Kubernetes secret, where newlines are commonly \n-escaped.
-  signingKeyPem: e.AUTH_SIGNING_KEY.replace(/\\n/g, "\n"),
+  signingKeyPem: e.AUTH_SIGNING_KEY.replace(/\\n/g, '\n'),
   codePepper: e.AUTH_CODE_PEPPER,
   issuer: e.AUTH_ISSUER,
   audience: e.AUTH_AUDIENCE,
