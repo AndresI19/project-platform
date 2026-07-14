@@ -64,6 +64,18 @@ export function liveBadge(p: Project): string {
 }
 
 /**
+ * The version the component is actually running, for the projects that ARE deployed components.
+ *
+ * Rendered `hidden` and empty: versions.ts fills it from /api/versions on load. A component that
+ * does not answer therefore shows nothing at all, rather than an empty pill or the word "unknown" —
+ * the badge appears only when there is something true to put in it.
+ */
+export function versionBadge(p: Project): string {
+  if (!p.component) return '';
+  return `<span class="ver" data-ver="${esc(p.component)}" title="Version of the running image" hidden></span>`;
+}
+
+/**
  * The status badges of an entry, as one right-aligned group.
  *
  * Every badge answers the same kind of question — is it live, is it finished, is it featured — so
@@ -92,7 +104,7 @@ export function featCard(p: Project): string {
   return `<article class="feat lux${p.diagram === 'k8s' ? ' wide' : ''}">
     <div class="feat-top">
       <h3>${esc(p.name)}</h3>
-      ${badges(tagChip(p), liveBadge(p))}
+      ${badges(tagChip(p), liveBadge(p), versionBadge(p))}
     </div>
     <div class="tech">${esc(p.tech)}</div>
     <p class="feat-blurb">${esc(p.blurb)}</p>
@@ -112,7 +124,7 @@ export function memberPanels(members: Project[], linkCls: string): string {
         <div class="member-head">
           <span class="member-name">${esc(m.name)}</span>
           <span class="tech-inline">${esc(m.tech)}</span>
-          ${badges(liveBadge(m))}
+          ${badges(liveBadge(m), versionBadge(m))}
         </div>
         <p class="member-blurb">${esc(m.blurb)}</p>
         <div class="member-actions">${m.links.map((l) => btn(l, linkCls)).join('')}</div>
@@ -164,7 +176,7 @@ export function projRow(p: Project): string {
       <div class="proj-head">
         <span class="proj-name">${esc(p.name)}</span>
         <span class="tech-inline">${esc(p.tech)}</span>
-        ${badges(featuredChip(p), tagChip(p), liveBadge(p))}
+        ${badges(featuredChip(p), tagChip(p), liveBadge(p), versionBadge(p))}
       </div>
       <p class="proj-blurb">${esc(p.blurb)}</p>
       <div class="proj-links">${p.links.map((l) => btn(l, 'chip')).join('')}</div>
@@ -204,8 +216,17 @@ export function expCard(e: Experience): string {
   </article>`;
 }
 
-/** The whole page, as a string. Pure — the caller is what puts it in the document. */
-export function pageHtml(version: string): string {
+/**
+ * The whole page, as a string. Pure — the caller is what puts it in the document.
+ *
+ * It no longer takes a version. It used to be handed `__APP_VERSION__`, which Vite baked in from
+ * package.json AT BUILD TIME — a number that changed only when someone remembered to run
+ * `npm version`, and that described the source tree rather than the thing actually serving the page.
+ * The footer tag is now just another `[data-ver]` slot, filled from /api/versions like every other
+ * badge — and it shows the PLATFORM version, not this app's: a tag in the corner of the whole site
+ * should say what the whole site is, and the per-project badges already say what each part is.
+ */
+export function pageHtml(): string {
   return `
     <div class="wrap">
       <header class="masthead">
@@ -260,5 +281,5 @@ export function pageHtml(version: string): string {
         Built with Vanilla TypeScript + Vite · served behind an nginx reverse proxy.
       </footer>
     </div>
-    <div class="vertag" title="Version, from package.json">${esc(version)}</div>`;
+    <div class="vertag" data-ver="platform" title="Platform version — the orchestration that runs this site">…</div>`;
 }

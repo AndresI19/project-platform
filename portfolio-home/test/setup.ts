@@ -32,10 +32,6 @@ const storage = new MemoryStorage();
 Object.defineProperty(globalThis, 'localStorage', { value: storage, configurable: true });
 Object.defineProperty(window, 'localStorage', { value: storage, configurable: true });
 
-// Vite injects this at build time from package.json; under Vitest nothing does, so the version badge
-// would throw a ReferenceError on import.
-vi.stubGlobal('__APP_VERSION__', '0.0.0-test');
-
 // happy-dom has no <dialog> implementation: showModal/close are simply absent, and greet() calls
 // both. Give the element the two methods plus the `open` flag the spec says they toggle, so the
 // dialog can actually be exercised.

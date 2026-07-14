@@ -41,7 +41,21 @@ npm test            # vitest run  (4 files, ~49 cases)
 
 ## Routes
 
-`GET /api/config` → `{ vmcpApiBase }` · `POST /api/hello` (the greeting) · then `serveClient()`.
+`GET /api/config` → `{ vmcpApiBase }` · `POST /api/hello` (the greeting) · `GET /version` →
+`{ version, platform }` · `GET /api/versions` → `{ platform, components: {…} }` · then `serveClient()`.
+
+Two different things, hence two fields. `version` is **this image's own**, baked in and fixed for the
+life of the container. `platform` is the **orchestration repo's**, read from `platform-version.json`
+on the shared volume (mounted read-only at `/content`): the platform ships no image, so its version
+cannot ride in one. It is read **per request** — a deploy rewrites that file, and reading it at
+startup would mean a rollout just to report the truth. In `/api/versions`, `platform` is a sibling of
+`components`, not a member: it has no image, no Pod and no Service.
+
+`/api/versions` fans out to the other components over in-cluster service DNS (`src/server/versions.ts`).
+That fan-out is **on the server on purpose**: `rs-mcp-server` and `platform-auth` have no public route
+for `/version`, and in production the API is a different origin, so a browser-side fetch would be a
+CORS problem as well as a routing one. The client asks once per page load and never polls — a version
+cannot change without a new image, and that means new pods.
 
 `serveClient()` (in `@platform/ui`) adds `GET /api/health`, the static handler, and a `/*` SPA
 fallback. **It must stay last** — it ends in a catch-all that shadows anything registered after it.
@@ -57,8 +71,12 @@ fallback. **It must stay last** — it ends in a catch-all that shadows anything
 - **The server is never compiled.** `npm start` runs `tsx src/server/index.ts`, which is why the
   runtime Docker image keeps dev dependencies and copies `src/` + `tsconfig.json`. Dropping dev deps
   from the image breaks `npm start`.
-- **`__APP_VERSION__` is a Vite `define`.** Anything importing `main.ts`/`view.ts` outside Vite must
-  stub it (Vitest does, in `test/setup.ts`).
+- **The version is served, not baked.** There is no `__APP_VERSION__` define any more. It used to be
+  injected by Vite from `package.json` at *build* time, which described the source tree and only
+  changed when someone ran `npm version` — it could not say what was actually deployed. The image now
+  carries a `VERSION` file (stamped by `k8s/deploy.sh` from the repo's latest git tag, suffixed
+  `-snapshot` when the source differs from `main`), the server reads it once at startup, and the page
+  fetches it. Don't reintroduce a build-time version constant.
 - **This app has no Vite `base`** because it sits at the proxy root — unlike the quiz
   (`/cloud-developer-quiz/`) and the dashboard (`/vmcp/`).
 - The rate limiter on `/api/hello` (5/hour) is an **in-memory `Map` keyed on `req.ip`**, which comes

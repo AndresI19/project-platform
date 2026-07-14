@@ -745,6 +745,28 @@ section {
   margin-top: 0;
 }
 
+/* The version of the running image, fetched once from /api/versions and written in by versions.ts.
+   Monospace because it is an identifier, not prose, and muted because it sits next to the live badge
+   and must not compete with it: the question "is it up" is louder than "which build".
+   `hidden` until filled — a component that does not answer shows no badge at all, rather than an
+   empty pill. A -snapshot build does not match main, so it is accented rather than left to read as
+   a release. */
+.ver {
+  display: inline-flex;
+  align-items: center;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: .2px;
+  color: var(--muted);
+}
+.ver[hidden] {
+  display: none;
+}
+.ver.snapshot {
+  color: var(--accent);
+}
+
 /* Live/offline indicator: red dot + text when up; muted when offline/checking. */
 .live {
   display: inline-flex;
