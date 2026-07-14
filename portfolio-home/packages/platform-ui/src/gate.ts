@@ -6,6 +6,7 @@ import {
   current,
   isAdmin,
   isSignedIn,
+  onIdentity,
   signIn,
   signOut,
   signUp,
@@ -120,9 +121,12 @@ export interface GateOptions {
   onDone: (id: Identity | null) => void;
   /** Where the optional greeting is relayed. Absent → the greeting page is skipped entirely. */
   greetUrl?: string;
+  /** Which page to open on. Default 'choose'; the account FAB's "Create an account" opens 'new' so a
+   *  visitor who already said they want an account is not made to say it twice. */
+  initial?: 'choose' | 'new' | 'signin';
 }
 
-export function mountGate({ onDone, greetUrl }: GateOptions): void {
+export function mountGate({ onDone, greetUrl, initial }: GateOptions): void {
   const host = document.createElement('div');
   host.className = 'pg-host';
   document.body.appendChild(host);
@@ -142,7 +146,7 @@ export function mountGate({ onDone, greetUrl }: GateOptions): void {
     }
   };
 
-  shell(chooseView());
+  shell(initial === 'new' ? newView() : initial === 'signin' ? signInView() : chooseView());
 
   host.addEventListener('click', (e) => {
     const act = (e.target as HTMLElement).closest<HTMLElement>('[data-act]')?.dataset.act;
@@ -211,14 +215,49 @@ export function mountGate({ onDone, greetUrl }: GateOptions): void {
 
 /* ── The account FAB ──────────────────────────────────────────────────────────────────────────── */
 
+export interface FabOptions {
+  /** If there is no identity yet, silently establish a GUEST one (no blocking gate) and mark the FAB
+   *  with a one-time red nudge inviting the visitor to make a real account. The home page uses this:
+   *  it has no gated routes, so a sign-in wall on arrival would be friction with nothing behind it. */
+  nudgeGuest?: boolean;
+  /** What the guest panel's "Create an account" does. Given → called (the home page opens the full
+   *  gate here). Absent → the legacy sign-out-and-reload, which brings the blocking gate back. */
+  onUpgrade?: () => void;
+}
+
+// Whether the guest has acknowledged the nudge. Persisted, so the red alert does not reappear on
+// every reload once they have opened the FAB (or signed in).
+const NUDGE_SEEN = 'platform:fab-nudge-seen';
+const nudgeSeen = (): boolean => {
+  try {
+    return localStorage.getItem(NUDGE_SEEN) === '1';
+  } catch {
+    return false;
+  }
+};
+const markNudgeSeen = (): void => {
+  try {
+    localStorage.setItem(NUDGE_SEEN, '1');
+  } catch {
+    /* private mode: it will simply nudge again next time */
+  }
+};
+
 /**
  * Top-right. Shows who you are, lets you see the code again, and lets you sign out.
  *
  * The code is hidden behind a reveal rather than printed. Not because revealing it is dangerous —
  * anyone at this keyboard already has the session — but because people screen-share, and a
  * credential sitting permanently in the corner of a demo is a credential that leaves the room.
+ *
+ * With `nudgeGuest`, this also replaces the arrival gate: a first visitor is defaulted to guest and
+ * the FAB wears a red alert until they open it (seeing the disclaimer) or sign in.
  */
-export function mountAccountFab(): void {
+export function mountAccountFab(opts: FabOptions = {}): void {
+  // No blocking gate on arrival: a first visitor becomes a guest right here, so the page is usable
+  // immediately and the nudge below — not a modal — is what invites them to upgrade.
+  if (opts.nudgeGuest && !current()) continueAsGuest();
+
   const host = document.createElement('div');
   host.className = 'pg-fab-host';
   document.body.appendChild(host);
@@ -235,10 +274,13 @@ export function mountAccountFab(): void {
 
     const label = id.mode === 'guest' ? 'Guest' : esc(id.username ?? '');
     const badge = isAdmin() ? '<span class="pg-badge">admin</span>' : '';
+    // The nudge: a guest who has not opened the FAB yet wears a red alert, until they open it (which
+    // shows them the disclaimer) or sign in. Home-page only, via nudgeGuest.
+    const alerting = Boolean(opts.nudgeGuest) && id.mode === 'guest' && !nudgeSeen();
 
     const panel = id.mode === 'guest'
-      ? `<p class="pg-fab-warn">You are playing as a guest. Everything is in this browser only —
-           clearing your site data will end it, and nothing can bring it back.</p>
+      ? `<p class="pg-fab-warn">You are browsing as a guest. Nothing is saved to an account — quiz
+           progress would stay in this browser only, and clearing site data ends it.</p>
          <button class="pg-btn primary full" data-act="upgrade">Create an account</button>`
       : `<div class="pg-fab-row"><span>Username</span><code>${esc(id.username ?? '')}</code></div>
          <div class="pg-fab-row">
@@ -253,8 +295,9 @@ export function mountAccountFab(): void {
          <button class="pg-btn ghost full" data-act="signout">Sign out</button>`;
 
     host.innerHTML = `
-      <button class="pg-fab" data-act="toggle" aria-expanded="${open}">
+      <button class="pg-fab${alerting ? ' has-alert' : ''}" data-act="toggle" aria-expanded="${open}">
         <span class="pg-fab-dot ${id.mode}"></span>${label}${badge}
+        ${alerting ? '<span class="pg-fab-alert" aria-hidden="true"></span>' : ''}
       </button>
       ${open ? `<div class="pg-fab-panel">${panel}</div>` : ''}`;
   };
@@ -270,13 +313,27 @@ export function mountAccountFab(): void {
     if (act === 'toggle') {
       open = !open;
       revealed = false; // never leave a code on screen across an open/close
+      markNudgeSeen(); // clicking the FAB IS acknowledging the disclaimer — clear the red alert
       return render();
     }
     if (act === 'reveal') {
       revealed = true;
       return render();
     }
-    if (act === 'signout' || act === 'upgrade') {
+    if (act === 'upgrade') {
+      // Open the full gate rather than signing out. onUpgrade is what the home page passes; the
+      // identity listener below re-renders the FAB when the gate completes.
+      markNudgeSeen();
+      open = false;
+      if (opts.onUpgrade) {
+        opts.onUpgrade();
+        return render();
+      }
+      signOut();
+      location.reload();
+      return;
+    }
+    if (act === 'signout') {
       // Sign out clears the identity but NOT the local document — see auth.ts. The gate then
       // reappears on the next load, which is how you sign up again or hand the browser to someone.
       signOut();
@@ -291,6 +348,9 @@ export function mountAccountFab(): void {
     }
   });
 
+  // Re-render on any identity change — a sign-in from the gate, a sign-out from anywhere — so the FAB
+  // and its nudge never show a stale state.
+  onIdentity(() => render());
   render();
   void isSignedIn;
 }

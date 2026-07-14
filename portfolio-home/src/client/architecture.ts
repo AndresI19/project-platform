@@ -1,4 +1,4 @@
-// The platform architecture, revealed by a pull-down in the masthead banner. TWO diagrams now, paged
+// The platform architecture, revealed by a pull-down in the masthead banner. THREE diagrams now, paged
 // by a slider:
 //
 //   1. Platform topology — who talks to whom, from the browser down to the outbound APIs. This is the
@@ -6,6 +6,9 @@
 //   2. Auth & the browser — the narrower story of how the identity service issues a token, how the
 //      front ends carry it, and how each verifies it on its own. Split out because it is a different
 //      question (a sequence, not a topology) and crowding it into the map made both harder to read.
+//   3. Security — a service × scan matrix: every workload and the blocking CI gates (image, deps,
+//      SAST, secrets, config, manifests) it passes on every PR. A table, not a topology, for the same
+//      reason as diagram 2 — a different question deserves its own shape.
 //
 // WHY HTML AND NOT SVG (or the wiki's ASCII art): both scale only UNIFORMLY — on a phone the whole
 // picture shrinks past legibility. Built as boxes in a grid, the diagram REFLOWS: columns collapse,
@@ -239,6 +242,96 @@ function authDiagram(): string {
     </div>`;
 }
 
+/* ── Diagram 3 — the security posture ──────────────────────────────────────────────────────────── */
+// Every service on the platform, against the automated scans that gate its CI. Rows are services (one
+// per repo, except the two that share the platform monorepo); columns are scan classes. A tick is a
+// BLOCKING check on every pull request — a regression fails the PR before it can reach the cluster. It
+// mirrors the security section of the orchestration wiki, the source of truth.
+const SEC_COLS = ['Image', 'Deps', 'SAST', 'Secrets', 'Config', 'Manifests'] as const;
+type SecCol = (typeof SEC_COLS)[number];
+
+interface SecRow {
+  service: string;
+  repo: string;
+  /** The topology diagram's colour class, so a service reads as the same thing in both diagrams. */
+  cls: string;
+  has: SecCol[];
+}
+const SEC_ROWS: SecRow[] = [
+  { service: 'home', repo: 'project-platform', cls: 'b-app', has: ['Image', 'Deps', 'SAST', 'Secrets'] },
+  {
+    service: 'platform-auth',
+    repo: 'project-platform',
+    cls: 'b-auth',
+    has: ['Image', 'Deps', 'SAST', 'Secrets'],
+  },
+  {
+    service: 'quiz',
+    repo: 'data-driven-quiz-server',
+    cls: 'b-app',
+    has: ['Image', 'Deps', 'SAST', 'Secrets'],
+  },
+  { service: 'vmcp', repo: 'open-vMCP', cls: 'b-app', has: ['Image', 'Deps', 'SAST', 'Secrets'] },
+  {
+    service: 'rs-mcp-server',
+    repo: 'rs-mcp-server',
+    cls: 'b-infra',
+    has: ['Image', 'Deps', 'SAST', 'Secrets'],
+  },
+  {
+    service: 'orchestration',
+    repo: 'platform-orchestration',
+    cls: 'b-net',
+    has: ['Secrets', 'Config', 'Manifests'],
+  },
+];
+/** What each column actually runs — the tool, and the class of problem it catches. */
+const SEC_LEGEND: [SecCol, string][] = [
+  ['Image', 'Trivy — container-image CVEs'],
+  ['Deps', 'Trivy fs — dependency CVEs (SCA)'],
+  ['SAST', 'CodeQL — static analysis of our own code'],
+  ['Secrets', 'gitleaks — secrets across git history'],
+  ['Config', 'Trivy config — Kubernetes misconfig'],
+  ['Manifests', 'kubeconform — manifest schema validation'],
+];
+
+function securityDiagram(): string {
+  const head = SEC_COLS.map((c) => `<th class="sec-c">${c}</th>`).join('');
+  const rows = SEC_ROWS.map((r) => {
+    const cells = SEC_COLS.map((c) =>
+      r.has.includes(c)
+        ? `<td class="sec-y"><span aria-label="${c}: yes">✓</span></td>`
+        : `<td class="sec-n"><span aria-label="${c}: not applicable">·</span></td>`,
+    ).join('');
+    return `<tr>
+        <th class="sec-svc"><span class="arch-chip ${r.cls}">${r.service}</span><span class="sec-repo">${r.repo}</span></th>
+        ${cells}
+      </tr>`;
+  }).join('');
+  const legend = SEC_LEGEND.map(([c, d]) => `<tr><th>${c}</th><td>${d}</td></tr>`).join('');
+  return `
+    <div class="arch-diagram arch-sec">
+      <p class="sec-intro">
+        Every service ships through the same gates. A <strong>✓</strong> is a <strong>blocking</strong>
+        check on every pull request — plus branch protection on all of them, so nothing merges unscanned.
+      </p>
+      <div class="sec-wrap">
+        <table class="sec-tbl">
+          <thead><tr><th class="sec-svc">Service</th>${head}</tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+      <table class="arch-tbl sec-what">${legend}</table>
+      <footer class="arch-foot">
+        <div class="arch-key">
+          <span class="arch-chip sec-chip-y">✓ blocking scan</span>
+          <span class="arch-chip sec-chip-n">· not applicable</span>
+        </div>
+        <a class="arch-more" href="${WIKI}" target="_blank" rel="noopener">Security write-up in the wiki →</a>
+      </footer>
+    </div>`;
+}
+
 export function architecturePanel(): string {
   return `
     <div class="arch-panel" id="arch-panel">
@@ -247,11 +340,13 @@ export function architecturePanel(): string {
           <div class="arch-tabs" role="tablist" aria-label="Architecture diagrams">
             <button class="arch-tab is-active" type="button" role="tab" aria-selected="true" data-slide="0">Platform topology</button>
             <button class="arch-tab" type="button" role="tab" aria-selected="false" data-slide="1">Auth &amp; the browser</button>
+            <button class="arch-tab" type="button" role="tab" aria-selected="false" data-slide="2">Security</button>
           </div>
           <div class="arch-viewport">
             <div class="arch-track">
               <section class="arch-slide" role="tabpanel" aria-label="Platform topology">${topologyDiagram()}</section>
               <section class="arch-slide" role="tabpanel" aria-label="Auth and the browser">${authDiagram()}</section>
+              <section class="arch-slide" role="tabpanel" aria-label="Security posture">${securityDiagram()}</section>
             </div>
           </div>
         </div>

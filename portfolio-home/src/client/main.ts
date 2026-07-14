@@ -4,7 +4,7 @@ import '@platform/ui/base.css';
 import '@platform/ui/gate.css';
 import './styles.css';
 
-import { mountAccountFab, mountGate, needsGate } from '@platform/ui/gate';
+import { mountAccountFab, mountGate } from '@platform/ui/gate';
 import { architectureToggle } from './architecture.js';
 import { loadConfig, refreshLiveness } from './liveness.js';
 import { pageHtml } from './view.js';
@@ -27,14 +27,15 @@ export function mount(): void {
   // Identity, shared with every other front end — the gate, the account FAB and sign-out all live in
   // @platform/ui so the three apps cannot grow three different opinions about what signing out means.
   //
-  // The greeting used to be a dialog that ambushed you on arrival (greet.ts, now retired). It is an
-  // OPTIONAL second page of the gate instead: asked once, after the account exists, and entirely
-  // skippable. Same relay endpoint, same fire-and-forget, but now it says where the answer goes.
-  if (needsGate()) {
-    mountGate({ greetUrl: '/api/hello', onDone: () => mountAccountFab() });
-  } else {
-    mountAccountFab();
-  }
+  // The home page has no gated routes, so a blocking sign-in wall on arrival would be pure friction —
+  // and a modal that greets a visitor with "pick an account" scares more people off than it converts.
+  // So a first visitor is defaulted to guest (silently, inside mountAccountFab) and the account FAB
+  // wears a one-time red nudge inviting them to create a real account — which is what benefits the
+  // quiz. Choosing to create one opens the full gate straight on its username page.
+  mountAccountFab({
+    nudgeGuest: true,
+    onUpgrade: () => mountGate({ greetUrl: '/api/hello', onDone: () => {}, initial: 'new' }),
+  });
 
   // The config tells the probes which origin to ask, so it has to land before the first poll.
   void loadConfig().then(() => {
