@@ -313,14 +313,14 @@ export function architecturePanel(): string {
       <div class="arch-panel-in">
         <div class="arch-slider">
           <div class="arch-tabs" role="tablist" aria-label="Architecture diagrams">
-            <button class="arch-tab is-active" type="button" role="tab" aria-selected="true" data-slide="0">Platform topology</button>
-            <button class="arch-tab" type="button" role="tab" aria-selected="false" data-slide="1">Auth &amp; the browser</button>
+            <button class="arch-tab is-active" type="button" role="tab" aria-selected="true" data-slide="0">Platform Topography</button>
+            <button class="arch-tab" type="button" role="tab" aria-selected="false" data-slide="1">Auth and Entrypoint</button>
             <button class="arch-tab" type="button" role="tab" aria-selected="false" data-slide="2">Security</button>
           </div>
           <div class="arch-viewport">
             <div class="arch-track">
-              <section class="arch-slide" role="tabpanel" aria-label="Platform topology">${topologyDiagram()}</section>
-              <section class="arch-slide" role="tabpanel" aria-label="Auth and the browser">${authDiagram()}</section>
+              <section class="arch-slide" role="tabpanel" aria-label="Platform Topography">${topologyDiagram()}</section>
+              <section class="arch-slide" role="tabpanel" aria-label="Auth and Entrypoint">${authDiagram()}</section>
               <section class="arch-slide" role="tabpanel" aria-label="Security posture">${securityDiagram()}</section>
             </div>
           </div>

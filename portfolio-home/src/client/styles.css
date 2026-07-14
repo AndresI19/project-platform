@@ -323,6 +323,12 @@ section {
   font-weight: 650;
   margin-top: 2px;
 }
+/* The stack line is for the detailed all-projects list, where a reader is comparing tools. In the
+   featured banner it is noise — the cards are already tight on height — so it is hidden there. */
+.feat .tech,
+.feat .tech-inline {
+  display: none;
+}
 .feat-blurb {
   color: var(--muted);
   font-size: 14.5px;
@@ -352,8 +358,8 @@ section {
 }
 .btn.ghost {
   color: var(--ink);
-  border: 1px solid var(--line);
-  background: var(--panel-2);
+  border: 1px solid color-mix(in srgb, var(--accent) 22%, var(--line));
+  background: color-mix(in srgb, var(--accent) 8%, var(--panel-2));
 }
 .btn.ghost:hover {
   border-color: var(--accent);
@@ -1002,8 +1008,8 @@ section {
 }
 .chip.ghost {
   color: var(--muted);
-  background: var(--panel);
-  border: 1px solid var(--line);
+  background: color-mix(in srgb, var(--accent) 8%, var(--panel));
+  border: 1px solid color-mix(in srgb, var(--accent) 22%, var(--line));
 }
 .chip.ghost:hover {
   color: var(--accent);

@@ -309,9 +309,16 @@ export function mountAccountFab(opts: FabOptions = {}): void {
     e.stopPropagation();
     const act = (e.target as HTMLElement).closest<HTMLElement>('[data-act]')?.dataset.act;
     if (act === 'toggle') {
+      markNudgeSeen(); // clicking the FAB IS acknowledging the disclaimer — clear the red alert
+      // A guest's FAB opens the account dialog DIRECTLY — the three-option chooser, no intermediate
+      // "Create an account" bubble in between. A signed-in user gets the account panel (username /
+      // code / sign out) as a dropdown instead.
+      if (current()?.mode === 'guest' && opts.onUpgrade) {
+        opts.onUpgrade();
+        return render();
+      }
       open = !open;
       revealed = false; // never leave a code on screen across an open/close
-      markNudgeSeen(); // clicking the FAB IS acknowledging the disclaimer — clear the red alert
       return render();
     }
     if (act === 'reveal') {

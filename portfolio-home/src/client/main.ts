@@ -31,11 +31,13 @@ export function mount(): void {
   // and a modal that greets a visitor with "pick an account" scares more people off than it converts.
   // So a first visitor is defaulted to guest (silently, inside mountAccountFab) and the account FAB
   // wears a one-time red nudge inviting them to create a real account — which is what benefits the
-  // quiz. Choosing to create one opens the full gate on its original three-option chooser; account
-  // creation itself is two pages (pick a name, write the code down) with no greeting step.
+  // quiz. The FAB opens straight onto the gate's three-option chooser (create / I have a code /
+  // continue as guest); creating an account ends on the optional "who stopped by?" greeting, which is
+  // relayed to a private Discord webhook (POST /api/hello) — home-page only, since that is where the
+  // webhook lives.
   mountAccountFab({
     nudgeGuest: true,
-    onUpgrade: () => mountGate({ onDone: () => {} }),
+    onUpgrade: () => mountGate({ greetUrl: '/api/hello', onDone: () => {} }),
   });
 
   // The config tells the probes which origin to ask, so it has to land before the first poll.
