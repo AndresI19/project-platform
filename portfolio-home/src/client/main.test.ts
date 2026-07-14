@@ -39,6 +39,25 @@ async function mountPage(opts: MountOptions = {}): Promise<void> {
         status: 200,
       });
     }
+    // The aggregated versions: the platform's own (the orchestration repo — no image, read from the
+    // volume) alongside the five deployed components. `vmcp` is deliberately a -snapshot and
+    // `platform-auth` deliberately null (a component that did not answer) — both are states the page
+    // has to render correctly, and neither shows up if the fixture is all happy-path releases.
+    if (url.endsWith('/api/versions')) {
+      return new Response(
+        JSON.stringify({
+          platform: '0.1.0',
+          components: {
+            home: '0.1.4',
+            quiz: '0.1.4',
+            vmcp: '0.1.4-snapshot',
+            'rs-mcp-server': '0.0.32',
+            'platform-auth': null,
+          },
+        }),
+        { status: 200 },
+      );
+    }
     return new Response('{}', { status: 200 });
   });
   vi.stubGlobal('fetch', fetchMock);
@@ -162,10 +181,49 @@ describe('professional experience', () => {
   });
 });
 
-describe('version badge', () => {
-  test('shows the version injected at build time', async () => {
+describe('version badges', () => {
+  test('the footer tag shows the PLATFORM version, not this app’s', async () => {
     await mountPage();
-    expect($('.vertag')?.textContent).toBe('0.0.0-test');
+    // A tag in the corner of the whole site says what the whole site is. The orchestration repo
+    // ships no image, so this number comes off the shared volume, not out of a container.
+    expect($('.vertag')?.textContent).toBe('0.1.0');
+  });
+
+  test('the orchestration card is badged with the platform version', async () => {
+    await mountPage();
+    expect($$('[data-ver="platform"]').map((el) => el.textContent)).toContain('0.1.0');
+  });
+
+  test('each deployed component shows its own version', async () => {
+    await mountPage();
+    const ver = (component: string): string | undefined =>
+      $$(`[data-ver="${component}"]`)[0]?.textContent ?? undefined;
+    expect(ver('quiz')).toBe('0.1.4');
+    expect(ver('rs-mcp-server')).toBe('0.0.32');
+    // home still reports its OWN image's version — the platform version did not overwrite it.
+    expect(ver('home')).toBe('0.1.4');
+  });
+
+  test('a build that does not match main is marked as a snapshot', async () => {
+    await mountPage();
+    const vmcp = $$('[data-ver="vmcp"]')[0];
+    expect(vmcp?.textContent).toBe('0.1.4-snapshot');
+    expect(vmcp?.classList.contains('snapshot')).toBe(true);
+  });
+
+  test('a component that does not answer shows no badge at all, rather than an empty one', async () => {
+    await mountPage();
+    // platform-auth answered null. The badge must stay hidden and empty — an unknown version and a
+    // version of "" are different claims, and only one of them is honest.
+    const auth = $$('[data-ver="platform-auth"]')[0] as HTMLElement | undefined;
+    expect(auth?.textContent).toBe('');
+    expect(auth?.hidden).toBe(true);
+  });
+
+  test('versions are fetched exactly once — they are not polled', async () => {
+    await mountPage();
+    const calls = fetchMock.mock.calls.filter((c) => String(c[0]).endsWith('/api/versions'));
+    expect(calls).toHaveLength(1);
   });
 });
 

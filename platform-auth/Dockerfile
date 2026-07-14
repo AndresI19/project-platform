@@ -12,6 +12,19 @@ FROM node:22-bookworm-slim AS run
 WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=8002
+
+# Version, stamped by k8s/deploy.sh — an OCI label so the image is identifiable without running it,
+# and a VERSION file so the service can serve it from /version. Unset (a bare `docker build`) writes
+# an empty file and the server reports "snapshot"; a dev build must not claim to be a release.
+ARG VERSION
+ARG GIT_SHA
+ARG BUILD_DATE
+LABEL org.opencontainers.image.title="platform-auth" \
+      org.opencontainers.image.description="Identity service — issues and signs platform tokens" \
+      org.opencontainers.image.version="${VERSION}" \
+      org.opencontainers.image.revision="${GIT_SHA}" \
+      org.opencontainers.image.created="${BUILD_DATE}"
+RUN printf '%s' "${VERSION}" > /app/VERSION
 # Patch the base OS, then remove the package manager: the runtime runs `node`, never npm, so npm and
 # its large bundled node_modules (a recurring source of HIGH/CRITICAL CVEs — sigstore, etc.) have no
 # business shipping in the image. Installed prod deps first, since removing npm happens after.

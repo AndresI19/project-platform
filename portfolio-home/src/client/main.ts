@@ -7,10 +7,8 @@ import './styles.css';
 import { mountAccountFab, mountGate } from '@platform/ui/gate';
 import { architectureToggle } from './architecture.js';
 import { loadConfig, refreshLiveness } from './liveness.js';
+import { paintVersions } from './versions.js';
 import { pageHtml } from './view.js';
-
-// Injected at build time from package.json — see vite.config.ts.
-declare const __APP_VERSION__: string;
 
 /**
  * Put the page on the screen and start it running.
@@ -20,9 +18,14 @@ declare const __APP_VERSION__: string;
  * plumbing and assets. This file is the only place that knows the order they go in.
  */
 export function mount(): void {
-  document.getElementById('app')!.innerHTML = pageHtml(__APP_VERSION__);
+  document.getElementById('app')!.innerHTML = pageHtml();
   // After pageHtml, because it binds to the button that markup just created.
   architectureToggle();
+
+  // What every component is actually running. Fetched ONCE — no timer, unlike liveness below: a
+  // version cannot change without a new image, and a new image means new pods, so the only thing that
+  // can change it is a deploy the visitor has to reload the page to see anyway.
+  void paintVersions();
 
   // Identity, shared with every other front end — the gate, the account FAB and sign-out all live in
   // @platform/ui so the three apps cannot grow three different opinions about what signing out means.

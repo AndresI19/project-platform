@@ -91,6 +91,22 @@ export interface Project {
   featured?: boolean;
   /** When set, the card shows a live/offline indicator polled every minute. */
   live?: Live;
+  /**
+   * The name this project is reported under by /api/versions. Set it and the card shows the version
+   * that thing is ACTUALLY running (see client/versions.ts).
+   *
+   * Five of these are deployed services: the key is the name of the image and of the Service, and the
+   * version comes from a VERSION file baked into that image.
+   *
+   * `platform` is the odd one and is deliberately not a service. It is the orchestration repo — the
+   * manifests, the routing, the boot — which ships no image, so it has no image to carry a version
+   * in. Its version is written onto the shared volume by the deploy and read back from there. It is
+   * the version of the platform as a whole, which is why the footer tag shows it.
+   *
+   * A repo on this page that is neither (the planning repos, the tooling) has no version to show,
+   * which is why this is optional rather than derived from the name.
+   */
+  component?: 'home' | 'quiz' | 'vmcp' | 'rs-mcp-server' | 'platform-auth' | 'platform';
   /** Artwork filling the featured card's empty space; a path under public/. */
   image?: string;
   /** Two stacked images instead of one. Use when a single graphic misrepresents the project —
@@ -144,6 +160,7 @@ export const ENTRIES: Entry[] = [
         tech: 'Vanilla TS · Vite · Express',
         // Reaching this page at all means the server answered, so its own health probe is honest.
         live: { type: 'health', url: '/api/health' },
+        component: 'home',
         blurb: 'This site.',
         links: [
           {
@@ -162,6 +179,7 @@ export const ENTRIES: Entry[] = [
         // other front end already verifies tokens against this exact endpoint, so probing it here is
         // the same signal they rely on.
         live: { type: 'health', url: '/.well-known/jwks.json' },
+        component: 'platform-auth',
         blurb: 'The identity service: a username, a 7-character code, and an RS256-signed token.',
         links: [
           {
@@ -180,6 +198,7 @@ export const ENTRIES: Entry[] = [
     featured: true,
     tech: 'Vanilla TS · Vite',
     live: { type: 'health', url: '/cloud-developer-quiz/api/health' },
+    component: 'quiz',
     blurb:
       'A data-driven flashcard quiz for cloud & system-design interview prep, with an isometric garden you grow by answering correctly.',
     // The question first, the garden second. Led by the garden alone, the card reads as a game and
@@ -196,6 +215,7 @@ export const ENTRIES: Entry[] = [
     featured: true,
     tech: 'TypeScript · Carbon',
     live: { type: 'health', url: '/vmcp/api/servers' },
+    component: 'vmcp',
     blurb:
       'A reverse proxy for MCP: one endpoint in front of every MCP server, with a data-driven registry, mocked identity/RBAC, and a dashboard recording each call that crosses it.',
     diagram: 'vmcp',
@@ -218,6 +238,7 @@ export const ENTRIES: Entry[] = [
         tech: 'Python · MCP',
         // "Live" = registered + enabled in the vMCP gateway it is fronted by.
         live: { type: 'vmcp', url: '/vmcp/api/servers', slug: 'rs-mcp' },
+        component: 'rs-mcp-server',
         blurb: 'RuneScape wiki search, GE prices, and hiscores, fronted by open-vMCP.',
         links: [
           {
@@ -262,6 +283,10 @@ export const ENTRIES: Entry[] = [
     // If this page answered at all, nginx routed to `home` — so the stack it orchestrates is up.
     // Reaching the home page IS the liveliness signal for the thing that serves the home page.
     live: { type: 'health', url: '/api/health' },
+    // The one entry whose version is not an image's. This repo ships none — it describes the platform
+    // rather than running on it — so the deploy writes its version onto the shared volume and the
+    // home server reads it back. It is the version of the platform as a whole.
+    component: 'platform',
     blurb:
       'A minikube cluster where nginx fronts every app on one port, published through an outbound Cloudflare tunnel with no open ports, its secrets vaulted.',
     diagram: 'k8s',

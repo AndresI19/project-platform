@@ -1,9 +1,11 @@
+import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { serveClient } from '@platform/ui/server';
 import express from 'express';
 import rateLimit from 'express-rate-limit';
 import { loadEnv } from './env.js';
+import { collectVersions, platformVersion } from './versions.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, '../..'); // project root
@@ -38,6 +40,33 @@ app.use(limiter);
 // registry from: empty means same-origin (/vmcp/api, the local deployment), and in production it is
 // the API host. Served rather than baked in, so one image runs in both places.
 app.get('/api/config', (_req, res) => res.json({ vmcpApiBase: env.vmcpApiBase }));
+
+// ---------------------------------------------------------------------------
+// Versions. This server's own, and — because it is the one component that can reach all the others
+// from inside the cluster — everybody else's, aggregated (see versions.ts for why that fan-out is
+// here and not in the browser).
+//
+// The version is READ FROM A FILE, not from package.json and not from a build-time define. The page
+// used to show `__APP_VERSION__`, which Vite bakes in from package.json at BUILD time — a number
+// that only ever changed when someone remembered to bump it by hand, and which said nothing about
+// what was actually deployed. This one is stamped into the image by k8s/deploy.sh from the real git
+// tag, so the page cannot claim a version it is not running.
+// ---------------------------------------------------------------------------
+const VERSION = ((): string => {
+  try {
+    return readFileSync(resolve(ROOT, 'VERSION'), 'utf8').trim() || 'snapshot';
+  } catch {
+    // No VERSION file means a dev checkout, not a release. Say so rather than inventing a number.
+    return 'snapshot';
+  }
+})();
+
+// `version` is this image's own — baked in, fixed for the life of the container. `platform` is the
+// orchestration repo's, read from the version spec on the shared volume: the platform has no image
+// to carry a version in, so its version is written next to the résumé and the card decks. Two
+// different things, two fields, rather than one field that means whichever the caller assumed.
+app.get('/version', (_req, res) => res.json({ version: VERSION, platform: platformVersion() }));
+app.get('/api/versions', async (_req, res) => res.json(await collectVersions(VERSION)));
 
 // ---------------------------------------------------------------------------
 // "Who are you?" — the optional greeting the home page collects on a first visit, relayed to me
@@ -112,6 +141,7 @@ serveClient(app, { clientDir: CLIENT_DIR, appName: 'portfolio-home' });
 
 app.listen(env.port, () => {
   console.log(`portfolio-home listening on http://localhost:${env.port}`);
+  console.log(`  version    : ${VERSION}`);
   console.log(`  vMCP API   : ${env.vmcpApiBase || '(same-origin /vmcp/api)'}`);
   console.log(
     `  greetings  : ${env.discordWebhookUrl ? 'relayed to Discord' : 'logged to stdout (DISCORD_WEBHOOK_URL unset)'}`,

@@ -35,6 +35,21 @@ FROM node:22-bookworm-slim AS run
 WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=3000
+
+# Version, stamped by k8s/deploy.sh. It goes two places on purpose: an OCI label, so the image can be
+# identified without running it, and a VERSION file, so the running server can serve it from /version
+# without the version having to become an environment variable in the manifest. Unset (a bare
+# `docker build`) writes an empty file, and the server falls back to "snapshot" — a dev build should
+# never claim to be a release.
+ARG VERSION
+ARG GIT_SHA
+ARG BUILD_DATE
+LABEL org.opencontainers.image.title="portfolio-home" \
+      org.opencontainers.image.description="Personal home page + project index" \
+      org.opencontainers.image.version="${VERSION}" \
+      org.opencontainers.image.revision="${GIT_SHA}" \
+      org.opencontainers.image.created="${BUILD_DATE}"
+RUN printf '%s' "${VERSION}" > /app/VERSION
 # Patch the OS, then strip npm (the runtime only ever runs `node`): both are pure CVE surface here.
 RUN apt-get update && apt-get upgrade -y && rm -rf /var/lib/apt/lists/* \
     && rm -rf /usr/local/lib/node_modules/npm /usr/local/bin/npm /usr/local/bin/npx

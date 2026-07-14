@@ -1,3 +1,6 @@
+import { readFileSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import express from 'express';
 import rateLimit from 'express-rate-limit';
 import { env } from './env.js';
@@ -30,6 +33,23 @@ app.use(limiter);
 
 app.get('/health', (_req, res) => {
   res.json({ status: 'ok' });
+});
+
+// The version this image was built from. Baked into <root>/VERSION by the Dockerfile, which
+// k8s/deploy.sh stamps from the repo's latest git tag (suffixed -snapshot when the source differs
+// from main). This file is dist/index.js in the image, so the app root is one directory up. Read once
+// at startup — it cannot change without a new image. Absent in a dev checkout, hence "snapshot": an
+// untagged build must not claim to be a release.
+const VERSION = ((): string => {
+  try {
+    const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+    return readFileSync(resolve(root, 'VERSION'), 'utf8').trim() || 'snapshot';
+  } catch {
+    return 'snapshot';
+  }
+})();
+app.get('/version', (_req, res) => {
+  res.json({ version: VERSION });
 });
 
 /**
