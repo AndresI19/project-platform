@@ -145,8 +145,7 @@ export const ENTRIES: Entry[] = [
         tech: 'Vanilla TS · Vite · Express',
         // Reaching this page at all means the server answered, so its own health probe is honest.
         live: { type: 'health', url: '/api/health' },
-        blurb:
-          'This site, rendered from a single data file — and the home of @platform/ui, the design tokens and server middleware the quiz shares.',
+        blurb: 'This site.',
         links: [
           {
             label: 'Repository →',
@@ -164,8 +163,7 @@ export const ENTRIES: Entry[] = [
         // other front end already verifies tokens against this exact endpoint, so probing it here is
         // the same signal they rely on.
         live: { type: 'health', url: '/.well-known/jwks.json' },
-        blurb:
-          'The identity service: a username, a 7-character code, and an RS256-signed token — no passwords, nothing sensitive stored.',
+        blurb: 'The identity service: a username, a 7-character code, and an RS256-signed token.',
         links: [
           {
             label: 'Repository →',
@@ -267,7 +265,7 @@ export const ENTRIES: Entry[] = [
     // Reaching the home page IS the liveliness signal for the thing that serves the home page.
     live: { type: 'health', url: '/api/health' },
     blurb:
-      'A minikube cluster where nginx fronts every app on one port, published through an outbound Cloudflare tunnel with no open ports, and secrets sealed into the manifests.',
+      'A minikube cluster where nginx fronts every app on one port, published through an outbound Cloudflare tunnel with no open ports, its secrets vaulted.',
     diagram: 'k8s',
     links: [
       // The wiki is the real documentation — architecture, networking, secrets, backup/restore — so
@@ -298,8 +296,7 @@ export const ENTRIES: Entry[] = [
     date: '2020-12-02',
     tech: 'Python · Pygame',
     tag: { label: 'Archived', icon: 'archived' },
-    blurb:
-      'A hand-rolled 2D game engine on a hexagonal grid — camera, dialog, drops, enemies, and a built-in world creator for authoring maps.',
+    blurb: 'A hand-rolled 2D game engine on a hexagonal grid.',
     links: [{ label: 'Repository', href: `${GITHUB_ORG}/Lux-Strike`, external: true }],
   },
 ];

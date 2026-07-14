@@ -251,39 +251,17 @@ const SEC_COLS = ['Image', 'Deps', 'SAST', 'Secrets', 'Config', 'Manifests'] as 
 type SecCol = (typeof SEC_COLS)[number];
 
 interface SecRow {
-  service: string;
   repo: string;
-  /** The topology diagram's colour class, so a service reads as the same thing in both diagrams. */
-  cls: string;
   has: SecCol[];
 }
+// One row per repo — the granularity that matters, since a repo is what a CI pipeline gates. The two
+// services in the platform monorepo (home + platform-auth) share its pipeline, so they share a row.
 const SEC_ROWS: SecRow[] = [
-  { service: 'home', repo: 'project-platform', cls: 'b-app', has: ['Image', 'Deps', 'SAST', 'Secrets'] },
-  {
-    service: 'platform-auth',
-    repo: 'project-platform',
-    cls: 'b-auth',
-    has: ['Image', 'Deps', 'SAST', 'Secrets'],
-  },
-  {
-    service: 'quiz',
-    repo: 'data-driven-quiz-server',
-    cls: 'b-app',
-    has: ['Image', 'Deps', 'SAST', 'Secrets'],
-  },
-  { service: 'vmcp', repo: 'open-vMCP', cls: 'b-app', has: ['Image', 'Deps', 'SAST', 'Secrets'] },
-  {
-    service: 'rs-mcp-server',
-    repo: 'rs-mcp-server',
-    cls: 'b-infra',
-    has: ['Image', 'Deps', 'SAST', 'Secrets'],
-  },
-  {
-    service: 'orchestration',
-    repo: 'platform-orchestration',
-    cls: 'b-net',
-    has: ['Secrets', 'Config', 'Manifests'],
-  },
+  { repo: 'project-platform', has: ['Image', 'Deps', 'SAST', 'Secrets'] },
+  { repo: 'data-driven-quiz-server', has: ['Image', 'Deps', 'SAST', 'Secrets'] },
+  { repo: 'open-vMCP', has: ['Image', 'Deps', 'SAST', 'Secrets'] },
+  { repo: 'rs-mcp-server', has: ['Image', 'Deps', 'SAST', 'Secrets'] },
+  { repo: 'platform-orchestration', has: ['Secrets', 'Config', 'Manifests'] },
 ];
 /** What each column actually runs — the tool, and the class of problem it catches. */
 const SEC_LEGEND: [SecCol, string][] = [
@@ -301,23 +279,20 @@ function securityDiagram(): string {
     const cells = SEC_COLS.map((c) =>
       r.has.includes(c)
         ? `<td class="sec-y"><span aria-label="${c}: yes">✓</span></td>`
-        : `<td class="sec-n"><span aria-label="${c}: not applicable">·</span></td>`,
+        : `<td class="sec-n"><span aria-label="${c}: not applicable">N/A</span></td>`,
     ).join('');
-    return `<tr>
-        <th class="sec-svc"><span class="arch-chip ${r.cls}">${r.service}</span><span class="sec-repo">${r.repo}</span></th>
-        ${cells}
-      </tr>`;
+    return `<tr><th class="sec-repo-name">${r.repo}</th>${cells}</tr>`;
   }).join('');
   const legend = SEC_LEGEND.map(([c, d]) => `<tr><th>${c}</th><td>${d}</td></tr>`).join('');
   return `
     <div class="arch-diagram arch-sec">
       <p class="sec-intro">
-        Every service ships through the same gates. A <strong>✓</strong> is a <strong>blocking</strong>
+        Every repo ships through the same gates. A <strong>✓</strong> is a <strong>blocking</strong>
         check on every pull request — plus branch protection on all of them, so nothing merges unscanned.
       </p>
       <div class="sec-wrap">
         <table class="sec-tbl">
-          <thead><tr><th class="sec-svc">Service</th>${head}</tr></thead>
+          <thead><tr><th class="sec-repo-name">Repo</th>${head}</tr></thead>
           <tbody>${rows}</tbody>
         </table>
       </div>
@@ -325,7 +300,7 @@ function securityDiagram(): string {
       <footer class="arch-foot">
         <div class="arch-key">
           <span class="arch-chip sec-chip-y">✓ blocking scan</span>
-          <span class="arch-chip sec-chip-n">· not applicable</span>
+          <span class="arch-chip sec-chip-n">N/A not applicable</span>
         </div>
         <a class="arch-more" href="${WIKI}" target="_blank" rel="noopener">Security write-up in the wiki →</a>
       </footer>

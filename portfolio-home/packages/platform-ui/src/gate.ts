@@ -119,14 +119,12 @@ const greetView = (): string => `
 export interface GateOptions {
   /** Called once the player has chosen. Apps use this to sync, re-route, or simply re-render. */
   onDone: (id: Identity | null) => void;
-  /** Where the optional greeting is relayed. Absent → the greeting page is skipped entirely. */
+  /** Where the optional greeting is relayed. Absent → the greeting page is skipped entirely, which
+   *  keeps account creation to two pages (pick a name, write the code down). */
   greetUrl?: string;
-  /** Which page to open on. Default 'choose'; the account FAB's "Create an account" opens 'new' so a
-   *  visitor who already said they want an account is not made to say it twice. */
-  initial?: 'choose' | 'new' | 'signin';
 }
 
-export function mountGate({ onDone, greetUrl, initial }: GateOptions): void {
+export function mountGate({ onDone, greetUrl }: GateOptions): void {
   const host = document.createElement('div');
   host.className = 'pg-host';
   document.body.appendChild(host);
@@ -146,7 +144,7 @@ export function mountGate({ onDone, greetUrl, initial }: GateOptions): void {
     }
   };
 
-  shell(initial === 'new' ? newView() : initial === 'signin' ? signInView() : chooseView());
+  shell(chooseView());
 
   host.addEventListener('click', (e) => {
     const act = (e.target as HTMLElement).closest<HTMLElement>('[data-act]')?.dataset.act;
