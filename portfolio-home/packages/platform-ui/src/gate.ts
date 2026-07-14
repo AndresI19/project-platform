@@ -41,8 +41,7 @@ function chooseView(): string {
         <!-- The consequence is IN the offer, not in fine print under it. Someone choosing this
              deserves to know what happens before they click, not after they lose a garden. -->
         <span class="pg-door-d warn">Nothing is sent anywhere. Everything stays in <em>this
-          browser</em> — clear your site data, or open the site somewhere else, and it is gone. There
-          is nothing to recover it from.</span>
+          browser</em> — clear your site data, or open the site somewhere else, and it is gone.</span>
       </button>
     </div>`;
 }
@@ -73,19 +72,11 @@ const signInView = (): string => `
   </div>`;
 
 // The code. The button says "I have written it down" rather than "OK", because "OK" is what people
-// click without reading. It is also recoverable from the account menu for as long as you stay signed
-// in — but that is a convenience, not a safety net, and the warning is careful not to let it read as
-// one: sign out or clear the browser and it is gone for good.
+// click without reading. The code is also recoverable from the account menu while you stay signed in.
 const codeView = (username: string, code: string): string => `
   <h2>Write this down</h2>
   <p class="pg-sub">You are <strong>${esc(username)}</strong>. This is your code.</p>
   <div class="pg-code" data-code>${esc(code)}</div>
-  <p class="pg-warn">
-    <strong>Write it down now.</strong> You can see it again from your account menu (top-right) while
-    you stay signed in, but it is not stored anywhere we can read it, there is no email on this
-    account, and there is no way to reset it. Sign out or clear this browser without it and the
-    account is gone, along with everything in it.
-  </p>
   <div class="pg-actions">
     <button class="pg-btn ghost" data-act="copy">Copy</button>
     <button class="pg-btn primary" data-act="greet">I have written it down</button>
@@ -147,6 +138,11 @@ export function mountGate({ onDone, greetUrl }: GateOptions): void {
   shell(chooseView());
 
   host.addEventListener('click', (e) => {
+    // A click on the backdrop — anywhere outside the box — dismisses the gate and leaves you a guest.
+    if ((e.target as HTMLElement).classList.contains('pg-backdrop')) {
+      if (!current()) continueAsGuest();
+      return close();
+    }
     const act = (e.target as HTMLElement).closest<HTMLElement>('[data-act]')?.dataset.act;
     if (!act) return;
 
