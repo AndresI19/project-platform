@@ -1016,7 +1016,11 @@ section {
   background: linear-gradient(180deg, var(--proj), color-mix(in srgb, var(--proj) 78%, #000));
 }
 .projects .chip.primary:hover {
-  background: linear-gradient(180deg, color-mix(in srgb, var(--proj) 92%, #fff), color-mix(in srgb, var(--proj) 70%, #000));
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--proj) 92%, #fff),
+    color-mix(in srgb, var(--proj) 70%, #000)
+  );
 }
 /* Repository lands here as a ghost chip on most rows but as a PRIMARY one on grouped rows (a group
    member's single link is its main CTA). Left to the base .chip rules the ghost ones stayed navy
