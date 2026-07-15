@@ -101,7 +101,10 @@ export function btn(l: Link, cls = 'btn'): string {
 /** Featured card for a single project. The `kubectl get pods` table needs the full width to avoid
     wrapping its columns, so a card carrying it gets the same width as a group card. */
 export function featCard(p: Project): string {
-  return `<article class="feat lux${p.diagram === 'k8s' ? ' wide' : ''}">
+  // `data-component` lets the stylesheet give one card its own accent — the quiz is themed gold this
+  // way — without a bespoke class per project. Absent for entries that are not deployed components.
+  const dc = p.component ? ` data-component="${esc(p.component)}"` : '';
+  return `<article class="feat lux${p.diagram === 'k8s' ? ' wide' : ''}"${dc}>
     <div class="feat-top">
       <h3>${esc(p.name)}</h3>
       ${badges(tagChip(p), liveBadge(p), versionBadge(p))}
