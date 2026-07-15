@@ -156,6 +156,126 @@ function topologyDiagram(): string {
     </div>`;
 }
 
+/* ── Diagram (CICD) — how a merge reaches the cluster ──────────────────────────────────────────────
+   The design lives in cicd-design/design.html; this is that same picture, translated shape-for-shape
+   and recoloured to the palette above (its --warn/--ok zones become --gold/--proj via .arch-cicd).
+   Three worlds — GitHub's, this machine's, the cluster's — and every arrow is opened from our side.
+   No prose outside the boxes on purpose; the picture carries it. */
+function cicdDiagram(): string {
+  return `
+    <div class="arch-diagram arch-cicd">
+      <svg viewBox="0 0 1280 560" width="100%" role="img" aria-label="A pull request makes a CI job; a merge starts version-tag and release on the same event — version-tag cuts the git tag, release reads it and posts a repository_dispatch. Every job lands in one queue, dispatched by label: ubuntu-latest jobs run on a fresh GitHub-hosted VM, self-hosted jobs are taken by our runner, which polls the queue, pushes to the local registry, tells the apiserver to change the image, and the kubelet pulls. On failure it alerts Discord, outbound.">
+        <defs>
+          <marker id="cicdA" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M0 0 L10 5 L0 10 z" fill="currentColor" style="color:var(--muted)"/>
+          </marker>
+        </defs>
+
+        <!-- GitHub-hosted -->
+        <rect class="zone z-gh" x="6" y="8" width="594" height="544" rx="12"/>
+        <text class="t s" x="20" y="27">GitHub-hosted · GitHub's infrastructure</text>
+
+        <rect class="box" x="20" y="36" width="160" height="32" rx="7"/>
+        <text class="t" x="34" y="56">Service repo 1</text>
+        <rect class="box" x="58" y="66" width="160" height="32" rx="7"/>
+        <text class="t" x="72" y="86">Service repo 2</text>
+        <rect class="box" x="96" y="96" width="160" height="32" rx="7"/>
+        <text class="t" x="110" y="116">Service repo 3</text>
+
+        <path class="ln" style="marker-end:url(#cicdA)" d="M110 128 V 148"/>
+        <path class="ln" style="marker-end:url(#cicdA)" d="M256 112 H 330 V 146"/>
+
+        <rect class="box" x="20" y="150" width="230" height="44" rx="8"/>
+        <text class="t" x="34" y="176">pull_request</text>
+
+        <path class="ln" style="marker-end:url(#cicdA)" d="M70 194 V 212"/>
+
+        <rect class="box" x="20" y="212" width="230" height="76" rx="8"/>
+        <text class="t" x="34" y="230">CI job</text>
+        <text class="t m" x="34" y="247">ci.yml</text>
+        <text class="t m" x="34" y="262">codeql.yml</text>
+        <text class="t m" x="34" y="277">secret-scan.yml</text>
+
+        <rect class="box" x="290" y="150" width="270" height="44" rx="8"/>
+        <text class="t" x="304" y="176">Merge</text>
+
+        <path class="ln" style="marker-end:url(#cicdA)" d="M425 194 V 212"/>
+
+        <rect class="box" x="290" y="212" width="270" height="76" rx="8"/>
+        <text class="t" x="304" y="232">Version tag and release</text>
+        <text class="t m" x="304" y="256">version-tag.yml</text>
+        <text class="t m" x="304" y="273">release.yml</text>
+
+        <path class="ln hot" style="marker-end:url(#cicdA)" d="M425 288 V 330"/>
+        <path class="ln" style="marker-end:url(#cicdA)" d="M70 288 V 330"/>
+
+        <rect class="box here" x="20" y="330" width="540" height="106" rx="8"/>
+        <text class="t big" x="34" y="362">The job queue · every repo's jobs land here</text>
+        <text class="t s" x="34" y="388">dispatched BY LABEL: a job reaches only a runner whose labels match.</text>
+        <text class="t s" x="34" y="412">The runner is registered solely to platform-cicd, isolated from the application repositories.</text>
+
+        <path class="ln" style="marker-end:url(#cicdA)" d="M303 436 V 475"/>
+
+        <rect class="box vm" x="170" y="475" width="266" height="50" rx="8"/>
+        <text class="t" x="184" y="497">GitHub-hosted VM · fresh per job</text>
+        <text class="t s" x="184" y="514">provisioned for ONE job, then DESTROYED.</text>
+
+        <!-- Outside K8s -->
+        <rect class="zone z-out" x="616" y="8" width="304" height="544" rx="12"/>
+        <text class="t s" x="630" y="27">Outside K8s · this machine, not in the cluster</text>
+
+        <rect class="box here" x="630" y="110" width="276" height="76" rx="8"/>
+        <text class="t" x="644" y="130">registry:5000 · TLS, our own CA</text>
+        <text class="t s" x="644" y="147">pinned .10 · keeps the latest 2</text>
+        <text class="t s" x="644" y="164">the kubelet trusts our CA</text>
+
+        <path class="ln hot" style="marker-end:url(#cicdA)" d="M690 300 V 192"/>
+        <text class="t s" x="698" y="250">(2) push</text>
+
+        <rect class="box here" x="630" y="300" width="276" height="155" rx="8"/>
+        <text class="t big" x="644" y="326">Self-hosted runner · ephemeral</text>
+        <text class="t s" x="644" y="346">ONE job at a time — that IS the serialization</text>
+        <text class="t s" x="644" y="360">one job, de-register, restart</text>
+        <text class="t m" x="644" y="380">1 · docker build --build-arg VERSION</text>
+        <text class="t m" x="644" y="397">2 · docker push registry:5000/quiz:…</text>
+        <text class="t m" x="644" y="414">3 · kubectl set image deploy/quiz …</text>
+        <text class="t s" x="644" y="434">on failure → rollout undo, and Discord</text>
+
+        <path class="ln hot" style="marker-end:url(#cicdA)" d="M630 385 H 566"/>
+        <text class="t s" x="570" y="378">(1) polls</text>
+
+        <!-- an outbound alert to Discord on failure — no destination drawn, just that it leaves -->
+        <path class="ln" style="marker-end:url(#cicdA)" d="M768 455 V 540"/>
+        <text class="t s" x="640" y="500">outbound → Discord ↗</text>
+
+        <!-- Inside K8s -->
+        <rect class="zone z-k8s" x="936" y="8" width="338" height="544" rx="12"/>
+        <text class="t s" x="950" y="27">Inside K8s · the cluster</text>
+
+        <rect class="box here" x="950" y="110" width="310" height="76" rx="8"/>
+        <text class="t" x="964" y="130">kubelet · the minikube node</text>
+        <text class="t m" x="964" y="149">pull registry:5000/quiz:0.1.12</text>
+
+        <path class="ln hot" style="marker-end:url(#cicdA)" d="M950 148 H 912"/>
+        <text class="t s" x="916" y="102">(4) pull</text>
+
+        <path class="ln" style="stroke-dasharray:4 3; marker-end:url(#cicdA)" d="M1040 300 V 192"/>
+        <text class="t s" x="1048" y="240">schedules a Pod for an image</text>
+        <text class="t s" x="1048" y="254">the node has yet to pull</text>
+
+        <rect class="box here" x="950" y="300" width="310" height="155" rx="8"/>
+        <text class="t big" x="964" y="326">apiserver · platform namespace</text>
+        <text class="t s" x="964" y="348">the new image spec → a new ReplicaSet →</text>
+        <text class="t m" x="964" y="368">rollout status || rollout undo</text>
+        <text class="t s" x="964" y="388">reached at its NATIVE address — the one</text>
+        <text class="t s" x="964" y="402">the host cannot route to, but the runner can</text>
+
+        <path class="ln hot" style="marker-end:url(#cicdA)" d="M906 352 H 946"/>
+        <text class="t s" x="912" y="344">(3)</text>
+      </svg>
+    </div>`;
+}
+
 /* ── Diagram 2 — auth & the browser ────────────────────────────────────────────────────────────── */
 // TWO stacked pictures, because a front end touches platform-auth for two different reasons and the
 // old single grid blurred them. TOP is the MISS path: the browser's gate, finding no local identity,
@@ -314,12 +434,14 @@ export function architecturePanel(): string {
         <div class="arch-slider">
           <div class="arch-tabs" role="tablist" aria-label="Architecture diagrams">
             <button class="arch-tab is-active" type="button" role="tab" aria-selected="true" data-slide="0">Platform Topography</button>
-            <button class="arch-tab" type="button" role="tab" aria-selected="false" data-slide="1">Auth and Entrypoint</button>
-            <button class="arch-tab" type="button" role="tab" aria-selected="false" data-slide="2">Security</button>
+            <button class="arch-tab" type="button" role="tab" aria-selected="false" data-slide="1">CICD</button>
+            <button class="arch-tab" type="button" role="tab" aria-selected="false" data-slide="2">Auth and Entrypoint</button>
+            <button class="arch-tab" type="button" role="tab" aria-selected="false" data-slide="3">Security</button>
           </div>
           <div class="arch-viewport">
             <div class="arch-track">
               <section class="arch-slide" role="tabpanel" aria-label="Platform Topography">${topologyDiagram()}</section>
+              <section class="arch-slide" role="tabpanel" aria-label="CICD">${cicdDiagram()}</section>
               <section class="arch-slide" role="tabpanel" aria-label="Auth and Entrypoint">${authDiagram()}</section>
               <section class="arch-slide" role="tabpanel" aria-label="Security posture">${securityDiagram()}</section>
             </div>
