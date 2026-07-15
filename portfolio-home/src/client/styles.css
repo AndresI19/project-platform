@@ -1740,16 +1740,33 @@ section {
 }
 .arch-cicd .box {
   fill: var(--panel-2);
-  stroke: var(--line);
+  stroke: color-mix(in srgb, var(--muted) 42%, var(--line));
+  stroke-width: 1.3;
 }
 .arch-cicd .box.here {
   fill: color-mix(in srgb, var(--accent) 9%, var(--panel-2));
-  stroke: color-mix(in srgb, var(--accent) 35%, var(--line));
 }
 .arch-cicd .box.vm {
   fill: color-mix(in srgb, var(--muted) 18%, var(--panel-2));
-  stroke: color-mix(in srgb, var(--muted) 45%, var(--line));
   stroke-dasharray: 5 4;
+}
+/* Zone labels as filled pills — the same device the topology's frame tags use. Backgrounds are the
+   zone hue darkened so white text reads in both light and dark themes. */
+.arch-cicd .ztag-gh {
+  fill: color-mix(in srgb, var(--gold) 82%, #000);
+  stroke: none;
+}
+.arch-cicd .ztag-out {
+  fill: color-mix(in srgb, var(--proj) 82%, #000);
+  stroke: none;
+}
+.arch-cicd .ztag-k8s {
+  fill: color-mix(in srgb, var(--accent2) 70%, #000);
+  stroke: none;
+}
+.arch-cicd .ztt {
+  fill: #fff;
+  font: 700 11px -apple-system, "Segoe UI", Roboto, sans-serif;
 }
 .arch-cicd .zone {
   fill: none;

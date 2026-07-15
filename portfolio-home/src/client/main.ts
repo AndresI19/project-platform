@@ -22,6 +22,21 @@ export function mount(): void {
   // After pageHtml, because it binds to the button that markup just created.
   architectureToggle();
 
+  // Wheel over the featured banner scrolls it horizontally — the same gesture the quiz's shop rows
+  // use. A vertical wheel on a horizontal-scroll strip is otherwise dead, or worse, scrolls the page
+  // out from under the thing you are trying to pan. Only when there is actually overflow to pan.
+  document.querySelectorAll<HTMLElement>('.feat-banner').forEach((row) => {
+    row.addEventListener(
+      'wheel',
+      (e) => {
+        if (e.deltaY === 0 || row.scrollWidth <= row.clientWidth) return;
+        e.preventDefault();
+        row.scrollLeft += e.deltaY;
+      },
+      { passive: false },
+    );
+  });
+
   // What every component is actually running. Fetched ONCE — no timer, unlike liveness below: a
   // version cannot change without a new image, and a new image means new pods, so the only thing that
   // can change it is a deploy the visitor has to reload the page to see anyway.

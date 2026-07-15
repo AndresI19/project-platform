@@ -173,7 +173,8 @@ function cicdDiagram(): string {
 
         <!-- GitHub-hosted -->
         <rect class="zone z-gh" x="6" y="8" width="594" height="544" rx="12"/>
-        <text class="t s" x="20" y="27">GitHub-hosted · GitHub's infrastructure</text>
+        <rect class="ztag-gh" x="16" y="12" width="238" height="22" rx="11"/>
+        <text class="ztt" x="28" y="27">GitHub-hosted · GitHub's infrastructure</text>
 
         <rect class="box" x="20" y="36" width="160" height="32" rx="7"/>
         <text class="t" x="34" y="56">Service repo 1</text>
@@ -186,7 +187,7 @@ function cicdDiagram(): string {
         <path class="ln" style="marker-end:url(#cicdA)" d="M256 112 H 330 V 146"/>
 
         <rect class="box" x="20" y="150" width="230" height="44" rx="8"/>
-        <text class="t" x="34" y="176">pull_request</text>
+        <text class="t" x="34" y="176">PR</text>
 
         <path class="ln" style="marker-end:url(#cicdA)" d="M70 194 V 212"/>
 
@@ -222,15 +223,16 @@ function cicdDiagram(): string {
 
         <!-- Outside K8s -->
         <rect class="zone z-out" x="616" y="8" width="304" height="544" rx="12"/>
-        <text class="t s" x="630" y="27">Outside K8s · this machine, not in the cluster</text>
+        <rect class="ztag-out" x="626" y="12" width="278" height="22" rx="11"/>
+        <text class="ztt" x="638" y="27">Outside K8s · this machine, not in the cluster</text>
 
         <rect class="box here" x="630" y="110" width="276" height="76" rx="8"/>
         <text class="t" x="644" y="130">registry:5000 · TLS, our own CA</text>
         <text class="t s" x="644" y="147">pinned .10 · keeps the latest 2</text>
         <text class="t s" x="644" y="164">the kubelet trusts our CA</text>
 
-        <path class="ln hot" style="marker-end:url(#cicdA)" d="M690 300 V 192"/>
-        <text class="t s" x="698" y="250">(2) push</text>
+        <path class="ln hot" style="marker-end:url(#cicdA)" d="M768 300 V 192"/>
+        <text class="t s" x="776" y="250">(2) push</text>
 
         <rect class="box here" x="630" y="300" width="276" height="155" rx="8"/>
         <text class="t big" x="644" y="326">Self-hosted runner · ephemeral</text>
@@ -244,13 +246,14 @@ function cicdDiagram(): string {
         <path class="ln hot" style="marker-end:url(#cicdA)" d="M630 385 H 566"/>
         <text class="t s" x="570" y="378">(1) polls</text>
 
-        <!-- an outbound alert to Discord on failure — no destination drawn, just that it leaves -->
-        <path class="ln" style="marker-end:url(#cicdA)" d="M768 455 V 540"/>
-        <text class="t s" x="640" y="500">outbound → Discord ↗</text>
+        <!-- an outbound alert to Discord on failure — it LEAVES the box: starts inside, crosses out -->
+        <path class="ln" style="marker-end:url(#cicdA)" d="M855 440 V 545"/>
+        <text class="t s" x="700" y="500">outbound → Discord ↗</text>
 
         <!-- Inside K8s -->
         <rect class="zone z-k8s" x="936" y="8" width="338" height="544" rx="12"/>
-        <text class="t s" x="950" y="27">Inside K8s · the cluster</text>
+        <rect class="ztag-k8s" x="946" y="12" width="156" height="22" rx="11"/>
+        <text class="ztt" x="958" y="27">Inside K8s · the cluster</text>
 
         <rect class="box here" x="950" y="110" width="310" height="76" rx="8"/>
         <text class="t" x="964" y="130">kubelet · the minikube node</text>
@@ -259,9 +262,9 @@ function cicdDiagram(): string {
         <path class="ln hot" style="marker-end:url(#cicdA)" d="M950 148 H 912"/>
         <text class="t s" x="916" y="102">(4) pull</text>
 
-        <path class="ln" style="stroke-dasharray:4 3; marker-end:url(#cicdA)" d="M1040 300 V 192"/>
-        <text class="t s" x="1048" y="240">schedules a Pod for an image</text>
-        <text class="t s" x="1048" y="254">the node has yet to pull</text>
+        <path class="ln" style="stroke-dasharray:4 3; marker-end:url(#cicdA)" d="M1105 300 V 192"/>
+        <text class="t s" x="1113" y="240">schedules a Pod for an image</text>
+        <text class="t s" x="1113" y="254">the node has yet to pull</text>
 
         <rect class="box here" x="950" y="300" width="310" height="155" rx="8"/>
         <text class="t big" x="964" y="326">apiserver · platform namespace</text>
