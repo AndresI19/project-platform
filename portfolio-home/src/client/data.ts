@@ -143,12 +143,43 @@ export const isGroup = (e: Entry): e is Group => 'members' in e;
 // Featured entries lead the banner; the rest follow in the full list. Dates are last-commit dates.
 export const ENTRIES: Entry[] = [
   {
-    // First, and featured: it is the page you are on, and the source of truth for @platform/ui —
-    // the design system every other front end here builds from. It used to sit unfeatured near the
-    // bottom, which undersold the one project that literally renders everything above it.
-    // A monorepo, so a group: the page you are on and the identity service behind it live in one
-    // repository because they version together — the home page renders identities the auth service
-    // issues. First and featured, because it is the foundation everything else here is built on.
+    name: 'Cloud Developer Quiz',
+    date: '2026-07',
+    featured: true,
+    tech: 'Vanilla TS · Vite',
+    live: { type: 'health', url: '/cloud-developer-quiz/api/health' },
+    component: 'quiz',
+    blurb:
+      'A data-driven flashcard quiz for cloud & system-design interview prep, with an isometric garden you grow by answering correctly.',
+    // The question first, the garden second. Led by the garden alone, the card reads as a game and
+    // the word "quiz" gets lost — so an actual fill-in-the-blank card carries the top slot.
+    images: ['/quiz-sharding.png', '/home-page-garden.gif'],
+    links: [
+      { label: 'Check out! →', href: '/cloud-developer-quiz/', primary: true },
+      { label: 'Repository', href: `${GITHUB_ORG}/data-driven-quiz-server`, external: true },
+    ],
+  },
+  {
+    name: 'open-vMCP',
+    date: '2026-07-09',
+    featured: true,
+    tech: 'TypeScript · Carbon',
+    live: { type: 'health', url: '/vmcp/api/servers' },
+    component: 'vmcp',
+    blurb:
+      'A reverse proxy for MCP: one endpoint in front of every MCP server, with a data-driven registry, mocked identity/RBAC, and a dashboard recording each call that crosses it.',
+    diagram: 'vmcp',
+    links: [
+      { label: 'Check out! →', href: '/vmcp/', primary: true },
+      { label: 'Repository', href: `${GITHUB_ORG}/open-vMCP`, external: true },
+    ],
+  },
+  {
+    // Third in the banner now, by choice: the quiz leads, and this — the page you are on, and the
+    // source of truth for @platform/ui, the design system every other front end here builds from —
+    // follows it. A monorepo, so a group: the home page and the identity service behind it live in
+    // one repository because they version together, the home page rendering identities the auth
+    // service issues.
     name: 'project-platform',
     date: '2026-07-13',
     featured: true,
@@ -180,7 +211,7 @@ export const ENTRIES: Entry[] = [
         // the same signal they rely on.
         live: { type: 'health', url: '/.well-known/jwks.json' },
         component: 'platform-auth',
-        blurb: 'The identity service: a username, a 7-character code, and an RS256-signed token.',
+        blurb: 'The identity service: a username, a chosen password, and an RS256-signed token.',
         links: [
           {
             label: 'Repository →',
@@ -190,38 +221,6 @@ export const ENTRIES: Entry[] = [
           },
         ],
       },
-    ],
-  },
-  {
-    name: 'Cloud Developer Quiz',
-    date: '2026-07',
-    featured: true,
-    tech: 'Vanilla TS · Vite',
-    live: { type: 'health', url: '/cloud-developer-quiz/api/health' },
-    component: 'quiz',
-    blurb:
-      'A data-driven flashcard quiz for cloud & system-design interview prep, with an isometric garden you grow by answering correctly.',
-    // The question first, the garden second. Led by the garden alone, the card reads as a game and
-    // the word "quiz" gets lost — so an actual fill-in-the-blank card carries the top slot.
-    images: ['/quiz-sharding.png', '/home-page-garden.gif'],
-    links: [
-      { label: 'Check out! →', href: '/cloud-developer-quiz/', primary: true },
-      { label: 'Repository', href: `${GITHUB_ORG}/data-driven-quiz-server`, external: true },
-    ],
-  },
-  {
-    name: 'open-vMCP',
-    date: '2026-07-09',
-    featured: true,
-    tech: 'TypeScript · Carbon',
-    live: { type: 'health', url: '/vmcp/api/servers' },
-    component: 'vmcp',
-    blurb:
-      'A reverse proxy for MCP: one endpoint in front of every MCP server, with a data-driven registry, mocked identity/RBAC, and a dashboard recording each call that crosses it.',
-    diagram: 'vmcp',
-    links: [
-      { label: 'Check out! →', href: '/vmcp/', primary: true },
-      { label: 'Repository', href: `${GITHUB_ORG}/open-vMCP`, external: true },
     ],
   },
   {

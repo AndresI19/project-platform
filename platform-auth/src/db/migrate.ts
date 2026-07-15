@@ -13,13 +13,13 @@ await db.execute(sql`
   CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
   CREATE TABLE IF NOT EXISTS identities (
-    id           uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-    username     text NOT NULL UNIQUE,
-    code_lookup  text NOT NULL UNIQUE,
-    created_at   timestamptz NOT NULL DEFAULT now(),
-    last_seen    timestamptz NOT NULL DEFAULT now()
+    id             uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    username       text NOT NULL UNIQUE,
+    password_hash  text NOT NULL,
+    created_at     timestamptz NOT NULL DEFAULT now(),
+    last_seen      timestamptz NOT NULL DEFAULT now()
   );
-  CREATE INDEX IF NOT EXISTS identities_code_lookup_idx ON identities (code_lookup);
+  CREATE INDEX IF NOT EXISTS identities_username_idx ON identities (username);
 
   CREATE TABLE IF NOT EXISTS auth_attempts (
     id  uuid PRIMARY KEY DEFAULT gen_random_uuid(),

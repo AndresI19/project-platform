@@ -1,54 +1,60 @@
 # platform-auth
 
-Identity for the platform: a memorable code, exchanged for a signed JWT.
+Identity for the platform: a username and a chosen password, exchanged for a signed JWT.
 
-> **This is pseudonymous identity, not security.** A 7-character code is the entire credential —
-> anyone holding it *is* that user. It is a cloakroom ticket, not a login. Nothing sensitive is ever
-> stored behind it: no email, no real name, no PII. See [DESIGN.md](DESIGN.md).
+> **This is pseudonymous identity, not high-value security.** The username is public and the password
+> is the entire credential — anyone holding both *is* that user. It is a locker with a combination you
+> chose, not a bank login. Nothing sensitive is ever stored behind it: no email, no real name, no PII.
+> See [DESIGN.md](DESIGN.md). *(Earlier this service issued a server-generated code instead of a
+> password; DESIGN.md §1 keeps that history because it explains the current defences.)*
 
 ## How it works
 
 ```
-  browser                     platform-auth                     open-vMCP / quiz API
-     │                              │                                    │
-     │  POST /auth/identities       │                                    │
-     ├─────────────────────────────►│  mints code + handle + sub         │
-     │◄─────────────────────────────┤  { code, handle, token }           │
-     │   ↑ the ONLY time the code    │   (code is never returned again)   │
-     │     is ever sent              │                                    │
-     │                              │                                    │
-     │  POST /auth/token { code }   │                                    │
-     ├─────────────────────────────►│  HMAC lookup → mint RS256 JWT      │
-     │◄─────────────────────────────┤  { token }                         │
-     │                              │                                    │
-     │  Authorization: Bearer …                                          │
-     ├──────────────────────────────────────────────────────────────────►│
-     │                              │◄── GET /.well-known/jwks.json ─────┤
-     │                              │    (public key; verifiers can       │
-     │                              │     CHECK a token, never MINT one)  │
+  browser                        platform-auth                     open-vMCP / quiz API
+     │                                 │                                    │
+     │  POST /auth/identities          │                                    │
+     │    { username, password }       │                                    │
+     ├────────────────────────────────►│  hash password + mint sub          │
+     │◄────────────────────────────────┤  { username, token }               │
+     │                                 │   (password is never returned)     │
+     │                                 │                                    │
+     │  POST /auth/token               │                                    │
+     │    { username, password }       │                                    │
+     ├────────────────────────────────►│  find by username → verify → JWT   │
+     │◄────────────────────────────────┤  { token }                         │
+     │                                 │                                    │
+     │  Authorization: Bearer …                                             │
+     ├─────────────────────────────────────────────────────────────────────►│
+     │                                 │◄── GET /.well-known/jwks.json ─────┤
+     │                                 │    (public key; verifiers can       │
+     │                                 │     CHECK a token, never MINT one)  │
 ```
 
 ## Three values, deliberately distinct
 
 | | Example | Where it may appear |
 | --- | --- | --- |
-| **code** | `4KP7R2M` | The user's own screen, once. Never logged, never in a token, never returned again. |
+| **password** | chosen by the user | Sent on sign-up/sign-in. Never logged, never in a token, never returned. |
+| **username** | `andres` | The user's screen, dashboards, the vMCP User column, leaderboards. Safe to show anyone. |
 | **sub** | a UUID | Inside JWTs; the foreign key every other service stores. |
-| **handle** | `2NZXF` | Dashboards, the vMCP User column, leaderboards. Safe to show anyone. |
 
-The code is **not** the user id. If it were, it would be printed in vMCP's publicly-readable User
-column — the credential would be published by design. See DESIGN.md §2.
+The password is **not** the user id. The public identity is the username; the password only proves it
+is yours. See DESIGN.md §2.
 
-The code is **not stored**, either: the database holds `HMAC-SHA256(pepper, code)`. Deterministic, so
-login is one indexed read; keyed, so a stolen dump reveals nothing without the pepper.
+The password is **not stored**, either: the database holds `scrypt(pepper + password, salt)`, salted
+per row and self-describing. Login finds the row by username, then verifies — slow (scrypt), salted
+(users are independent), and peppered (a stolen dump reveals nothing without a secret it does not
+contain).
 
 ## API
 
 | | |
 | --- | --- |
-| `POST /auth/identities` | Mint an identity. Returns `{ code, handle, token }`. |
-| `POST /auth/token` | `{ code }` → `{ token, handle, expiresIn }`. Rate-limited. |
-| `GET /auth/me` | Bearer → `{ sub, handle, exp }`. Verifies, does not merely decode. |
+| `POST /auth/identities` | Mint an identity from `{ username, password }`. Returns `{ username, token, expiresIn }`. |
+| `POST /auth/token` | `{ username, password }` → `{ token, username, expiresIn }`. Rate-limited. |
+| `GET /auth/me` | Bearer → `{ sub, username, exp }`. Verifies, does not merely decode. |
+| `GET /auth/usernames/:name` | Whether a username is well-formed and available. |
 | `GET /.well-known/jwks.json` | The public keys. |
 | `GET /health` | |
 
@@ -66,8 +72,9 @@ npm run db:migrate
 npm run dev
 ```
 
-`npm test` — 13 tests. They assert the properties that matter: the alphabet excludes look-alikes, the
-stored lookup is useless without the pepper, and the token never carries the code.
+`npm test` — 14 tests. They assert the properties that matter: a chosen password verifies and a
+near-miss does not, the stored hash is salted and useless without the pepper, and the token never
+carries the password.
 
 ## Sharp edges
 
@@ -77,5 +84,8 @@ stored lookup is useless without the pepper, and the token never carries the cod
 - **Rate limiting protects the service, not the user.** A patient distributed attacker sampling the
   keyspace will eventually land on somebody's code. 34 billion combinations makes that a long way
   off, and the prize is a stranger's flashcard garden. Do not mistake it for safety.
-- **A lost code is lost.** There is no recovery, because recovery would need an email, and an email
-  would be PII. That is the trade this identity makes.
+- **A forgotten password is lost.** There is still no recovery, because recovery would need an email,
+  and an email would be PII. The user chooses the secret now, but a forgotten one is gone.
+- **A chosen password is a weaker floor than the old code.** The 7-char code was 34 billion uniform
+  values the server guaranteed; a user picks worse. scrypt + salt + pepper defend the *dump*, and the
+  8-char minimum is the only floor on *online* guessing. Do not mistake either for strong auth.

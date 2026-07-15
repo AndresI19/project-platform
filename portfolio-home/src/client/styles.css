@@ -1,7 +1,8 @@
 /* Surfaces, text, lines, the navy accent and the page wash all come from @platform/ui — imported in
    main.ts, ahead of this file. What is left here is what only the home page has an opinion about.
-   (--good and --gold used to be declared here too; they were inherited by the original copy-paste
-   and never used by a single rule, so they are gone.) */
+   (--good used to be declared here too; it was inherited by the original copy-paste and never used by
+   a single rule, so it is gone. --gold is back, and now earns its place: the quiz's featured card is
+   themed with it — see .feat[data-component="quiz"].) */
 :root {
   /* The content column is NOT declared here any more. It lives in @platform/ui's base.css, which is
      now the single definition of it — this page and the quiz having different gutters was exactly
@@ -17,19 +18,22 @@
   --indigo: #5a67f2;
   --indigo-2: #7d87ff;
   /* Per-destination brand colours for the contact chips, plus one hue per section so the page reads
-     as three distinct kinds of thing: navy (--accent) for featured work, green (--exp) for
-     employment history, amber (--proj) for the full project list. Each is muted rather than
-     saturated — they sit stacked down one page, so they have to be restful, not loud.
-     --wip is a separate orange: the work-in-progress badge lives *inside* the amber section, so it
-     cannot also be amber or it would vanish into its own background. */
+     as distinct kinds of thing: navy (--accent) for featured work, teal (--exp) for employment
+     history, green (--proj) for the full project list — and gold (--gold) for the one featured card
+     that earns its own accent, the quiz. Each is muted rather than saturated — they sit stacked down
+     one page, so they have to be restful, not loud.
+     --wip is a separate orange: the work-in-progress badge lives *inside* the green project section,
+     so it cannot also be green or it would vanish into its own background. */
   --brand-gh: #24292f;
   --brand-li: #0a66c2;
   --brand-em: #0d9488;
-  --exp: #2f9e6a;
-  --exp-2: #1e7a51;
+  --exp: #0f766e;
+  --exp-2: #115e59;
   --slate: #64748b;
-  --proj: #c08a12;
-  --proj-2: #8a610a;
+  --proj: #2f9e6a;
+  --proj-2: #1e7a51;
+  --gold: #c08a12;
+  --gold-2: #8a610a;
   --wip: #e2660c;
 }
 @media (prefers-color-scheme: dark) {
@@ -42,11 +46,13 @@
     --brand-gh: #e6edf3;
     --brand-li: #5aa9f0;
     --brand-em: #2dd4bf;
-    --exp: #4cc38a;
-    --exp-2: #7fdcaf;
+    --exp: #14b8a6;
+    --exp-2: #2dd4bf;
     --slate: #94a3b8;
-    --proj: #e8b23c;
-    --proj-2: #f2cd77;
+    --proj: #4cc38a;
+    --proj-2: #7fdcaf;
+    --gold: #e8b23c;
+    --gold-2: #f2cd77;
     --wip: #ff8c42;
   }
 }
@@ -231,6 +237,29 @@ section {
   transition: background-position .7s ease, opacity .2s;
 }
 
+/* The quiz is the one featured card with its own accent: gold — but only its CHROME, not its
+   controls. This used to override --accent on the whole card, which also re-tinted the "Check out!"
+   and "Repository" buttons gold; those must keep their original accent, so gold is applied to the
+   wash, border and left rail explicitly here instead, and the gleam is re-tinted just below. */
+.feat[data-component="quiz"] {
+  background: color-mix(in srgb, var(--gold) 5%, var(--panel));
+  border-color: color-mix(in srgb, var(--gold) 22%, var(--line));
+  border-left-color: var(--gold);
+}
+/* And its gleam: the lux strike is a white sweep on every other card; on the quiz it is gold, so the
+   hover reads as part of the same theme. Only the gradient is overridden — the sweep's size, resting
+   position and the hover animation are all inherited from .lux::before above. */
+.feat[data-component="quiz"].lux::before {
+  background-image: linear-gradient(
+    105deg,
+    transparent 34%,
+    color-mix(in srgb, var(--gold) 55%, transparent) 46%,
+    color-mix(in srgb, var(--gold) 85%, transparent) 50%,
+    color-mix(in srgb, var(--gold) 55%, transparent) 54%,
+    transparent 66%
+  );
+}
+
 /* Featured — a horizontal-scroll banner of cards. */
 .feat-banner {
   display: flex;
@@ -250,8 +279,8 @@ section {
 }
 /* Featured cards borrow what makes the experience rows look good: a coloured left rail, a wash of
    the section's own hue, and a lift on hover. Before, the projects — the things the page exists to
-   show — were flatter than the employment history sitting under them. The rail is indigo here and
-   green there, so the two sections still read as different kinds of thing. */
+   show — were flatter than the employment history sitting under them. The rail is navy here and
+   teal there, so the two sections still read as different kinds of thing. */
 .feat {
   flex: none;
   width: 292px;
@@ -808,9 +837,9 @@ section {
   }
 }
 
-/* Professional experience — deliberately teal, where every project surface is indigo. Employment
-   history is a different kind of thing from a side project, and the colour says so before the
-   heading is read. The left rail and tinted panel carry the distinction. */
+/* Professional experience — deliberately teal, where featured work is navy and the project list is
+   green. Employment history is a different kind of thing from a side project, and the colour says so
+   before the heading is read. The left rail and tinted panel carry the distinction. */
 .exp-lab {
   color: var(--exp);
 }
@@ -917,10 +946,10 @@ section {
   }
 }
 
-/* All projects — detailed dated list, and the page's third hue. Featured work is indigo, employment
-   is green, and the full archive is amber: three sections, three colours, so a reader can tell
-   which one they are in without reading the heading. Same rail-plus-wash-plus-lift construction as
-   the other two, so they read as siblings rather than three unrelated designs. */
+/* All projects — detailed dated list, now the page's green hue. Featured work is navy, employment is
+   teal, and the full archive is green (the quiz card being the one gold exception in the banner
+   above): distinct colours, so a reader can tell which section they are in without reading the
+   heading. Same rail-plus-wash-plus-lift construction as the other two, so they read as siblings. */
 .proj-lab {
   color: var(--proj-2);
 }
@@ -978,13 +1007,29 @@ section {
   border-color: color-mix(in srgb, var(--proj) 22%, var(--line));
   border-left-color: color-mix(in srgb, var(--proj) 55%, var(--line));
 }
+/* The primary chip in All projects — "Check out!" — is FILLED green, the same solid treatment the
+   featured cards' primary buttons get, rather than the pale tint it used to be. A call to action on a
+   green row should read as green, not as a faint wash of it. */
 .projects .chip.primary {
-  color: var(--proj-2);
-  background: color-mix(in srgb, var(--proj) 12%, var(--panel));
-  border: 1px solid color-mix(in srgb, var(--proj) 42%, var(--line));
+  color: #fff;
+  border: 1px solid transparent;
+  background: linear-gradient(180deg, var(--proj), color-mix(in srgb, var(--proj) 78%, #000));
 }
 .projects .chip.primary:hover {
-  background: color-mix(in srgb, var(--proj) 20%, var(--panel));
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--proj) 92%, #fff),
+    color-mix(in srgb, var(--proj) 70%, #000)
+  );
+}
+/* Repository lands here as a ghost chip on most rows but as a PRIMARY one on grouped rows (a group
+   member's single link is its main CTA). Left to the base .chip rules the ghost ones stayed navy
+   while the primary ones went green — the same label, two colours down one list. Pin the ghost to the
+   section's green as well, so every chip in All projects reads as one green family. */
+.projects .chip.ghost {
+  color: var(--muted);
+  background: color-mix(in srgb, var(--proj) 8%, var(--panel));
+  border: 1px solid color-mix(in srgb, var(--proj) 30%, var(--line));
 }
 .projects .chip.ghost:hover {
   color: var(--proj-2);

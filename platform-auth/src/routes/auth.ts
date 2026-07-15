@@ -1,21 +1,28 @@
-import { and, eq, sql } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import { type Request, Router } from 'express';
 import { createLocalJWKSet, jwtVerify } from 'jose';
 import { z } from 'zod';
 import {
-  codeLookup,
-  generateCode,
+  hashPassword,
+  isValidPassword,
   isValidUsername,
-  isWellFormed,
-  normaliseCode,
   normaliseUsername,
-} from '../code.js';
+  verifyPassword,
+} from '../credential.js';
 import { db } from '../db/client.js';
 import { authAttempts, identities } from '../db/schema.js';
 import { env } from '../env.js';
 import { jwks, mint } from '../tokens.js';
 
 export const authRouter = Router();
+
+/**
+ * A real, well-formed hash of a throwaway value, computed once at boot. The sign-in path verifies
+ * against THIS when the username does not exist, so a miss costs exactly one scrypt derivation just
+ * like a hit — otherwise the endpoint would answer "no such user" measurably faster than "wrong
+ * password" and hand an attacker a timing oracle for which usernames are real.
+ */
+const DUMMY_HASH = await hashPassword('timing-equaliser', env.codePepper);
 
 /**
  * The rate limiter — the code's ONLY defence.
@@ -56,17 +63,22 @@ async function audit(ip: string, ok: boolean): Promise<void> {
 }
 
 /* ── Sign up ─────────────────────────────────────────────────────────────────────────────────────
- * The user brings a USERNAME. The server brings the UUID and the CODE.
+ * The user brings a USERNAME and a PASSWORD. The server brings the UUID.
  *
- * Splitting it that way is the whole point. The username is public — it is printed in vMCP's
- * dashboard, which anyone can read — so it must be safe for a stranger to see. The code is the proof
- * that the username is yours, and nobody ever sees it but you.
+ * Splitting the username from the secret is still the whole point. The username is public — it is
+ * printed in vMCP's dashboard, which anyone can read — so it must be safe for a stranger to see. The
+ * password is the proof that the username is yours, and nobody ever sees it but you: it is hashed on
+ * arrival and the plaintext is never stored, never logged, never put in a token.
  *
- * This response is the ONLY place in the system's entire lifetime where the code appears. It is
- * never returned again, never logged, never put in a token. If the user does not write it down, it
- * is gone — and there is no reset, because a reset needs an email and an email is PII.
+ * What changed from the old design is who chooses the secret. The server used to generate a
+ * high-entropy code; now the user picks a password, so the entropy floor is a minimum length and the
+ * defence against a weak choice is a slow, salted, peppered hash (credential.ts). There is still no
+ * recovery — a reset would need an email, and an email is PII.
  */
-const SignUpBody = z.object({ username: z.string().min(1).max(64) });
+const SignUpBody = z.object({
+  username: z.string().min(1).max(64),
+  password: z.string().min(1).max(256),
+});
 
 authRouter.post('/identities', async (req, res) => {
   const ip = clientIp(req);
@@ -77,7 +89,7 @@ authRouter.post('/identities', async (req, res) => {
 
   const parsed = SignUpBody.safeParse(req.body);
   if (!parsed.success) {
-    res.status(400).json({ error: 'provide { username }' });
+    res.status(400).json({ error: 'provide { username, password }' });
     return;
   }
 
@@ -89,47 +101,32 @@ authRouter.post('/identities', async (req, res) => {
     });
     return;
   }
-
-  // A code collision is astronomically unlikely (34 billion), but "unlikely" is not "impossible" and
-  // the failure mode is two people sharing one identity — so it is checked, not assumed. A USERNAME
-  // collision, by contrast, is entirely likely and is a normal, expected answer.
-  for (let attempt = 0; attempt < 5; attempt++) {
-    const code = generateCode();
-    const lookup = codeLookup(code, env.codePepper);
-
-    const [row] = await db
-      .insert(identities)
-      .values({ username, codeLookup: lookup })
-      .onConflictDoNothing()
-      .returning({ id: identities.id, username: identities.username });
-
-    if (!row) {
-      // Conflicted on username or on code, and the two need different answers. Ask the database
-      // which: a taken username is a 409 the user can act on; a code collision just means draw again.
-      const [taken] = await db
-        .select({ id: identities.id })
-        .from(identities)
-        .where(eq(identities.username, username))
-        .limit(1);
-      if (taken) {
-        res.status(409).json({ error: 'username taken', username });
-        return;
-      }
-      continue; // code collision — draw another
-    }
-
-    const { token, expiresIn } = await mint({ sub: row.id, username: row.username });
-    res.status(201).json({
-      username: row.username,
-      code, //  ← the one and only time this is ever sent
-      token,
-      expiresIn,
-      warning: 'Write this code down. It cannot be recovered, and it is the only way back into this account.',
+  if (!isValidPassword(parsed.data.password)) {
+    res.status(400).json({
+      error: 'invalid password',
+      detail: '8–128 characters',
     });
     return;
   }
 
-  res.status(503).json({ error: 'could not allocate an identity; try again' });
+  // Hash BEFORE the insert, so the plaintext never travels further than this handler and a failed
+  // insert leaves nothing half-written. The username is the only unique column now, so a conflict can
+  // mean exactly one thing — the name is taken — and is answered directly, with no retry loop.
+  const passwordHash = await hashPassword(parsed.data.password, env.codePepper);
+
+  const [row] = await db
+    .insert(identities)
+    .values({ username, passwordHash })
+    .onConflictDoNothing()
+    .returning({ id: identities.id, username: identities.username });
+
+  if (!row) {
+    res.status(409).json({ error: 'username taken', username });
+    return;
+  }
+
+  const { token, expiresIn } = await mint({ sub: row.id, username: row.username });
+  res.status(201).json({ username: row.username, token, expiresIn });
 });
 
 /* ── Check a username before committing to it ─────────────────────────────────────────────────────
@@ -152,12 +149,12 @@ authRouter.get('/usernames/:name', async (req, res) => {
 });
 
 /* ── Sign in ─────────────────────────────────────────────────────────────────────────────────────
- * Username + code. No password — a code is a key, not a password — but not nothing, either: without
- * the code, a username is a claim and anyone could make it.
+ * Username + password. Without the password a username is a claim and anyone could make it, so both
+ * are required and both are checked the same generic way on failure.
  */
 const TokenBody = z.object({
   username: z.string().min(1).max(64),
-  code: z.string().min(1).max(32),
+  password: z.string().min(1).max(256),
 });
 
 authRouter.post('/token', async (req, res) => {
@@ -170,33 +167,39 @@ authRouter.post('/token', async (req, res) => {
 
   const parsed = TokenBody.safeParse(req.body);
   if (!parsed.success) {
-    res.status(400).json({ error: 'provide { username, code }' });
+    res.status(400).json({ error: 'provide { username, password }' });
     return;
   }
 
   const username = normaliseUsername(parsed.data.username);
-  const code = normaliseCode(parsed.data.code);
+  const password = parsed.data.password;
 
   // EVERY failure below returns the same generic message. Distinguishing "no such username" from
-  // "wrong code" would hand an attacker a free oracle: they could confirm which usernames exist and
-  // then spend the whole rate-limit budget on codes for one that does. The username being public
-  // elsewhere does not make it free to confirm HERE, on the endpoint the keyspace is attacked
+  // "wrong password" would hand an attacker a free oracle: they could confirm which usernames exist
+  // and then spend the whole rate-limit budget on passwords for one that does. The username being
+  // public elsewhere does not make it free to confirm HERE, on the endpoint credentials are attacked
   // through.
   const deny = async () => {
     await audit(ip, false);
-    res.status(401).json({ error: 'unknown username or code' });
+    res.status(401).json({ error: 'unknown username or password' });
   };
 
-  if (!isValidUsername(username) || !isWellFormed(code)) return void (await deny());
+  if (!isValidUsername(username)) return void (await deny());
 
-  const lookup = codeLookup(code, env.codePepper);
   const [row] = await db
-    .select({ id: identities.id, username: identities.username })
+    .select({ id: identities.id, username: identities.username, passwordHash: identities.passwordHash })
     .from(identities)
-    .where(and(eq(identities.username, username), eq(identities.codeLookup, lookup)))
+    .where(eq(identities.username, username))
     .limit(1);
 
-  if (!row) return void (await deny());
+  // Verify whether or not the row exists. If we skipped scrypt on a missing username, the endpoint
+  // would answer "no such user" faster than "wrong password" — a timing oracle for which usernames
+  // are real. So on a miss we still burn one hash against a throwaway value before denying.
+  const ok = row
+    ? await verifyPassword(row.passwordHash, password, env.codePepper)
+    : await verifyPassword(DUMMY_HASH, password, env.codePepper);
+
+  if (!row || !ok) return void (await deny());
 
   await db.update(identities).set({ lastSeen: sql`now()` }).where(eq(identities.id, row.id));
   await audit(ip, true);
