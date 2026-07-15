@@ -1,26 +1,33 @@
 # platform-auth — design
 
-A memorable code, a signed token, and an honest name for what that is.
+A username, a chosen password, a signed token, and an honest name for what that is.
+
+> **History.** This service originally issued a **server-generated 7-character code** as the entire
+> credential — no password at all. It now takes a **user-chosen password**. Sections below are
+> written in the present tense of the password model; where the reasoning changed, the old rationale
+> is kept inline because it explains why the current defences are shaped the way they are.
 
 ---
 
 ## 1. What this is, and what it is not
 
-A user is given a **7-character code** (`4KP7R2M`) and asked to remember it. That code is the entire
-credential. There is no password, no email, no second factor, and no recovery — lose the code and the
+A user brings a **username** and a **password**. The username is public; the password is the entire
+credential. There is no email, no second factor, and no recovery — forget the password and the
 identity is gone.
 
-**This is pseudonymous identity, not security.** Anyone holding a code *is* that user. The right
-mental model is a cloakroom ticket, not a login.
+**This is pseudonymous identity, not high-value security.** Anyone holding the username and password
+*is* that user. The right mental model is a locker with a combination you chose, not a bank login.
 
 That is a perfectly good trade for what it carries — quiz progress, a garden, and attribution of MCP
 tool calls. It is a *terrible* trade for anything else, so the rule is absolute:
 
-> **Nothing sensitive is ever stored behind this code. No email, no real name, no PII, ever.**
+> **Nothing sensitive is ever stored behind this credential. No email, no real name, no PII, ever.**
 
-The code is 7 characters of Crockford base32 (`0-9A-Z` minus `I L O U`, which look like other
-characters): **32⁷ ≈ 34 billion** combinations. Seven digits would have been 10 million — walkable in
-about a day at a modest guess rate. Same thing to memorise, 3,400× the keyspace.
+The credential used to be a server-generated 7-character Crockford-base32 code — **32⁷ ≈ 34 billion**
+uniform combinations, an entropy floor the server guaranteed. A user-chosen password moves that floor
+onto the user, who picks worse than a CSPRNG. Two things follow directly, and the rest of the design
+is mostly their consequences: a **minimum length** is the only entropy we can insist on, and the hash
+must be **slow and salted** (§2) because it can no longer assume a high-entropy input.
 
 ---
 
@@ -37,25 +44,41 @@ So three distinct things:
 
 | | What | Where it may appear |
 | --- | --- | --- |
-| **code** | `4KP7R2M` — the secret the user memorises | The user's own screen, once. Never logged, never in a token, never in an API response after issue. |
+| **password** | the secret the user chooses | Sent on sign-up and sign-in. Never logged, never in a token, never in any API response. |
+| **username** | the public identity the user chooses | The user's own screen, dashboards, leaderboards, the User column. Safe to show anyone. |
 | **sub** | a UUID — the stable internal identity | Inside JWTs; as a foreign key in every service's database. |
-| **handle** | `K7R2M` — a short public display id | Dashboards, leaderboards, the User column. Safe to show to anyone. |
 
-The token carries `sub` and `handle`. **It never carries the code.**
+The token carries `sub` and `username`. **It never carries the password.**
 
-### The code is not stored in plaintext either
+(The username replaced an earlier server-invented `handle`; the reason a separate *public* identity
+exists — the credential must never be the thing printed on a public dashboard — is unchanged.)
 
-Storing it hashed the usual way (bcrypt/argon2, random salt) would make lookup impossible — logging
-in means finding a row *by* the code, and a randomly salted hash cannot be indexed.
+### The password is not stored, and the lookup key changed with it
 
-So: `code_lookup = HMAC-SHA256(pepper, code)`, unique-indexed.
+The old code was stored as `HMAC-SHA256(pepper, code)`, **unique-indexed**, and login was a single
+read *by that hash*. That worked only because the code was high-entropy: a fast keyed hash was safe
+because 34 billion uniform inputs cannot be dictionary-attacked, and being deterministic it could be
+the index.
 
-- **Deterministic**, so login is a single indexed lookup.
-- **Keyed**, so a stolen database dump reveals nothing without the pepper — which lives in a sealed
-  secret, not in the database.
+A chosen password breaks both halves of that. It is low-entropy, so a fast hash would be
+dictionary-crackable from a dump; and it must be **salted per row**, so it is no longer deterministic
+and cannot be the lookup key. So the access path changes:
 
-A plain SHA-256 would not do: with only 34 billion possible inputs, an attacker with the dump could
-enumerate the entire keyspace offline in minutes. The pepper is what makes that infeasible.
+- **login finds the row by `username`** — unique and indexed — and *then* verifies the password;
+- the stored value is `scrypt(pepper + password, per-row salt)`, self-describing (`scrypt$N$r$p$salt$hash`).
+
+Three defences layer here, each covering what the next cannot:
+
+- the **salt** (stored beside the hash) means one cracked password does not crack the rest, and equal
+  passwords do not collide to equal hashes;
+- **scrypt's slowness** makes offline guessing cost real time per candidate, the thing a fast HMAC
+  could not do once the input stopped being high-entropy;
+- the **pepper** (a sealed secret, never in the database, kept from the old design) means a stolen
+  dump — salts and all — still cannot begin without a secret it does not contain.
+
+scrypt is Node's stdlib; argon2/bcrypt were declined only to avoid a native build dependency in the
+image, not on the merits — the self-describing format lets the parameters or the algorithm change
+later without a migration.
 
 ---
 
@@ -91,21 +114,26 @@ with nothing to show for it.
 
 | Endpoint | Purpose |
 | --- | --- |
-| `POST /auth/identities` | Mint a new identity. Server generates the code (CSPRNG), checks it is unused, returns `{ code, handle, token }`. **The only time the code is ever returned.** |
-| `POST /auth/token` | `{ code }` → `{ token, handle, expiresIn }`. Rate-limited hard. |
-| `GET /auth/me` | Bearer → `{ sub, handle, createdAt }`. |
+| `POST /auth/identities` | Mint a new identity from `{ username, password }`. Returns `{ username, token, expiresIn }`. The password is hashed on arrival and never returned. |
+| `POST /auth/token` | `{ username, password }` → `{ token, username, expiresIn }`. Rate-limited hard. |
+| `GET /auth/me` | Bearer → `{ sub, username, exp }`. Verifies, does not merely decode. |
+| `GET /auth/usernames/:name` | Is a username well-formed and available? Usernames are public, so this leaks nothing the dashboard would not. |
 | `GET /.well-known/jwks.json` | The public keys, with `kid`, so verifiers can rotate. |
 | `GET /health` | Liveness. |
 
-### Rate limiting is the only defence the code has
+### Rate limiting is the only online defence
 
-`POST /auth/token` is where the entire keyspace is attacked. Per-IP limiting, plus a global ceiling,
-plus an `auth_attempts` audit table.
+`POST /auth/token` is where credentials are attacked online. Per-IP limiting, plus a global ceiling,
+plus an `auth_attempts` audit table. On a **missing** username the endpoint still runs one scrypt
+verification against a dummy hash before denying — otherwise a miss would return faster than a wrong
+password and leak which usernames exist.
 
-Note what rate limiting *cannot* do: it protects the **service**, not any individual user. A
-distributed attacker sampling the keyspace slowly will eventually hit *somebody's* code. With 34
-billion combinations that is a long way off, and the prize is a stranger's flashcard garden. This is
-stated so nobody later mistakes rate limiting for safety.
+Note what rate limiting *cannot* do: it protects the **service**, not any individual user, and it
+does nothing about *offline* guessing of a weak password from a stolen dump — that is what scrypt and
+the pepper (§2) are for. A distributed attacker guessing common passwords online will eventually hit
+*somebody's*, and the weaker floor of a chosen password (versus the old 34-billion code) makes that
+nearer than it was. The prize is still a stranger's flashcard garden. This is stated so nobody later
+mistakes rate limiting for safety.
 
 ---
 

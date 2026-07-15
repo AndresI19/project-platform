@@ -13,10 +13,10 @@ const Schema = z.object({
   AUTH_SIGNING_KEY: z.string().min(1, 'AUTH_SIGNING_KEY is required (PKCS#8 PEM)'),
 
   /**
-   * The HMAC key that codes are hashed under. Without it a stolen database dump would be
-   * enumerable offline — 34 billion candidates is minutes of work. It is the only thing standing
-   * between a dump and every user's credential, and it must NEVER be stored alongside the data it
-   * protects.
+   * The pepper folded into every password hash. The per-row salt defends users from one another; the
+   * pepper defends all of them from a dump. Without it a stolen database — salts and all — cannot be
+   * dictionary-attacked, because the secret it needs never lives alongside the data it protects. Kept
+   * under its original name so existing sealed secrets and deploys keep working across this change.
    */
   AUTH_CODE_PEPPER: z.string().min(32, 'AUTH_CODE_PEPPER must be at least 32 chars'),
 

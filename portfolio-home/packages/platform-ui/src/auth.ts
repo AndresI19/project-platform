@@ -9,7 +9,7 @@
 //
 //   unchosen  — first visit. The gate asks.
 //   guest     — no identity, no server, no row. Everything stays in the browser, and we SAY SO.
-//   signed in — username + code, exchanged for a signed token.
+//   signed in — username + password, exchanged for a signed token.
 
 const KEY = 'platform:identity';
 const AUTH = '/auth';
@@ -18,18 +18,20 @@ export interface Identity {
   mode: 'guest' | 'user';
   username?: string;
   /**
-   * The code lives in localStorage, and it is worth being straight about why.
+   * The password lives in localStorage, and it is worth being straight about why.
    *
-   * The token expires in 24 hours. Without the code stored, the user re-types it every single day —
-   * a tax steep enough that people simply stop signing in. With it stored, re-minting is silent.
+   * The token expires in 24 hours. Without the password stored, the user re-types it every single
+   * day — a tax steep enough that people simply stop signing in. With it stored, re-minting is silent.
    *
    * The honest accounting: anything that can read localStorage can already read the TOKEN and act as
-   * the user until it expires. Storing the code extends that from a day to indefinitely. On a
-   * platform whose worst case is a lost flashcard garden that is the right trade — and it would NOT
-   * be on a platform that held anything else. Which is exactly why this identity is designed to hold
-   * nothing else.
+   * the user until it expires. Storing the password extends that from a day to indefinitely, and —
+   * unlike the token — a password may be reused elsewhere, so this is a worse thing to leave lying
+   * around than the old random code was. On a platform whose worst case is a lost flashcard garden it
+   * is still the right trade, and it is the reason the sign-up copy tells people not to reuse a
+   * password here. Nothing sensitive is ever stored behind this identity, which is what makes the
+   * trade acceptable at all.
    */
-  code?: string;
+  password?: string;
   token?: string;
   expiresAt?: number;
   /** Elevated. Read from the SIGNED token, never set by the client — see isAdmin(). */
@@ -102,11 +104,11 @@ function claims(token: string): Record<string, unknown> {
   }
 }
 
-function adopt(res: { username: string; token: string; expiresIn: number }, code: string): void {
+function adopt(res: { username: string; token: string; expiresIn: number }, password: string): void {
   setIdentity({
     mode: 'user',
     username: res.username,
-    code,
+    password,
     token: res.token,
     expiresAt: Date.now() + res.expiresIn * 1000,
     admin: claims(res.token).admin === true,
@@ -119,22 +121,23 @@ export async function checkUsername(username: string): Promise<{ valid: boolean;
   return (await r.json()) as { valid: boolean; available: boolean };
 }
 
-/** Sign up. Returns the code — the ONLY time it is ever available anywhere. */
-export async function signUp(username: string): Promise<{ username: string; code: string }> {
-  const res = await post<{ username: string; code: string; token: string; expiresIn: number }>(
-    '/identities',
-    { username },
-  );
-  adopt(res, res.code);
-  return { username: res.username, code: res.code };
+/** Sign up with a chosen password. On success the identity is signed in immediately — there is no
+ *  code to hand back and nothing to write down. */
+export async function signUp(username: string, password: string): Promise<{ username: string }> {
+  const res = await post<{ username: string; token: string; expiresIn: number }>('/identities', {
+    username,
+    password,
+  });
+  adopt(res, password);
+  return { username: res.username };
 }
 
-export async function signIn(username: string, code: string): Promise<void> {
+export async function signIn(username: string, password: string): Promise<void> {
   const res = await post<{ username: string; token: string; expiresIn: number }>('/token', {
     username,
-    code,
+    password,
   });
-  adopt(res, code);
+  adopt(res, password);
 }
 
 export function continueAsGuest(): void {
@@ -153,13 +156,13 @@ export function signOut(): void {
   setIdentity(null);
 }
 
-/** A live token, re-minted silently when it is close to expiry. The stored code is what allows this. */
+/** A live token, re-minted silently when it is close to expiry. The stored password is what allows this. */
 export async function token(): Promise<string | null> {
   if (!identity || identity.mode !== 'user') return null;
   if (identity.token && (identity.expiresAt ?? 0) > Date.now() + 60_000) return identity.token;
-  if (!identity.username || !identity.code) return null;
+  if (!identity.username || !identity.password) return null;
   try {
-    await signIn(identity.username, identity.code);
+    await signIn(identity.username, identity.password);
     return identity.token ?? null;
   } catch {
     return null;
