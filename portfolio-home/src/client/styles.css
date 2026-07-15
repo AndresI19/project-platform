@@ -27,8 +27,8 @@
   --brand-gh: #24292f;
   --brand-li: #0a66c2;
   --brand-em: #0d9488;
-  --exp: #0d9488;
-  --exp-2: #0f766e;
+  --exp: #0f766e;
+  --exp-2: #115e59;
   --slate: #64748b;
   --proj: #2f9e6a;
   --proj-2: #1e7a51;
@@ -46,8 +46,8 @@
     --brand-gh: #e6edf3;
     --brand-li: #5aa9f0;
     --brand-em: #2dd4bf;
-    --exp: #2dd4bf;
-    --exp-2: #5eead4;
+    --exp: #14b8a6;
+    --exp-2: #2dd4bf;
     --slate: #94a3b8;
     --proj: #4cc38a;
     --proj-2: #7fdcaf;
@@ -237,13 +237,14 @@ section {
   transition: background-position .7s ease, opacity .2s;
 }
 
-/* The quiz is the one featured card with its own accent: gold. Overriding --accent/--accent2 on the
-   card itself re-tints, in a single place, everything inside it that is drawn from them — the wash,
-   the left rail, the primary "Check out!" button — so the whole card reads gold without a bespoke
-   rule per element. */
+/* The quiz is the one featured card with its own accent: gold — but only its CHROME, not its
+   controls. This used to override --accent on the whole card, which also re-tinted the "Check out!"
+   and "Repository" buttons gold; those must keep their original accent, so gold is applied to the
+   wash, border and left rail explicitly here instead, and the gleam is re-tinted just below. */
 .feat[data-component="quiz"] {
-  --accent: var(--gold);
-  --accent2: var(--gold-2);
+  background: color-mix(in srgb, var(--gold) 5%, var(--panel));
+  border-color: color-mix(in srgb, var(--gold) 22%, var(--line));
+  border-left-color: var(--gold);
 }
 /* And its gleam: the lux strike is a white sweep on every other card; on the quiz it is gold, so the
    hover reads as part of the same theme. Only the gradient is overridden — the sweep's size, resting
@@ -1006,13 +1007,25 @@ section {
   border-color: color-mix(in srgb, var(--proj) 22%, var(--line));
   border-left-color: color-mix(in srgb, var(--proj) 55%, var(--line));
 }
+/* The primary chip in All projects — "Check out!" — is FILLED green, the same solid treatment the
+   featured cards' primary buttons get, rather than the pale tint it used to be. A call to action on a
+   green row should read as green, not as a faint wash of it. */
 .projects .chip.primary {
-  color: var(--proj-2);
-  background: color-mix(in srgb, var(--proj) 12%, var(--panel));
-  border: 1px solid color-mix(in srgb, var(--proj) 42%, var(--line));
+  color: #fff;
+  border: 1px solid transparent;
+  background: linear-gradient(180deg, var(--proj), color-mix(in srgb, var(--proj) 78%, #000));
 }
 .projects .chip.primary:hover {
-  background: color-mix(in srgb, var(--proj) 20%, var(--panel));
+  background: linear-gradient(180deg, color-mix(in srgb, var(--proj) 92%, #fff), color-mix(in srgb, var(--proj) 70%, #000));
+}
+/* Repository lands here as a ghost chip on most rows but as a PRIMARY one on grouped rows (a group
+   member's single link is its main CTA). Left to the base .chip rules the ghost ones stayed navy
+   while the primary ones went green — the same label, two colours down one list. Pin the ghost to the
+   section's green as well, so every chip in All projects reads as one green family. */
+.projects .chip.ghost {
+  color: var(--muted);
+  background: color-mix(in srgb, var(--proj) 8%, var(--panel));
+  border: 1px solid color-mix(in srgb, var(--proj) 30%, var(--line));
 }
 .projects .chip.ghost:hover {
   color: var(--proj-2);
