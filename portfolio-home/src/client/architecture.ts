@@ -184,15 +184,15 @@ function authDiagram(): string {
           </div>
           <div class="auth-col provider">
             ${box('b-auth au-cbox', 'platform-auth', 'mints &amp; signs an RS256 token')}
-            ${vconn('checks the code')}
-            ${box('b-vol au-cbox', 'platform-db', 'usernames + hashed codes')}
+            ${vconn('verifies the password')}
+            ${box('b-vol au-cbox', 'platform-db', 'usernames + hashed passwords')}
           </div>
         </div>
         <p class="auth-expl">
           The <strong>gate</strong> (vMCP uses a slimmer account menu) reads the browser's local storage.
           On a <strong>miss</strong> — a first visit, or after signing out — it calls platform-auth,
-          which checks your 7-character code against platform-db and returns a signed token. That token
-          is the only thing kept. “Continue as guest” never reaches this row: it writes a local guest
+          which verifies your username and password against platform-db and returns a signed token. That
+          token is the only thing kept. “Continue as guest” never reaches this row: it writes a local guest
           marker and calls nothing. Because all three front ends share the one storage key, exactly one
           sign-in fills it — the others then find it already set and never open the gate.
         </p>
