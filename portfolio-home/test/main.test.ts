@@ -105,7 +105,7 @@ describe('featured banner', () => {
     await mountPage();
     const imgs = $$('.media.stack img').map((i) => (i as HTMLImageElement).getAttribute('src'));
     // Order matters: led by the garden alone, the card reads as a game and the word "quiz" is lost.
-    expect(imgs).toEqual(['/quiz-sharding.png', '/home-page-garden.gif']);
+    expect(imgs).toEqual(['/quiz-sharding.png', '/home-page-garden-v2.gif']);
   });
 
   test('the grouped entry renders its logo and one panel per member', async () => {

@@ -155,7 +155,11 @@ export const ENTRIES: Entry[] = [
       'A data-driven flashcard quiz for cloud & system-design interview prep, with an isometric garden you grow by answering correctly.',
     // The question first, the garden second. Led by the garden alone, the card reads as a game and
     // the word "quiz" gets lost — so an actual fill-in-the-blank card carries the top slot.
-    images: ['/quiz-sharding.png', '/home-page-garden.gif'],
+    // The garden art carries a version in its NAME on purpose. public/ is served verbatim — no build
+    // fingerprint — under `cache-control: max-age=14400` behind Cloudflare, so replacing this file in
+    // place left every browser and CDN edge showing the previous garden for four hours. Bump the
+    // suffix when the art changes and the new URL is fetched at once, by everyone.
+    images: ['/quiz-sharding.png', '/home-page-garden-v2.gif'],
     links: [
       { label: 'Check out! →', href: '/cloud-developer-quiz/', primary: true },
       { label: 'Repository', href: `${GITHUB_ORG}/data-driven-quiz-server`, external: true },
