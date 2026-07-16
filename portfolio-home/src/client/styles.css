@@ -1608,6 +1608,7 @@ section {
   grid-row: 7 / 15;
   align-self: stretch;
   justify-content: center;
+  gap: 6px;
   padding: 8px 2px;
 }
 .vault-t {
@@ -1617,6 +1618,19 @@ section {
   font-size: 11px;
   letter-spacing: .3px;
   white-space: nowrap;
+}
+
+/* The mechanism, beside the name. Vertical like its title — the rail is ~30px wide and eight rows
+   tall, so the long side is the only side with room. `nowrap` because a wrapped vertical line breaks
+   into a SECOND COLUMN of sideways text, which reads as a different label rather than a continuation;
+   the rail is tall enough to hold the string on one run. */
+.vault-m {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  font-size: 9px;
+  letter-spacing: .2px;
+  white-space: nowrap;
+  color: var(--muted);
 }
 
 /* A MOUNT IS NOT TRAFFIC. A volume is attached to a pod; nothing flows along it. So it gets a plain
@@ -2492,9 +2506,18 @@ section {
     grid-row: 26;
   }
 
-  .vault-t {
+  /* Both lines turn with the rail. Once the grid collapses to one column this is a full-width box
+     like any other, and vertical text inside it is a ~700px tall column of sideways words beside an
+     empty orange field. `nowrap` has to go with the rotation: horizontal, the string is far wider
+     than a phone. */
+  .vault-t,
+  .vault-m {
     writing-mode: horizontal-tb;
     transform: none;
+    white-space: normal;
+  }
+  .vault-m {
+    text-align: center;
   }
   /* Nothing to run past, nothing to run along, and no shared column to join through. */
   .vm-rail,
