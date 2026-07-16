@@ -21,6 +21,27 @@ export interface Env {
   helloRateMax: number;
   /** The length of that window, in seconds. */
   helloRateWindowSeconds: number;
+  /**
+   * platform-auth's JWKS endpoint, where the public half of the token-signing key is published.
+   *
+   * UNSET IS A SUPPORTED MODE, and it means one specific thing: the admin upload route is never
+   * registered (see content.ts). It is a switch, not merely a value — which is why the pairing with
+   * AUTH_ISSUER below is validated rather than defaulted. Empty is how `npm run dev` stays one
+   * command with no auth service to talk to.
+   */
+  authJwksUri: string;
+  /** The issuer those tokens must claim. Required whenever authJwksUri is set — see loadEnv. */
+  authIssuer: string;
+  /** The audience those tokens must claim. 'platform', as every other verifier on this cluster uses. */
+  authAudience: string;
+  /**
+   * The platform-content volume's DIRECTORY mount. The résumé is read from here per request and the
+   * admin route writes here. A directory, deliberately: a single-file subPath mount is pinned to the
+   * file's inode at container start, so a replaced file is never seen. See content.ts.
+   */
+  contentDir: string;
+  /** Largest upload body accepted, in bytes. */
+  uploadMaxBytes: number;
 }
 
 function fail(name: string, value: string, why: string): never {
@@ -73,6 +94,45 @@ function webhook(raw: string): string {
   return value;
 }
 
+/**
+ * An absolute http(s) URL, PATH AND ALL.
+ *
+ * Deliberately not absoluteOrigin() above: that one's contract is "not a path", and it strips a
+ * trailing slash to keep appended paths clean. A JWKS URI is nothing BUT a path
+ * (…/.well-known/jwks.json) and nothing is appended to it. Reusing absoluteOrigin here would make its
+ * own doc comment a lie, which is a worse cost than the six duplicated lines.
+ */
+function absoluteUrl(name: string, raw: string): string {
+  const value = raw.trim();
+  if (!value) return '';
+  let url: URL;
+  try {
+    url = new URL(value);
+  } catch {
+    return fail(
+      name,
+      value,
+      'must be an absolute URL (e.g. http://platform-auth:8002/.well-known/jwks.json)',
+    );
+  }
+  if (url.protocol !== 'https:' && url.protocol !== 'http:') {
+    return fail(name, value, `must be http or https, got "${url.protocol}"`);
+  }
+  return value;
+}
+
+/** An absolute filesystem path, with a default when unset.
+ *
+ *  Existence is NOT checked, and that is the point: /content does not exist in a dev checkout, and a
+ *  dev checkout is a supported mode — the seeded résumé in the image answers and uploads are simply
+ *  not registered. Failing boot here would make `npm start` require a Kubernetes volume. */
+function absolutePath(name: string, raw: string | undefined, fallback: string): string {
+  const value = (raw ?? '').trim();
+  if (!value) return fallback;
+  if (!value.startsWith('/')) return fail(name, value, 'must be an absolute path');
+  return value.replace(/\/+$/, '');
+}
+
 function port(raw: string | undefined): number {
   if (!raw) return 3000;
   const n = Number(raw);
@@ -94,11 +154,28 @@ function positiveInt(name: string, raw: string | undefined, fallback: number): n
 }
 
 export function loadEnv(e: NodeJS.ProcessEnv = process.env): Env {
+  const authJwksUri = absoluteUrl('AUTH_JWKS_URI', e.AUTH_JWKS_URI ?? '');
+  const authIssuer = absoluteUrl('AUTH_ISSUER', e.AUTH_ISSUER ?? '');
+  // Auth is all-or-nothing. A JWKS URI with no issuer verifies the SIGNATURE and then accepts any
+  // issuer's token — a guard that looks configured, passes a smoke test, and checks nothing about who
+  // minted the claim. Unset is a mode; half-set is a mistake, and it belongs here with the missing
+  // variable named rather than at the first upload.
+  if (authJwksUri && !authIssuer) {
+    fail('AUTH_ISSUER', '', 'is required when AUTH_JWKS_URI is set — see content.ts');
+  }
+
   return {
     port: port(e.PORT),
     vmcpApiBase: absoluteOrigin('VMCP_API_BASE', e.VMCP_API_BASE ?? ''),
     discordWebhookUrl: webhook(e.DISCORD_WEBHOOK_URL ?? ''),
     helloRateMax: positiveInt('HELLO_RATE_MAX', e.HELLO_RATE_MAX, 5),
     helloRateWindowSeconds: positiveInt('HELLO_RATE_WINDOW', e.HELLO_RATE_WINDOW, 3600),
+    authJwksUri,
+    authIssuer,
+    authAudience: (e.AUTH_AUDIENCE ?? '').trim() || 'platform',
+    contentDir: absolutePath('CONTENT_DIR', e.CONTENT_DIR, '/content'),
+    // 5 MiB. The résumé is ~82 KiB and the whole volume is 256Mi, so this is ~60x generous and still
+    // far under the volume — an upload cannot fill the disk the quiz's decks live on.
+    uploadMaxBytes: positiveInt('UPLOAD_MAX_BYTES', e.UPLOAD_MAX_BYTES, 5 * 1024 * 1024),
   };
 }

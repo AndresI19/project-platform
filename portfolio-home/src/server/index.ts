@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { serveClient } from '@platform/ui/server';
 import express from 'express';
 import rateLimit from 'express-rate-limit';
+import { contentWritable, mountContent, serveResume } from './content.js';
 import { loadEnv } from './env.js';
 import { collectVersions, platformVersion } from './versions.js';
 
@@ -136,6 +137,26 @@ app.post('/api/hello', (req, res) => {
   void notifyDiscord(lines.join('\n'));
 });
 
+// ---------------------------------------------------------------------------
+// The résumé, and the admin route that replaces it.
+//
+// /resume.pdf is READ PER REQUEST from the content volume's DIRECTORY mount — the same move, for the
+// same reason, as platformVersion() above. It used to arrive as a subPath single-file mount, which is
+// a bind mount pinned to the source file's INODE at container start: a replacement file has a new
+// inode and the mount goes on serving the old one, which is why swapping the résumé needed a rollout.
+// Reading the directory mount per request is what removes the rollout.
+//
+// This MUST be registered above serveClient(), and not merely because serveClient ends in a catch-all.
+// Dropping the subPath mount does NOT make dist/client/resume.pdf disappear — vite.config.ts still
+// copies public/resume.pdf into the build — so without this route serveClient's express.static serves
+// the IMAGE's stale copy, silently and forever: a 200 indistinguishable from the bug being fixed here.
+// That same copy is the seed fallback below, which is why the fallback costs nothing.
+// ---------------------------------------------------------------------------
+app.get('/resume.pdf', serveResume(env.contentDir, resolve(CLIENT_DIR, 'resume.pdf')));
+
+// Admin-only writes to that volume. Registers NOTHING when AUTH_JWKS_URI is unset — see content.ts.
+mountContent(app, { env });
+
 // The built client, its cache policy, the health probe and the SPA fallback — all shared with the
 // quiz. Mounted LAST: it ends in a catch-all, so any route added after it would never be reached.
 serveClient(app, { clientDir: CLIENT_DIR, appName: 'portfolio-home' });
@@ -147,4 +168,19 @@ app.listen(env.port, () => {
   console.log(
     `  greetings  : ${env.discordWebhookUrl ? 'relayed to Discord' : 'logged to stdout (DISCORD_WEBHOOK_URL unset)'}`,
   );
+  // The upload route 404s when unconfigured — deliberately, but that makes a misconfigured deploy
+  // silent. This line is the only thing that says so out loud, so it reports what was actually
+  // decided rather than what was intended.
+  console.log(
+    `  uploads    : ${
+      env.authJwksUri
+        ? `admin-only PUT /api/content/* (max ${env.uploadMaxBytes} bytes)`
+        : 'disabled — route not registered (AUTH_JWKS_URI unset)'
+    }`,
+  );
+  // Checked once, for the log only. Never to gate a request: that would be a TOCTOU check, and the
+  // write already reports the truth (503, see content.ts).
+  void contentWritable(env.contentDir).then((ok) => {
+    console.log(`  content    : ${env.contentDir}${ok ? '' : ' (NOT writable — uploads would 503)'}`);
+  });
 });

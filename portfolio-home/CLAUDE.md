@@ -23,10 +23,13 @@ npm run build       # vite build → dist/client
 npm start           # cross-env NODE_ENV=production tsx src/server/index.ts
 npm run serve       # build && start
 npm run typecheck   # tsc --noEmit
-npm test            # vitest run  (4 files, ~49 cases)
+npm run lint        # biome check src   — CI runs this; it fails the build
+npm test            # vitest run  (7 files, ~142 cases)
 ```
 
-**There is no linter.** `typecheck` is the only static gate.
+**Static gates: `lint` and `typecheck`, and CI enforces both.** `npm run lint` is Biome (formatting +
+import sorting) over `src` only — `test/` is not covered. `npx biome check --write src` applies the safe
+fixes. Run it before opening a PR: formatting alone will fail the `home` job.
 
 ## Layout
 
@@ -44,7 +47,8 @@ npm test            # vitest run  (4 files, ~49 cases)
 ## Routes
 
 `GET /api/config` → `{ vmcpApiBase }` · `POST /api/hello` (the greeting) · `GET /version` →
-`{ version, platform }` · `GET /api/versions` → `{ platform, components: {…} }` · then `serveClient()`.
+`{ version, platform }` · `GET /api/versions` → `{ platform, components: {…} }` ·
+`GET /resume.pdf` · `PUT /api/content/*` (admin) · then `serveClient()`.
 
 Two different things, hence two fields. `version` is **this image's own**, baked in and fixed for the
 life of the container. `platform` is the **orchestration repo's**, read from `platform-version.json`
@@ -62,6 +66,12 @@ cannot change without a new image, and that means new pods.
 `serveClient()` (in `@platform/ui`) adds `GET /api/health`, the static handler, and a `/*` SPA
 fallback. **It must stay last** — it ends in a catch-all that shadows anything registered after it.
 
+`GET /resume.pdf` and `PUT /api/content/*` live in `src/server/content.ts`. The résumé is read **per
+request** from the volume's directory mount at `/content`, for the same reason `platform-version.json`
+is: it is content, it changes on a different clock than the image, and reading it per request means a
+swap needs no rollout. `PUT /api/content/*` writes that volume, admin-only, against an **allowlist**
+(`resume.pdf`, `cards/<name>.yaml`) — not a path sanitiser. See "The content volume" below.
+
 ## Gotchas
 
 - **`serveClient()` must be the last route registered.** Anything after it is shadowed by
@@ -70,9 +80,12 @@ fallback. **It must stay last** — it ends in a catch-all that shadows anything
   without pointing `publicDir` back at the project-root `public/`, `resume.pdf` is never copied into
   the build and `/resume.pdf` silently falls through the SPA catch-all and returns `index.html`. This
   records a real past bug — don't "clean it up".
-- **The server is never compiled.** `npm start` runs `tsx src/server/index.ts`, which is why the
-  runtime Docker image keeps dev dependencies and copies `src/` + `tsconfig.json`. Dropping dev deps
-  from the image breaks `npm start`.
+- **The server is bundled for the image, but not for `npm start`.** Locally, `npm start` runs
+  `tsx src/server/index.ts` straight from source. The **image** does not: the Dockerfile esbuilds
+  `src/server` into one self-contained `dist/server/index.mjs` with every dependency inlined, and the
+  runtime stage ships `dist/` alone — no `node_modules`, no npm. So a new runtime dependency has to
+  survive **bundling** (`--platform=node --format=esm`), not merely be installed; build the image
+  before believing it works.
 - **The version is served, not baked.** There is no `__APP_VERSION__` define any more. It used to be
   injected by Vite from `package.json` at *build* time, which described the source tree and only
   changed when someone ran `npm version` — it could not say what was actually deployed. The image now
@@ -94,10 +107,33 @@ All optional, all validated at boot in `src/server/env.ts`:
 | `PORT` | default 3000 |
 | `VMCP_API_BASE` | where the client's liveness badges poll. Empty = same-origin. Served via `/api/config`. |
 | `DISCORD_WEBHOOK_URL` | where `POST /api/hello` pushes the greeting. **Unset is a supported mode** — the server logs the greeting to stdout instead of dropping it. |
+| `AUTH_JWKS_URI` | platform-auth's JWKS. **Unset is a supported mode, and it is the switch**: with no value, `PUT /api/content/*` is not registered at all. |
+| `AUTH_ISSUER` | issuer the token must claim. **Required once `AUTH_JWKS_URI` is set** — half-set fails at boot, because a JWKS with no issuer verifies signatures while accepting anyone's token. |
+| `AUTH_AUDIENCE` | audience the token must claim. Default `platform`. |
+| `CONTENT_DIR` | the content volume's directory mount. Default `/content`. Existence is not checked — a dev checkout has none, and that is supported. |
+| `UPLOAD_MAX_BYTES` | largest upload accepted. Default 5 MiB. |
 
-In the cluster, `resume.pdf` is **mounted from a PersistentVolume** over
-`/app/dist/client/resume.pdf`, so it can be replaced without an image rebuild. The copy in `public/`
-is the seed default.
+## The content volume
+
+In the cluster, the résumé lives on the `platform-content` PersistentVolume, mounted **as a directory**
+at `/content` (read-write), and is served by `GET /resume.pdf` reading it **per request**. `public/resume.pdf`
+is the seed default: the `seed-resume` initContainer `cp -n`s it onto the volume, and the server falls
+back to the image's copy when the volume has none (which is what makes `npm run dev` work).
+
+- **It used to be a `subPath` single-file mount over `/app/dist/client/resume.pdf`. Do not put that
+  back.** A subPath mount is a bind mount pinned to the source file's **inode** at container start.
+  Replacing the file on the volume creates a new inode (`kubectl cp` untars = unlink + create), and the
+  mount serves the old, unlinked inode for the life of the pod. That is why swapping the résumé used to
+  require `rollout restart`. Directory mounts resolve names per lookup and have no such problem.
+- **`GET /resume.pdf` must stay registered above `serveClient()`.** Not just because of the catch-all:
+  Vite still copies `public/resume.pdf` into `dist/client/`, so without the route `express.static`
+  serves the **image's stale copy** — a 200 that is indistinguishable from the bug above.
+- **`PUT /api/content/*` is bounded by an allowlist, not by the filesystem.** `/content` is owned
+  1000:1000 and this process is uid 1000, so once the mount is writable nothing below the allowlist
+  stops a write — including to `platform-version.json`, which the deploy pipeline owns and the
+  allowlist deliberately excludes.
+- Writing `cards/*.yaml` does **not** take effect until the quiz restarts (it builds decks at boot), and
+  a malformed deck fails that boot. The response says so.
 
 ## Editing @platform/ui
 
