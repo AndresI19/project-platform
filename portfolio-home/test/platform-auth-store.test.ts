@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import * as auth from '../../packages/platform-ui/src/auth.js';
+import * as auth from '../packages/platform-ui/src/auth.js';
 
 /**
  * Characterization tests for the shared client identity/token store (packages/platform-ui/src/auth.ts).

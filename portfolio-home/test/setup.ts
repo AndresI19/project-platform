@@ -1,5 +1,3 @@
-import { vi } from 'vitest';
-
 /**
  * A real localStorage. happy-dom 15 ships a `localStorage` object with no `clear()`, and the
  * greeting dialog's "ask once" rule is entirely localStorage-based — so the tests need a complete,
@@ -35,7 +33,9 @@ Object.defineProperty(window, 'localStorage', { value: storage, configurable: tr
 // happy-dom has no <dialog> implementation: showModal/close are simply absent, and greet() calls
 // both. Give the element the two methods plus the `open` flag the spec says they toggle, so the
 // dialog can actually be exercised.
-const proto = window.HTMLDialogElement?.prototype as (HTMLDialogElement & { showModal?: unknown }) | undefined;
+const proto = window.HTMLDialogElement?.prototype as
+  | (HTMLDialogElement & { showModal?: unknown })
+  | undefined;
 if (proto && typeof proto.showModal !== 'function') {
   proto.showModal = function (this: HTMLDialogElement) {
     this.setAttribute('open', '');

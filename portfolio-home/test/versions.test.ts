@@ -2,7 +2,7 @@ import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import { collectVersions, platformVersion } from './versions.js';
+import { collectVersions, platformVersion } from '../src/server/versions.js';
 
 /**
  * These write a REAL spec file and point the reader at it, rather than stubbing node:fs.

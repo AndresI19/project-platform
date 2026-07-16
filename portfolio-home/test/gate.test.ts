@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 // The gate reads identity from ./auth; replace it so the test drives sign-in without a network or
 // storage, and starts with nobody signed in.
-vi.mock('../../packages/platform-ui/src/auth.js', () => ({
+vi.mock('../packages/platform-ui/src/auth.js', () => ({
   continueAsGuest: vi.fn(),
   current: vi.fn(() => null),
   isAdmin: vi.fn(() => false),
@@ -13,8 +13,8 @@ vi.mock('../../packages/platform-ui/src/auth.js', () => ({
   signUp: vi.fn(async () => {}),
 }));
 
-import { signUp } from '../../packages/platform-ui/src/auth.js';
-import { mountGate } from '../../packages/platform-ui/src/gate.js';
+import { signUp } from '../packages/platform-ui/src/auth.js';
+import { mountGate } from '../packages/platform-ui/src/gate.js';
 
 const signUpMock = signUp as unknown as ReturnType<typeof vi.fn>;
 

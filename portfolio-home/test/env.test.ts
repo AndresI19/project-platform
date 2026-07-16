@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { loadEnv } from './env.js';
+import { loadEnv } from '../src/server/env.js';
 
 /**
  * The config guards. Every variable is optional — the app must run with an empty environment — but a

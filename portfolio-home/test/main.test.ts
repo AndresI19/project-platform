@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import { BIO, BIO_CODA, CONTACTS, ENTRIES, EXPERIENCE, NAME, TITLE, isGroup } from './data.js';
+import { BIO, BIO_CODA, CONTACTS, ENTRIES, EXPERIENCE, NAME, TITLE, isGroup } from '../src/client/data.js';
 
 /**
  * The home page has never had a test. These are characterization tests: they describe the HTML the
@@ -56,7 +56,7 @@ async function mountPage(opts: MountOptions = {}): Promise<void> {
   vi.stubGlobal('fetch', fetchMock);
 
   vi.resetModules();
-  await import('./main.js');
+  await import('../src/client/main.js');
   // let the config fetch + the first liveness poll settle
   await new Promise((r) => setTimeout(r, 0));
   await new Promise((r) => setTimeout(r, 0));
