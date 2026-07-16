@@ -12,13 +12,32 @@
  * and its brand-coloured contact chips. Those live in the app that uses them. A token nothing else
  * consumes is not a design system, it is a global variable.
  */
+/* LIGHT AND DARK ARE NOT SYMMETRIC, and the light values below are what that costs.
+ *
+ * In dark, --panel sits BETWEEN --bg and --line: the border is lighter than both, so it separates
+ * from each cheaply. In light, --panel is #fff — the end of the scale — so --line has to be darker
+ * than the page AND the card, and every step toward the page is a bigger step away from the card.
+ * Pushing --line dark enough to read against --bg as well as dark's does (1.45:1) lands it at
+ * 1.68:1 on white, which is a heavier border than this design wants. So light does not chase dark's
+ * ratios; it buys a visible edge (1.51:1 on the card, where the eye actually looks for it) and lets
+ * --panel/--bg and the shadow carry the separation from the page.
+ *
+ * The failure this fixes: --line used to be #e5e8f1, which is 1.06:1 against --bg. It is the most
+ * used token in the stylesheet, and against the page it was invisible — cards had no border, no
+ * shadow worth the name (2.5% alpha), and a 1.16:1 surface step, so they dissolved into the wash.
+ * Light mode's TEXT was never the problem and is unchanged: --ink is 17.6:1 on a panel.
+ */
 :root {
-  --bg: #eceef5;
+  /* Deepened from #eceef5 (panel/bg 1.16 -> 1.23) so a white card has somewhere to sit. */
+  --bg: #e4e8f2;
   --panel: #ffffff;
-  --panel-2: #f2f4fb;
+  --panel-2: #eef1f9;
   --ink: #161922;
-  --muted: #5c6576;
-  --line: #e5e8f1;
+  /* From #5c6576: 5.87 -> 7.27 on a panel. Secondary text should be quiet, not faint. */
+  --muted: #4e5768;
+  /* From #e5e8f1 (1.06:1 on --bg — an edge you could not see). Now 1.51 on the card, 1.23 on
+     the page, and bluer rather than greyer, so it reads as the palette and not as a border. */
+  --line: #ccd2e2;
 
   /* The platform accent: navy. Both front ends key off this — buttons, rails, links, the page wash,
      and the gradient wordmark. It is the one token most likely to be reached for by an app that
@@ -26,10 +45,12 @@
   --accent: #1e3a8a;
   --accent2: #1fb6d0;
   --accent-ink: #fff;
-  --chip: #f2f4fb;
+  --chip: #eef1f9;
 
-  --shadow: 0 1px 2px rgba(22, 30, 60, .025), 0 6px 18px rgba(22, 30, 60, .035);
-  --shadow-lg: 0 4px 14px rgba(22, 30, 60, .04), 0 14px 40px rgba(22, 30, 60, .055);
+  /* Roughly doubled. Dark carries 20–30% alpha; light carried 2.5–3.5%, which on a tinted page is
+     not an elevation cue, it is a rounding error. This is the other half of "the card has an edge". */
+  --shadow: 0 1px 2px rgba(22, 30, 60, .05), 0 6px 18px rgba(22, 30, 60, .07);
+  --shadow-lg: 0 4px 14px rgba(22, 30, 60, .07), 0 14px 40px rgba(22, 30, 60, .10);
 }
 
 @media (prefers-color-scheme: dark) {
