@@ -17,7 +17,69 @@ describe('an empty environment is valid', () => {
       discordWebhookUrl: '',
       helloRateMax: 5,
       helloRateWindowSeconds: 3600,
+      // Empty auth is not a gap to be filled in later — it is the mode that keeps `npm run dev` a
+      // single command, and it is what makes mountContent register no upload route at all.
+      authJwksUri: '',
+      authIssuer: '',
+      authAudience: 'platform',
+      contentDir: '/content',
+      uploadMaxBytes: 5 * 1024 * 1024,
     });
+  });
+});
+
+describe('AUTH_*', () => {
+  test('a JWKS URI keeps its path — it is not an origin', () => {
+    const uri = 'http://platform-auth:8002/.well-known/jwks.json';
+    expect(loadEnv({ AUTH_JWKS_URI: uri, AUTH_ISSUER: 'https://api.example/auth' }).authJwksUri).toBe(uri);
+  });
+
+  test('AUTH_ISSUER is required once AUTH_JWKS_URI is set', () => {
+    // The failure this prevents is the quiet one: a JWKS URI with no issuer verifies the signature and
+    // then accepts ANY issuer's token — a guard that looks configured and checks nothing about who
+    // minted the claim. Half-set is a mistake, and it belongs at boot with the variable named.
+    expect(() => loadEnv({ AUTH_JWKS_URI: 'http://platform-auth:8002/.well-known/jwks.json' })).toThrow(
+      /AUTH_ISSUER/,
+    );
+  });
+
+  test('an issuer without a JWKS URI is simply unconfigured, not an error', () => {
+    // Only the pairing is invalid. An issuer alone cannot verify anything, so there is nothing to
+    // half-configure: the route is not registered either way.
+    expect(loadEnv({ AUTH_ISSUER: 'https://api.example/auth' }).authJwksUri).toBe('');
+  });
+
+  test.each(['not-a-url', 'ftp://platform-auth/jwks.json', '//platform-auth/jwks.json'])(
+    'rejects AUTH_JWKS_URI=%s by name',
+    (bad) => {
+      expect(() => loadEnv({ AUTH_JWKS_URI: bad })).toThrow(/AUTH_JWKS_URI/);
+    },
+  );
+
+  test('AUTH_AUDIENCE defaults to platform', () => {
+    expect(loadEnv({}).authAudience).toBe('platform');
+    expect(loadEnv({ AUTH_AUDIENCE: 'other' }).authAudience).toBe('other');
+  });
+});
+
+describe('CONTENT_DIR / UPLOAD_MAX_BYTES', () => {
+  test('defaults to the volume mount, and strips a trailing slash', () => {
+    expect(loadEnv({}).contentDir).toBe('/content');
+    expect(loadEnv({ CONTENT_DIR: '/mnt/content/' }).contentDir).toBe('/mnt/content');
+  });
+
+  test('a relative CONTENT_DIR fails by name', () => {
+    expect(() => loadEnv({ CONTENT_DIR: 'content' })).toThrow(/CONTENT_DIR/);
+  });
+
+  test('a CONTENT_DIR that does not exist is fine — that is a dev checkout', () => {
+    // Existence is deliberately unchecked: /content is a Kubernetes volume, and requiring one to boot
+    // would make `npm start` need a cluster.
+    expect(loadEnv({ CONTENT_DIR: '/no/such/place' }).contentDir).toBe('/no/such/place');
+  });
+
+  test.each(['0', '-1', 'abc', '1.5'])('rejects UPLOAD_MAX_BYTES=%s by name', (bad) => {
+    expect(() => loadEnv({ UPLOAD_MAX_BYTES: bad })).toThrow(/UPLOAD_MAX_BYTES/);
   });
 });
 

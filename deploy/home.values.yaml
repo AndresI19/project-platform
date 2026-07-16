@@ -34,6 +34,26 @@ env:
         name: platform-secrets
         key: DISCORD_WEBHOOK_URL
         optional: true
+  # The guard on PUT /api/content/* — the same three values the quiz's progress routes verify against.
+  # UNSET IS A MODE: with no AUTH_JWKS_URI the server does not register the upload route at all (it
+  # 404s), which is what keeps `npm start` a single command with no auth service to talk to. The
+  # admin role itself is NOT here and cannot be: it is minted into the token by platform-auth from
+  # the AUTH_ADMINS secret, which only platform-auth can read. home enforces a policy it is not
+  # allowed to know, so nothing in this file can widen it.
+  - name: AUTH_JWKS_URI
+    valueFrom:
+      configMapKeyRef:
+        name: platform-config
+        key: AUTH_JWKS_URI
+  - name: AUTH_ISSUER
+    valueFrom:
+      configMapKeyRef:
+        name: platform-config
+        key: AUTH_ISSUER
+  # A literal, not a ConfigMap key, because there is no such key — platform-auth and the quiz both
+  # hardcode the same string.
+  - name: AUTH_AUDIENCE
+    value: platform
 initContainers:
   - name: seed-resume
     command:
@@ -50,13 +70,25 @@ initContainers:
       limits:
         memory: 128Mi
 volumeMounts:
-  - name: content
-    mountPath: /app/dist/client/resume.pdf
-    subPath: resume.pdf
-    readOnly: true
+  # There is no subPath mount over /app/dist/client/resume.pdf any more, and its absence is the point.
+  #
+  # A subPath single-file mount is a bind mount resolved to the source file's INODE at container start.
+  # Replacing the résumé on the volume gives it a new inode — kubectl cp untars, which unlinks and
+  # recreates — and the mount went on serving the old, unlinked inode for the life of the pod. That is
+  # the whole reason swapping the résumé needed `rollout restart`. Measured, not assumed: volume inode
+  # 2495958, the pod's mount still reading 2496037, same bytes served indefinitely.
+  #
+  # The server now reads /resume.pdf per request from the directory mount below (src/server/content.ts),
+  # exactly as it already reads platform-version.json. A directory mount resolves names on every lookup,
+  # so a replaced file is seen immediately and no rollout is needed.
   - name: content
     mountPath: /content
-    readOnly: true
+    # readOnly:false is STATED rather than omitted: this one word is the pod's security posture, and it
+    # must be legible in a diff rather than inferred from a default. home is the internet-facing pod,
+    # and what actually bounds the write is the allowlist in src/server/content.ts (resume.pdf and
+    # cards/<name>.yaml) — NOT the filesystem. /content is owned 1000:1000 and home runs as uid 1000,
+    # so nothing below this line stops it from writing anything on the volume.
+    readOnly: false
 volumes:
   - name: content
     persistentVolumeClaim:
