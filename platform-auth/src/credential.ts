@@ -51,7 +51,7 @@ export function isValidUsername(name: string): boolean {
 
 /** 8–128 characters. The lower bound is the real defence now that the user chooses this; the upper
  *  bound bounds the work scrypt is asked to do on attacker-supplied input. */
-const PW_MIN = 8;
+const PW_MIN = 4;
 const PW_MAX = 128;
 
 export function isValidPassword(pw: unknown): pw is string {

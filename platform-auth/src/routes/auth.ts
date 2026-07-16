@@ -103,8 +103,8 @@ authRouter.post('/identities', async (req, res) => {
   }
   if (!isValidPassword(parsed.data.password)) {
     res.status(400).json({
-      error: 'invalid password',
-      detail: '8–128 characters',
+      error: 'invalid pin',
+      detail: '4–128 characters',
     });
     return;
   }
