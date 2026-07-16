@@ -80,32 +80,6 @@ export const K8S_DIAGRAM = `<div class="term" role="img" aria-label="A terminal 
   </div>
 </div>`;
 
-export const PLATFORMUI_DIAGRAM = `<svg class="dgm" viewBox="0 0 300 176" role="img" aria-label="The @platform/ui package, defined in portfolio-home, feeds shared design tokens down to both the home page and the quiz.">
-    <defs>
-      <marker id="ahp" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
-        <path d="M0 0.5 5 3 0 5.5Z" fill="currentColor"/>
-      </marker>
-    </defs>
-    <g class="dgm-line" marker-end="url(#ahp)">
-      <path d="M92 92V126"/>
-      <path d="M208 92V126"/>
-    </g>
-    <g class="dgm-box">
-      <rect class="hub" x="14" y="44" width="272" height="46" rx="10"/>
-      <rect x="24" y="128" width="112" height="36" rx="8"/>
-      <rect x="164" y="128" width="112" height="36" rx="8"/>
-    </g>
-    <g class="dgm-t">
-      <text class="you" x="150" y="26">this page</text>
-      <text class="hub-t" x="150" y="62">@platform/ui</text>
-      <text class="sub" x="150" y="77">tokens · base · serveClient</text>
-      <text class="edge" x="66" y="109">imports</text>
-      <text class="edge" x="234" y="109">imports</text>
-      <text x="80" y="150">home</text>
-      <text x="220" y="150">quiz</text>
-    </g>
-  </svg>`;
-
 // The CI/CD pipeline — how a merge reaches the cluster, drawn shape-for-shape from
 // cicd-design/design.html and recoloured to the arch palette (its --warn/--ok zones become
 // --gold/--proj via .arch-cicd). Three worlds — GitHub’s, this machine’s, the cluster’s —
@@ -229,5 +203,4 @@ export const CICD_DIAGRAM = `
 export const DIAGRAMS: Record<NonNullable<Project['diagram']>, string> = {
   vmcp: VMCP_DIAGRAM,
   k8s: K8S_DIAGRAM,
-  platformui: PLATFORMUI_DIAGRAM,
 };

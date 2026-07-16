@@ -203,7 +203,7 @@ export function expCard(e: Experience): string {
   // like a footnote.
   const links = e.links
     .map(
-      (l) => `<a class="exp-fab" href="${esc(l.url)}" target="_blank" rel="noopener">
+      (l) => `<a class="exp-fab" href="${esc(l.url)}"${tab(true)}>
         <span class="fab-ico">${DOC_ICON}</span><span>${esc(l.label)}</span><span class="fab-out">↗</span>
       </a>`,
     )

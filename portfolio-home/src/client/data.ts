@@ -116,7 +116,7 @@ export interface Project {
   images?: [string, string];
   /** An inline schematic drawn in place of an image. 'vmcp' shows a user reaching two MCP
    *  servers through the gateway; 'k8s' is a mock `kubectl get pods` of the running cluster. */
-  diagram?: 'vmcp' | 'k8s' | 'platformui';
+  diagram?: 'vmcp' | 'k8s';
   /** Status badge — how finished this is, so a visitor does not misjudge it. */
   tag?: { label: string; icon: 'wip' | 'archived' };
 }
