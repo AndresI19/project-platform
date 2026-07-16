@@ -90,15 +90,20 @@
 }
 /* Larger and wider than the body text elsewhere: this is the one paragraph anyone actually reads.
    The masthead panel runs the full width of the column, but the PROSE does not follow it out there —
-   past ~95 characters the eye loses its place on the return sweep. So the bio holds a measure and
-   centres, which keeps its edges in line with the contact row beneath rather than tucking it inside
-   something wider. Both are centred; they read as siblings. */
+   it holds a measure and centres, which keeps its edges in line with the contact row beneath rather
+   than tucking it inside something wider.
+
+   1080px is not a round number; it is the narrowest width at which the current bio sets in three
+   lines. At 1020 it took four, the fourth holding the single word "comprehended." — the same orphan
+   the coda below is widened to avoid, and a visible enough mistake to be worth a longer measure than
+   the ~95 characters prose normally wants. It sits exactly on the boundary: adding a few words to
+   BIO drops it back to four lines and re-orphans the tail, so re-measure if the copy grows. */
 .mast-bio {
   color: var(--ink);
   font-size: 16.5px;
   line-height: 1.55;
   margin: 14px auto 0;
-  max-width: 1020px;
+  max-width: 1080px;
 }
 /* The closer sits on its own line — it is the turn from "who I am" to "and here is the thing
    itself", so it gets the weight of a separate statement rather than trailing the paragraph. */
