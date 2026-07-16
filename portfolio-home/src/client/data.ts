@@ -2,12 +2,14 @@
 // everything below renders from these values, so there is no HTML to hand-maintain.
 
 export const NAME = 'Andres Irarragorri';
-export const TITLE = 'Software Engineer / Devops';
+export const TITLE = 'Software Engineer / DevOps';
 
 export const BIO =
-  "Hey — glad you stopped by. I'm a back-end and DevOps developer. My degree is in physics, so I " +
-  "had to learn the craft fast and on the fly. Now I'm helping launch IBM's agentic capabilities " +
-  'for ETL flow creation to the cloud, from the platform side.';
+  "Hey — glad you stopped by. I'm a back-end and DevOps developer. Half a decade at IBM building " +
+  "hybrid-cloud ETL, and right now I'm taking its agentic flow-authoring capabilities to the cloud " +
+  'from the platform side. My degree is in physics, and it still sets how I build: nothing is ' +
+  "viable until it's demonstrated, and a hard problem gets broken down to its fundamentals until " +
+  "it's comprehensible.";
 
 /** The closer, on its own line — it is the turn from "who I am" to "and here is the thing itself". */
 export const BIO_CODA =
