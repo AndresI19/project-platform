@@ -1,0 +1,65 @@
+# Deploy values for platform-auth — the Kubernetes Deployment/Service spec for this service. It is consumed at
+# deploy time by platform-orchestration's generic `service` chart:
+#   helm upgrade platform-auth <orchestration>/charts/service -n platform -f deploy/platform-auth.values.yaml \
+#     --set image.repo=registry:5000/platform-auth --set image.tag=<version> --set version=<version>
+# The shared boilerplate (securityContext, /tmp mount, labels, probe rendering) lives in the chart's
+# platform.app helper; only what varies for this service is here. Image repo/tag + version are set per
+# deploy by CI. Keep the `name` field == the Service DNS name the router and sibling services expect.
+name: platform-auth
+image:
+  repo: platform-platform-auth
+  tag: latest
+version: 0.0.0
+port: 8002
+resources:
+  requests:
+    cpu: 25m
+    memory: 96Mi
+  limits:
+    memory: 384Mi
+probe:
+  path: /health
+  initialDelaySeconds: 4
+env:
+  - name: PORT
+    value: '8002'
+  - name: DATABASE_URL
+    valueFrom:
+      secretKeyRef:
+        name: platform-auth
+        key: DATABASE_URL
+  - name: AUTH_SIGNING_KEY
+    valueFrom:
+      secretKeyRef:
+        name: platform-auth
+        key: AUTH_SIGNING_KEY
+  - name: AUTH_CODE_PEPPER
+    valueFrom:
+      secretKeyRef:
+        name: platform-auth
+        key: AUTH_CODE_PEPPER
+  - name: AUTH_ISSUER
+    valueFrom:
+      configMapKeyRef:
+        name: platform-config
+        key: AUTH_ISSUER
+  - name: AUTH_AUDIENCE
+    value: platform
+  - name: AUTH_ADMINS
+    valueFrom:
+      secretKeyRef:
+        name: platform-auth
+        key: AUTH_ADMINS
+initContainers:
+  - name: wait-for-db
+    image: postgres:16
+    command:
+      - sh
+      - '-c'
+      - until pg_isready -h platform-db -U platform; do echo waiting for db; sleep 2; done
+    resources:
+      requests:
+        cpu: 10m
+        memory: 32Mi
+      limits:
+        memory: 128Mi
