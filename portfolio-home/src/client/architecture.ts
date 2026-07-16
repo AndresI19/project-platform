@@ -164,7 +164,7 @@ function topologyDiagram(): string {
 function cicdDiagram(): string {
   return `
     <div class="arch-diagram arch-cicd">
-      <svg viewBox="0 0 1280 560" width="100%" role="img" aria-label="A pull request makes a CI job; a merge starts version-tag and release on the same event — version-tag cuts the git tag, release reads it and posts a repository_dispatch. Every job lands in one queue, dispatched by label: ubuntu-latest jobs run on a fresh GitHub-hosted VM, self-hosted jobs are taken by our runner, which polls the queue, pushes to the local registry, tells the apiserver to change the image, and the kubelet pulls. On failure it alerts Discord, outbound.">
+      <svg viewBox="0 0 1280 560" width="100%" role="img" aria-label="A pull request makes a CI job; a merge starts version-tag and release on the same event — version-tag cuts the git tag, release reads it and posts a repository_dispatch. Every job lands in one queue, dispatched by label: ubuntu-latest jobs run on a fresh GitHub-hosted VM, self-hosted jobs are taken by our runner, which polls the queue, builds and pushes to the local registry, checks out the Helm chart and runs helm upgrade to roll the release forward, and the kubelet pulls the new image. On failure Helm rolls the release back and it alerts Discord, outbound.">
         <defs>
           <marker id="cicdA" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
             <path d="M0 0 L10 5 L0 10 z" fill="currentColor" style="color:var(--muted)"/>
@@ -240,8 +240,8 @@ function cicdDiagram(): string {
         <text class="t s" x="644" y="360">one job, de-register, restart</text>
         <text class="t m" x="644" y="380">1 · docker build --build-arg VERSION</text>
         <text class="t m" x="644" y="397">2 · docker push registry:5000/quiz:…</text>
-        <text class="t m" x="644" y="414">3 · kubectl set image deploy/quiz …</text>
-        <text class="t s" x="644" y="434">on failure → rollout undo, and Discord</text>
+        <text class="t m" x="644" y="414">3 · helm upgrade platform --reuse-values</text>
+        <text class="t s" x="644" y="434">on failure → helm rollback, and Discord</text>
 
         <path class="ln hot" style="marker-end:url(#cicdA)" d="M630 385 H 566"/>
         <text class="t s" x="570" y="378">(1) polls</text>
@@ -257,7 +257,7 @@ function cicdDiagram(): string {
 
         <rect class="box here" x="950" y="110" width="310" height="76" rx="8"/>
         <text class="t" x="964" y="130">kubelet · the minikube node</text>
-        <text class="t m" x="964" y="149">pull registry:5000/quiz:0.1.12</text>
+        <text class="t m" x="964" y="149">pull registry:5000/quiz:0.1.22</text>
 
         <path class="ln hot" style="marker-end:url(#cicdA)" d="M950 148 H 912"/>
         <text class="t s" x="916" y="102">(4) pull</text>
@@ -268,8 +268,8 @@ function cicdDiagram(): string {
 
         <rect class="box here" x="950" y="300" width="310" height="155" rx="8"/>
         <text class="t big" x="964" y="326">apiserver · platform namespace</text>
-        <text class="t s" x="964" y="348">the new image spec → a new ReplicaSet →</text>
-        <text class="t m" x="964" y="368">rollout status || rollout undo</text>
+        <text class="t s" x="964" y="348">the release's new image → a new ReplicaSet →</text>
+        <text class="t m" x="964" y="368">helm --wait, else roll the release back</text>
         <text class="t s" x="964" y="388">reached at its NATIVE address — the one</text>
         <text class="t s" x="964" y="402">the host cannot route to, but the runner can</text>
 
@@ -410,8 +410,10 @@ function securityDiagram(): string {
   return `
     <div class="arch-diagram arch-sec">
       <p class="sec-intro">
-        Every repo ships through the same gates. A <strong>✓</strong> is a <strong>blocking</strong>
+        Every service repo ships through the same gates. A <strong>✓</strong> is a <strong>blocking</strong>
         check on every pull request — plus branch protection on all of them, so nothing merges unscanned.
+        (The private <code>platform-cicd</code> repo is the deploy pipeline itself — it ships no service, so
+        these scan classes don't apply to it.)
       </p>
       <div class="sec-wrap">
         <table class="sec-tbl">
