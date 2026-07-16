@@ -56,5 +56,27 @@ export function serveClient(app: Express, opts: ServeClientOptions): void {
     }),
   );
 
-  app.get(`${b}/*`, (_req, res) => res.sendFile(resolve(clientDir, 'index.html')));
+  // The SPA fallback — for NAVIGATION only. A request that looks like a file and reaches here means
+  // express.static did not find it, i.e. the file is gone; answering index.html would be a lie with a
+  // 200 on it.
+  //
+  // That lie has a specific, ugly failure. Vite fingerprints every bundle, so each deploy retires the
+  // previous hashes. A browser still holding an older index.html then asks for `/assets/index-OLD.js`
+  // and gets HTML back, with a 200 and a JS content-type expectation: `Unexpected token '<'`, and the
+  // page renders nothing. The page had worked moments earlier, a fresh device is fine (it fetches a
+  // current index.html), and clearing site data "fixes" it — so it reads as a browser problem rather
+  // than a server one. A 404 is the honest answer, and the one a client can recover from.
+  //
+  // Same lie, second victim: a missing `/resume.pdf` used to fall through here and return index.html
+  // (see portfolio-home's CLAUDE.md — Vite's publicDir once dropped it from the build), so a broken
+  // asset looked like a working page. Anything with an extension gets the truth now.
+  //
+  // Client routes are extension-free ('/home', '/quiz', '/garden'), so this cannot swallow one.
+  app.get(`${b}/*`, (req, res) => {
+    if (req.path.includes('/assets/') || /\.[a-z0-9]{2,5}$/i.test(req.path)) {
+      res.status(404).end();
+      return;
+    }
+    res.sendFile(resolve(clientDir, 'index.html'));
+  });
 }
