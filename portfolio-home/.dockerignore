@@ -4,6 +4,8 @@ node_modules/
 packages/*/node_modules/
 dist/
 coverage/
+test/
+**/*.test.ts
 .git/
 .github/
 .vite/

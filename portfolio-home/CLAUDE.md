@@ -32,7 +32,9 @@ npm test            # vitest run  (4 files, ~49 cases)
 
 - `src/client/` — `data.ts` (**all site content lives here**: projects, experience, bio, links),
   `view.ts` (pure data→HTML), `liveness.ts` (polls the vMCP gateway to light up status badges),
-  `greet.ts` (the first-visit dialog), `main.ts` (entry).
+  `architecture.ts` (the four diagram builders) + `architecture-toggle.ts` (the pull-down/slider
+  controller), `diagrams.ts` (the inline-SVG assets), `main.ts` (entry). The first-visit dialog now
+  lives in the shared `@platform/ui` gate, not a local module.
 - `src/server/` — `index.ts` (Express), `env.ts` (**all** `process.env` reading happens here, and it
   is validated at boot).
 - `packages/platform-ui/` — the shared design system. Tokens, base CSS, `tsconfig.base.json`, and

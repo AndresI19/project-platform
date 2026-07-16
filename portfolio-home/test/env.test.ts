@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { loadEnv } from './env.js';
+import { loadEnv } from '../src/server/env.js';
 
 /**
  * The config guards. Every variable is optional — the app must run with an empty environment — but a
@@ -10,8 +10,14 @@ import { loadEnv } from './env.js';
 const WEBHOOK = 'https://discord.com/api/webhooks/123/abc';
 
 describe('an empty environment is valid', () => {
-  test('defaults: port 3000, same-origin API, greetings logged not relayed', () => {
-    expect(loadEnv({})).toEqual({ port: 3000, vmcpApiBase: '', discordWebhookUrl: '' });
+  test('defaults: port 3000, same-origin API, greetings logged not relayed, 5/hour cap', () => {
+    expect(loadEnv({})).toEqual({
+      port: 3000,
+      vmcpApiBase: '',
+      discordWebhookUrl: '',
+      helloRateMax: 5,
+      helloRateWindowSeconds: 3600,
+    });
   });
 });
 
@@ -22,6 +28,22 @@ describe('PORT', () => {
 
   test.each(['abc', '0', '70000', '3000.5', '-1'])('rejects %s', (bad) => {
     expect(() => loadEnv({ PORT: bad })).toThrow(/PORT/);
+  });
+});
+
+describe('HELLO_RATE_MAX / HELLO_RATE_WINDOW', () => {
+  test('override the greeting cap', () => {
+    const env = loadEnv({ HELLO_RATE_MAX: '20', HELLO_RATE_WINDOW: '600' });
+    expect(env.helloRateMax).toBe(20);
+    expect(env.helloRateWindowSeconds).toBe(600);
+  });
+
+  test.each(['abc', '0', '-1', '2.5'])('reject %s for HELLO_RATE_MAX', (bad) => {
+    expect(() => loadEnv({ HELLO_RATE_MAX: bad })).toThrow(/HELLO_RATE_MAX/);
+  });
+
+  test.each(['abc', '0', '-1', '2.5'])('reject %s for HELLO_RATE_WINDOW', (bad) => {
+    expect(() => loadEnv({ HELLO_RATE_WINDOW: bad })).toThrow(/HELLO_RATE_WINDOW/);
   });
 });
 

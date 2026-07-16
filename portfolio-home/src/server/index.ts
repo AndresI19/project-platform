@@ -76,8 +76,9 @@ app.get('/api/versions', async (_req, res) => res.json(await collectVersions(VER
 const DISCORD_WEBHOOK_URL = env.discordWebhookUrl;
 
 /** Crude fixed-window cap. The endpoint is unauthenticated and fans out to a webhook, so it must
-    not be usable as a free megaphone; a handful of greetings an hour is far more than it needs. */
-const RATE_LIMIT = { max: 5, windowMs: 60 * 60 * 1000 };
+    not be usable as a free megaphone; a handful of greetings an hour is far more than it needs. The
+    defaults (5 per hour) are validated in env.ts and overridable via HELLO_RATE_MAX/HELLO_RATE_WINDOW. */
+const RATE_LIMIT = { max: env.helloRateMax, windowMs: env.helloRateWindowSeconds * 1000 };
 const hits = new Map<string, number[]>();
 function overLimit(ip: string): boolean {
   const now = Date.now();

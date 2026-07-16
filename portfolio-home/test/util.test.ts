@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { esc, fmtDate, slug, tab } from './util.js';
+import { esc, fmtDate, slug, tab } from '../src/client/util.js';
 
 /**
  * The page's string plumbing. Every one of these was unreachable to a test until main.ts was split:

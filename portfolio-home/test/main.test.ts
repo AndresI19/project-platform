@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import { BIO, BIO_CODA, CONTACTS, ENTRIES, EXPERIENCE, NAME, TITLE, isGroup } from './data.js';
+import { BIO, BIO_CODA, CONTACTS, ENTRIES, EXPERIENCE, NAME, TITLE, isGroup } from '../src/client/data.js';
 
 /**
  * The home page has never had a test. These are characterization tests: they describe the HTML the
@@ -10,12 +10,7 @@ import { BIO, BIO_CODA, CONTACTS, ENTRIES, EXPERIENCE, NAME, TITLE, isGroup } fr
  * should not break the suite; rendering one *wrong* should.
  */
 
-const GREETED_KEY = 'portfolio-home:greeted';
-
 interface MountOptions {
-  greeted?: boolean;
-  /** e.g. '?greet' — the escape hatch that re-opens the dialog. */
-  search?: string;
   /** What GET /api/config answers with. */
   vmcpApiBase?: string;
 }
@@ -26,8 +21,6 @@ let fetchMock: ReturnType<typeof vi.fn>;
 async function mountPage(opts: MountOptions = {}): Promise<void> {
   document.body.innerHTML = '<div id="app"></div>';
   localStorage.clear();
-  if (opts.greeted) localStorage.setItem(GREETED_KEY, '2026-01-01T00:00:00.000Z');
-  window.history.replaceState({}, '', `/${opts.search ?? ''}`);
 
   fetchMock = vi.fn(async (input: RequestInfo | URL) => {
     const url = String(input);
@@ -63,7 +56,7 @@ async function mountPage(opts: MountOptions = {}): Promise<void> {
   vi.stubGlobal('fetch', fetchMock);
 
   vi.resetModules();
-  await import('./main.js');
+  await import('../src/client/main.js');
   // let the config fetch + the first liveness poll settle
   await new Promise((r) => setTimeout(r, 0));
   await new Promise((r) => setTimeout(r, 0));
