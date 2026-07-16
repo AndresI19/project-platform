@@ -75,7 +75,7 @@ async function audit(ip: string, ok: boolean): Promise<void> {
  * defence against a weak choice is a slow, salted, peppered hash (credential.ts). There is still no
  * recovery — a reset would need an email, and an email is PII.
  */
-const SignUpBody = z.object({
+const CredentialsBody = z.object({
   username: z.string().min(1).max(64),
   password: z.string().min(1).max(256),
 });
@@ -87,7 +87,7 @@ authRouter.post('/identities', async (req, res) => {
     return;
   }
 
-  const parsed = SignUpBody.safeParse(req.body);
+  const parsed = CredentialsBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: 'provide { username, password }' });
     return;
@@ -152,11 +152,6 @@ authRouter.get('/usernames/:name', async (req, res) => {
  * Username + password. Without the password a username is a claim and anyone could make it, so both
  * are required and both are checked the same generic way on failure.
  */
-const TokenBody = z.object({
-  username: z.string().min(1).max(64),
-  password: z.string().min(1).max(256),
-});
-
 authRouter.post('/token', async (req, res) => {
   const ip = clientIp(req);
   if (overLimit(ip)) {
@@ -165,7 +160,7 @@ authRouter.post('/token', async (req, res) => {
     return;
   }
 
-  const parsed = TokenBody.safeParse(req.body);
+  const parsed = CredentialsBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: 'provide { username, password }' });
     return;

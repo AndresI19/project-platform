@@ -49,7 +49,7 @@ export function isValidUsername(name: string): boolean {
  * Rate limiting (routes/auth.ts) remains the only online defence, exactly as before.
  */
 
-/** 8–128 characters. The lower bound is the real defence now that the user chooses this; the upper
+/** 4–128 characters. The lower bound is the real defence now that the user chooses this; the upper
  *  bound bounds the work scrypt is asked to do on attacker-supplied input. */
 const PW_MIN = 4;
 const PW_MAX = 128;

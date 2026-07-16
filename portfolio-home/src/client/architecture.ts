@@ -1,15 +1,17 @@
 import { CICD_DIAGRAM } from './diagrams.js';
-// The platform architecture, revealed by a pull-down in the masthead banner. THREE diagrams now, paged
+// The platform architecture, revealed by a pull-down in the masthead banner. FOUR diagrams now, paged
 // by a slider:
 //
 //   1. Platform topology — who talks to whom, from the browser down to the outbound APIs. This is the
 //      evidence for the bio's closing claim: everything below is built, hosted and running right here.
-//   2. Auth & the browser — the narrower story of how the identity service issues a token, how the
+//   2. CICD — how a merge reaches the cluster: the pipeline from a pushed commit through the blocking
+//      gates to a rolled-out deployment. A sequence, not a topology, so it earns its own slide.
+//   3. Auth & the browser — the narrower story of how the identity service issues a token, how the
 //      front ends carry it, and how each verifies it on its own. Split out because it is a different
 //      question (a sequence, not a topology) and crowding it into the map made both harder to read.
-//   3. Security — a service × scan matrix: every workload and the blocking CI gates (image, deps,
+//   4. Security — a service × scan matrix: every workload and the blocking CI gates (image, deps,
 //      SAST, secrets, config, manifests) it passes on every PR. A table, not a topology, for the same
-//      reason as diagram 2 — a different question deserves its own shape.
+//      reason as diagram 3 — a different question deserves its own shape.
 //
 // WHY HTML AND NOT SVG (or the wiki's ASCII art): both scale only UNIFORMLY — on a phone the whole
 // picture shrinks past legibility. Built as boxes in a grid, the diagram REFLOWS: columns collapse,
