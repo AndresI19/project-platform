@@ -1398,21 +1398,18 @@ section {
 .r17 {
   grid-row: 17;
 }
-.r18 {
-  grid-row: 18;
-}
 
 /* FOUR services now, each THREE columns wide (home 2-4, quiz 5-7, vmcp 8-10, platform-auth 11-13).
-   vmcp still has a lane either side of its database — the fvt line rises the left one, the MCP-over-SSE
-   line drops the right one — just one column narrower than before. */
+   vmcp keeps a lane either side of its database — the MCP-over-SSE line drops down the right one to
+   rs-mcp; the left lane is now unused (fvt-traffic, which rose up it, left the cluster). */
 /* home 2-4, quiz 5-7, platform-auth 8-10, vmcp 11-13. vmcp stays on the RIGHT EDGE, where its whole
-   stack already lives — the agent's road down the right, the database in its middle column, fvt up the
-   left lane, the SSE line down the right — so none of that has to move. platform-auth is the new peer
+   stack already lives — the agent's road down the right, the database in its middle column, the SSE
+   line down the right lane to rs-mcp — so none of that has to move. platform-auth is the new peer
    dropped into the freed middle slot. (The agent box must stay far-right too: pulled inward it
    collides with the full-width "You" box above it.) */
 .s1 {
   grid-column: 2 / 5;
-} /* home, fvt-traffic */
+} /* home */
 .s2 {
   grid-column: 5 / 8;
 } /* quiz */
@@ -1584,20 +1581,14 @@ section {
 }
 
 /* vmcp-db is the MIDDLE column of the gateway's three (col 9). The two it leaves over, 8 and 10, are
-   the lanes the connectors run in — fvt up the left, the SSE line down the right. Narrower by
-   construction, not by a margin, so nothing needs re-tuning when the viewport changes.
+   the lanes the connectors run in — the SSE line down the right (the left is now spare since fvt-traffic
+   left). Narrower by construction, not by a margin, so nothing needs re-tuning when the viewport changes.
    platform-db sits under platform-auth (s4) with no lanes to reserve, so it takes the full width. */
 .db {
   grid-column: 12 / 13;
 }
 .authdb {
   grid-column: 8 / 11;
-}
-
-/* fvt-traffic drops away from platform-content's border — they sit on adjacent rows and overlap in
-   column 4, so with no margin they touch. */
-.b-infra.s1 {
-  margin-top: 16px;
 }
 
 /* rs-mcp-server drops too — not for looks. The rail's arrowhead is drawn BELOW the rail's end, which
@@ -1609,7 +1600,7 @@ section {
 
 .vault {
   grid-column: 1;
-  grid-row: 7 / 16;
+  grid-row: 7 / 15;
   align-self: stretch;
   justify-content: center;
   padding: 8px 2px;
@@ -1717,9 +1708,7 @@ section {
 
 @media (prefers-reduced-motion: reduce) {
   .arch-arrow::before,
-  .vm-rail,
-  .fvt-elbow::before,
-  .fvt-elbow::after {
+  .vm-rail {
     animation: none;
   }
 }
@@ -1820,7 +1809,7 @@ section {
    database rather than through it. It is a column, not an offset, so it stays put at any width. */
 .vm-rail {
   grid-column: 13 / 14;
-  grid-row: 12 / 15;
+  grid-row: 12 / 14;
   justify-self: center;
   align-self: stretch;
   width: 3px;
@@ -1854,66 +1843,6 @@ section {
   color: var(--muted);
 }
 
-/* THE LEFT LANE — column 11, the left lane of vmcp (11-13). fvt-traffic is the only thing here that
-   talks UP the stack, so it comes in under the gateway and rises into it.
-   The horizontal reaches back to fvt-traffic with `left: calc(-600% - 60px)`. That looks like a magic
-   number and is not: this element is exactly one column wide, so 100% IS a column — SIX columns and
-   six gutters back is precisely fvt-traffic's right edge (it sits under home, 2-4), at any width. */
-.fvt-elbow {
-  grid-column: 11 / 12;
-  grid-row: 12 / 15;
-  align-self: stretch;
-  z-index: 0;
-  pointer-events: none;
-}
-.fvt-elbow::before {
-  /* along, out to fvt-traffic */
-  content: "";
-  position: absolute;
-  bottom: 26px;
-  left: calc(-600% - 60px);
-  right: 50%;
-  height: 3px;
-  background-image: repeating-linear-gradient(90deg, var(--slate) 0 8px, transparent 8px 14px);
-  background-size: 14px 100%;
-  animation: fvt-along .9s linear infinite;
-}
-.fvt-elbow::after {
-  /* then up, stopping under vmcp */
-  content: "";
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  top: 6px;
-  bottom: 26px;
-  width: 3px;
-  background-image: repeating-linear-gradient(180deg, var(--slate) 0 8px, transparent 8px 14px);
-  background-size: 100% 14px;
-  animation: fvt-up .9s linear infinite;
-}
-/* It marches the way the traffic goes: rightwards along the bottom, then UP into the gateway. */
-@keyframes fvt-along {
-  to {
-    background-position-x: 14px;
-  }
-}
-@keyframes fvt-up {
-  to {
-    background-position-y: -14px;
-  }
-}
-
-.fvt-head {
-  /* up, into vmcp's underside */
-  position: absolute;
-  left: 50%;
-  top: -2px;
-  transform: translateX(-50%);
-  border: 8px solid transparent;
-  border-top: 0;
-  border-bottom-color: var(--slate);
-}
-
 /* ── Enclosures ──────────────────────────────────────────────────────────────────────────────── */
 .arch-frame {
   grid-column: 1 / 14;
@@ -1928,13 +1857,13 @@ section {
 /* The frames bleed OUTWARD past the content, which is what gives the vault and the right-hand column
    room to breathe inside the cluster instead of pressing against its border. */
 .arch-hw {
-  grid-row: 5 / 17;
+  grid-row: 5 / 16;
   margin: 0 -18px;
   border: 2px solid color-mix(in srgb, var(--slate) 60%, var(--line));
   background: color-mix(in srgb, var(--slate) 6%, transparent);
 }
 .arch-k8s {
-  grid-row: 6 / 17;
+  grid-row: 6 / 16;
   margin: 0 -9px;
   border: 2px dashed color-mix(in srgb, var(--accent) 60%, var(--line));
   background: color-mix(in srgb, var(--accent) 5%, transparent);
@@ -2548,17 +2477,14 @@ section {
   .b-infra.s3 {
     grid-row: 23;
   } /* rs-mcp-server */
-  .b-infra.s1 {
-    grid-row: 24;
-  } /* fvt-traffic */
   .pad {
-    grid-row: 25;
+    grid-row: 24;
   }
-  .a-user.r17 {
-    grid-row: 26;
+  .a-user.r16 {
+    grid-row: 25;
   } /* outbound */
   .b-ext.s3 {
-    grid-row: 27;
+    grid-row: 26;
   }
 
   .vault-t {
@@ -2567,17 +2493,16 @@ section {
   }
   /* Nothing to run past, nothing to run along, and no shared column to join through. */
   .vm-rail,
-  .fvt-elbow,
   .mount {
     display: none;
   }
 
   .arch-hw {
-    grid-row: 7 / 26;
+    grid-row: 7 / 25;
     margin: 0 -8px;
   }
   .arch-k8s {
-    grid-row: 8 / 26;
+    grid-row: 8 / 25;
     margin: 0 -3px;
   }
   .arch-tag {
