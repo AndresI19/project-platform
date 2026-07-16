@@ -58,22 +58,24 @@ const vconn = (label: string): string =>
 /* ── Diagram 1 — the topology ──────────────────────────────────────────────────────────────────── */
 function topologyDiagram(): string {
   // Row map (keep in step with styles.css):
-  //   1 callers   3 Cloudflare   7 cloudflared   9 nginx   11 services   13 volumes   15 rs-mcp
-  //   2 arrows    4 pierce↓      8 arrow↓        10 fan-out 12 connectors 14 fvt      17 arrow↓ 18 APIs
+  //   1 callers   3 Cloudflare   7 cloudflared   9 nginx   11 services   13 volumes   14 rs-mcp
+  //   2 arrows    4 pierce↓      8 arrow↓        10 fan-out 12 connectors            16 arrow↓ 17 APIs
   //
   // Four services, THREE content columns each: home 2-4, quiz 5-7, vmcp 8-10, platform-auth 11-13
-  // (grid lines s1 2/5 · s2 5/8 · s3 8/11 · s4 11/14). vmcp keeps its whole stack — the database in
-  // its middle column, fvt rising up the left lane, the MCP-over-SSE line down the right lane, the
-  // agent's road on the same columns. platform-auth is the new fourth peer, with its own database
-  // under it. It is drawn as one more thing nginx routes to — because that is what it is; the story of
-  // the TOKEN it hands out lives in diagram 2, so this map stays a map.
+  // (grid lines s1 2/5 · s2 5/8 · s3 8/11 · s4 11/14). vmcp keeps its stack — the database in its
+  // middle column, the MCP-over-SSE line down the right lane to rs-mcp, the agent's road on the same
+  // columns. platform-auth is the fourth peer, with its own database under it. fvt-traffic USED to rise
+  // up the left lane into the gateway; it now lives outside the cluster and drives the public API like
+  // any other MCP consumer, so it is named in the caller box, not drawn as a box. That freed its row —
+  // rs-mcp sits directly under the volumes, one band shorter. It is drawn as one more thing nginx
+  // routes to — the story of the TOKEN platform-auth hands out lives in diagram 2, so this map stays a map.
   return `
     <div class="arch-diagram">
       <div class="arch-grid">
 
         <!-- ── Callers, both above the front door ────────────────────────────────────────── -->
         ${box('b-you r1', 'You', 'a browser', '', PERSON)}
-        ${box('b-agent r1', 'Agent / MCP consumer', 'Claude Desktop, an SDK', '', ROBOT)}
+        ${box('b-agent r1', 'Agent / MCP consumer', 'Claude Desktop, an SDK or <strong>FVT-traffic</strong>', '', ROBOT)}
 
         ${arrow('a-user w r2', 'TLS')}
         ${arrow('a-agent right r2', 'MCP')}
@@ -119,19 +121,18 @@ function topologyDiagram(): string {
         ${box('b-vol s3 r13 db', 'vmcp-db', 'PersistentVolume')}
         ${box('b-vol s4 r13 authdb', 'platform-db', 'PersistentVolume')}
 
-        ${box('b-infra s1 r14', 'fvt-traffic', 'replays the suite through the gateway, on a timer')}
-        <div class="fvt-elbow" aria-hidden="true"><i class="fvt-head"></i></div>
-
-        <!-- Down the right edge of the gateway's column, PAST the database. -->
+        <!-- Down the right edge of the gateway's column, PAST the database. rs-mcp-server sits directly
+             below the databases now — fvt-traffic used to occupy this band from the left lane, but it
+             left the cluster (it drives the PUBLIC API as one more MCP consumer, see the caller box). -->
         <div class="vm-rail" aria-hidden="true"><span class="vm-rail-l">MCP over SSE</span></div>
 
-        ${box('b-infra s3 r15', 'rs-mcp-server', '17 RuneScape tools')}
+        ${box('b-infra s3 r14', 'rs-mcp-server', '17 RuneScape tools')}
 
-        <div class="pad r16" aria-hidden="true"></div>
+        <div class="pad r15" aria-hidden="true"></div>
 
         <!-- OUTSIDE the machine: other people's servers, on the internet. -->
-        ${arrow('a-user s3 r17', 'outbound HTTPS')}
-        <div class="arch-box b-ext arch-ext-box s3 r18">
+        ${arrow('a-user s3 r16', 'outbound HTTPS')}
+        <div class="arch-box b-ext arch-ext-box s3 r17">
           <span class="arch-name">Public APIs</span>
           <table class="arch-tbl">
             ${OUTBOUND.map(([n, w]) => `<tr><th>${n}</th><td>${w}</td></tr>`).join('')}
