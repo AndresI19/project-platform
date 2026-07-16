@@ -86,7 +86,7 @@ export const K8S_DIAGRAM = `<div class="term" role="img" aria-label="A terminal 
 // and every arrow is opened from our side. A static asset: no interpolation, no logic.
 export const CICD_DIAGRAM = `
     <div class="arch-diagram arch-cicd">
-      <svg viewBox="0 0 1280 560" width="100%" role="img" aria-label="A pull request makes a CI job; a merge starts version-tag and release on the same event — version-tag cuts the git tag, release reads it and posts a repository_dispatch. Every job lands in one queue, dispatched by label: ubuntu-latest jobs run on a fresh GitHub-hosted VM, self-hosted jobs are taken by our runner, which polls the queue, builds and pushes to the local registry, checks out the Helm chart and runs helm upgrade to roll the release forward, and the kubelet pulls the new image. On failure Helm rolls the release back and it alerts Discord, outbound.">
+      <svg viewBox="0 0 1280 560" width="100%" role="img" aria-label="A pull request makes a CI job; a merge starts version-tag and release on the same event — version-tag cuts the git tag, release reads it and posts a repository_dispatch. Every job lands in one queue, dispatched by label: ubuntu-latest jobs run on a fresh GitHub-hosted VM, self-hosted jobs are taken by our runner, which polls the queue, builds and pushes to the local registry, checks out the Helm chart and runs helm upgrade on that one service's own release. The upgrade is applied, not awaited, so the runner is free in about half a second and the next release starts; the kubelet pulls the new image, and a Job inside the cluster watches the rollout in the runner's place. If the rollout stalls, that Job rolls the release back and alerts Discord, outbound — a rolling update means the old pods never stopped serving. The runner posts the release summary to Discord separately.">
         <defs>
           <marker id="cicdA" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
             <path d="M0 0 L10 5 L0 10 z" fill="currentColor" style="color:var(--muted)"/>
@@ -162,15 +162,15 @@ export const CICD_DIAGRAM = `
         <text class="t s" x="644" y="360">one job, de-register, restart</text>
         <text class="t m" x="644" y="380">1 · docker build --build-arg VERSION</text>
         <text class="t m" x="644" y="397">2 · docker push registry:5000/quiz:…</text>
-        <text class="t m" x="644" y="414">3 · helm upgrade platform --reuse-values</text>
-        <text class="t s" x="644" y="434">on failure → helm rollback, and Discord</text>
+        <text class="t m" x="644" y="414">3 · helm upgrade quiz · its own release</text>
+        <text class="t s" x="644" y="434">applied, not awaited — free again in ~0.5s</text>
 
         <path class="ln hot" style="marker-end:url(#cicdA)" d="M630 385 H 566"/>
         <text class="t s" x="570" y="378">(1) polls</text>
 
-        <!-- an outbound alert to Discord on failure — it LEAVES the box: starts inside, crosses out -->
+        <!-- the runner's release summary — it LEAVES the box: starts inside, crosses out -->
         <path class="ln" style="marker-end:url(#cicdA)" d="M855 440 V 545"/>
-        <text class="t s" x="700" y="500">outbound → Discord ↗</text>
+        <text class="t s" x="700" y="500">the release summary → Discord ↗</text>
 
         <!-- Inside K8s -->
         <rect class="zone z-k8s" x="936" y="8" width="338" height="544" rx="12"/>
@@ -191,12 +191,19 @@ export const CICD_DIAGRAM = `
         <rect class="box here" x="950" y="300" width="310" height="155" rx="8"/>
         <text class="t big" x="964" y="326">apiserver · platform namespace</text>
         <text class="t s" x="964" y="348">the release's new image → a new ReplicaSet →</text>
-        <text class="t m" x="964" y="368">helm --wait, else roll the release back</text>
-        <text class="t s" x="964" y="388">reached at its NATIVE address — the one</text>
-        <text class="t s" x="964" y="402">the host cannot route to, but the runner can</text>
+        <text class="t m" x="964" y="368">a Job watches the rollout, in-cluster</text>
+        <text class="t s" x="964" y="388">stalls → helm rollback; RollingUpdate means</text>
+        <text class="t s" x="964" y="402">the old pods never stopped serving</text>
+        <text class="t s" x="964" y="422">reached at its NATIVE address — the one</text>
+        <text class="t s" x="964" y="436">the host cannot route to, but the runner can</text>
 
         <path class="ln hot" style="marker-end:url(#cicdA)" d="M906 352 H 946"/>
         <text class="t s" x="912" y="344">(3)</text>
+
+        <!-- the stalled-rollout alert leaves the CLUSTER, not the runner: by the time a rollout
+             stalls the runner is long gone, which is the whole point of watching from in here -->
+        <path class="ln" style="marker-end:url(#cicdA)" d="M1105 455 V 545"/>
+        <text class="t s" x="1113" y="500">a stalled rollout → Discord ↗</text>
       </svg>
     </div>`;
 
