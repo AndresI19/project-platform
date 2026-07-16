@@ -33,7 +33,8 @@ describe("usernames", () => {
 
 describe("password rules", () => {
   it("requires a floor of length, the only entropy we can enforce on a chosen secret", () => {
-    expect(isValidPassword("short")).toBe(false);       // 5 chars
+    expect(isValidPassword("abc")).toBe(false);         // 3 chars — below the 4-char floor
+    expect(isValidPassword("pin4")).toBe(true);         // 4 chars — the floor
     expect(isValidPassword("goodenough")).toBe(true);   // 10 chars
     expect(isValidPassword("a".repeat(128))).toBe(true);
     expect(isValidPassword("a".repeat(129))).toBe(false);

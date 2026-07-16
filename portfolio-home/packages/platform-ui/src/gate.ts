@@ -29,12 +29,12 @@ function chooseView(): string {
     <div class="pg-doors">
       <button class="pg-door primary" data-act="new">
         <span class="pg-door-t">Create an account</span>
-        <span class="pg-door-d">Choose a username and a password. Your progress follows you to any
+        <span class="pg-door-d">Choose a username and a pin. Your progress follows you to any
           browser.</span>
       </button>
       <button class="pg-door" data-act="signin">
         <span class="pg-door-t">I have an account</span>
-        <span class="pg-door-d">Sign back in with your username and password.</span>
+        <span class="pg-door-d">Sign back in with your username and pin.</span>
       </button>
       <button class="pg-door" data-act="guest">
         <span class="pg-door-t">Continue as a guest</span>
@@ -46,23 +46,23 @@ function chooseView(): string {
     </div>`;
 }
 
-// Username is public; password is the secret. They are asked for together because, unlike the old
-// server-generated code, the password is something the user brings — there is no second page handing
-// anything back. The note on the password is not decoration: this credential is stored in
-// localStorage to keep sign-in silent (auth.ts), so reusing a real password here is a genuinely bad
-// idea and the copy says so plainly rather than hoping.
+// Username is public; the pin is the secret. They are asked for together because, unlike the old
+// server-generated code, the pin is something the user brings — there is no second page handing
+// anything back. The note on the pin is not decoration: this credential is stored in localStorage to
+// keep sign-in silent (auth.ts), so reusing a real password as the pin here is a genuinely bad idea
+// and the copy says so plainly rather than hoping.
 const newView = (): string => `
   <h2>Create an account</h2>
   <p class="pg-sub">The username is public — it appears on the dashboard and the leaderboard. The
-    password is yours.</p>
+    pin is yours.</p>
   <label class="pg-label" for="pg-user">Username</label>
   <input id="pg-user" class="pg-input" autocomplete="username" autocapitalize="off" spellcheck="false"
          placeholder="3–20 characters: a–z, 0–9, _ and -">
-  <label class="pg-label" for="pg-pass">Password</label>
+  <label class="pg-label" for="pg-pass">Create a pin</label>
   <input id="pg-pass" class="pg-input" type="password" autocomplete="new-password"
-         placeholder="at least 8 characters">
-  <p class="pg-note">Don't reuse a password you use anywhere else — this identity holds only quiz
-    progress, and it is not built to guard a real secret.</p>
+         placeholder="at least 4 characters">
+  <p class="pg-note">A short pin is fine — but don't make it a password you use anywhere else. This
+    identity holds only quiz progress, and it is not built to guard a real secret.</p>
   <p class="pg-err" data-err hidden></p>
   <div class="pg-actions">
     <button class="pg-btn ghost" data-act="back">Back</button>
@@ -73,7 +73,7 @@ const signInView = (): string => `
   <h2>Sign in</h2>
   <label class="pg-label" for="pg-user">Username</label>
   <input id="pg-user" class="pg-input" autocomplete="username" autocapitalize="off" spellcheck="false">
-  <label class="pg-label" for="pg-pass">Password</label>
+  <label class="pg-label" for="pg-pass">Pin</label>
   <input id="pg-pass" class="pg-input" type="password" autocomplete="current-password">
   <p class="pg-err" data-err hidden></p>
   <div class="pg-actions">
@@ -248,7 +248,7 @@ const markNudgeSeen = (): void => {
  * Top-right. Shows who you are and lets you sign out.
  *
  * It no longer reveals the credential: the old server-generated code was shown here because a user
- * who never saw it could not have written it down, but a password is something the user already
+ * who never saw it could not have written it down, but a pin is something the user already
  * chose and already knows. Printing it would only put a reusable secret on screen during a
  * screen-share for no benefit.
  *
@@ -284,7 +284,7 @@ export function mountAccountFab(opts: FabOptions = {}): void {
            progress would stay in this browser only, and clearing site data ends it.</p>
          <button class="pg-btn primary full" data-act="upgrade">Create an account</button>`
       : `<div class="pg-fab-row"><span>Username</span><code>${esc(id.username ?? '')}</code></div>
-         <p class="pg-fab-note">Your password is the only way back into this account — there is no
+         <p class="pg-fab-note">Your pin is the only way back into this account — there is no
            reset. You chose it, so keep it somewhere safe.</p>
          <button class="pg-btn ghost full" data-act="signout">Sign out</button>`;
 
