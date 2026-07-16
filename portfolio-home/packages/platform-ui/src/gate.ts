@@ -132,6 +132,21 @@ export function mountGate({ onDone, greetUrl }: GateOptions): void {
     if (e.key === 'Escape') {
       if (!current()) continueAsGuest();
       close();
+      return;
+    }
+    if (e.key === 'Enter') {
+      // The gate owns the screen while it is open, so Enter must resolve HERE and never bubble to the
+      // host app's own window-level keydown. The quiz reads a bare Enter as "start", so pressing it
+      // after typing a password launched a quiz out from under this dialog. Trigger the current view's
+      // primary action — Create / Sign in / Send — which is what someone who just filled the form
+      // expects Enter to do; reuse the click handler rather than re-implement each submit. The chooser
+      // has no single default, so there Enter does nothing, but is still swallowed so it cannot leak.
+      e.stopPropagation();
+      const primary = host.querySelector<HTMLElement>('.pg-btn.primary[data-act]');
+      if (primary) {
+        e.preventDefault();
+        primary.click();
+      }
     }
   };
   document.addEventListener('keydown', onKey);
