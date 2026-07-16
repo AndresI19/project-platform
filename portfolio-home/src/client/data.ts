@@ -5,8 +5,8 @@ export const NAME = 'Andres Irarragorri';
 export const TITLE = 'Software Engineer / DevOps';
 
 export const BIO =
-  "Hey — glad you stopped by. I'm a back-end and DevOps developer. Half a decade at IBM building " +
-  "hybrid-cloud ETL, and right now I'm taking its agentic flow-authoring capabilities to the cloud " +
+  'Hey — glad you stopped by. I spent half a decade at IBM on DataStage, where users author their ' +
+  "own ETL flows across hybrid cloud. Now I'm taking the agentic layer on top of it to the cloud, " +
   'from the platform side. My degree is in physics, and it still sets how I build: nothing is ' +
   "viable until it's demonstrated, and a hard problem gets broken down to its fundamentals until " +
   "it's comprehensible.";
