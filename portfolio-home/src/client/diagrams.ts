@@ -46,7 +46,8 @@ export const VMCP_DIAGRAM = `<svg class="dgm" viewBox="0 0 300 176" role="img" a
 // stretched every other card to match. Four load-bearing pods — the router, the two front doors, and
 // the identity service — say "a cluster is running here" without the height. Do not restore the
 // dropped pods (quiz, vmcp-db, rs-mcp-server, fvt-traffic) to "match the deployments"; the omission
-// is the feature. The `-l tier=core` flag on the command is what makes the short list honest.
+// is the feature. The `-l 'app in (…)'` selector names exactly these four — the pods carry only an
+// `app` label, no `tier` — which is what keeps the short list honest (a real command, a real subset).
 export const POD_ROWS: { name: string; ready: string }[] = [
   { name: 'nginx', ready: '1/1' },
   { name: 'home', ready: '1/1' },
@@ -56,13 +57,13 @@ export const POD_ROWS: { name: string; ready: string }[] = [
 
 // Drawn as an actual terminal window — chrome, traffic lights, dark body — rather than a table on
 // the page background, so it reads as a screenshot of the live cluster at a glance.
-export const K8S_DIAGRAM = `<div class="term" role="img" aria-label="A terminal showing kubectl -n platform get pods for the core tier: four running pods — nginx, home, vmcp and platform-auth.">
+export const K8S_DIAGRAM = `<div class="term" role="img" aria-label="A terminal showing kubectl -n platform get pods for the four core services — nginx, home, vmcp and platform-auth — each running.">
   <div class="term-bar">
     <span class="tl r"></span><span class="tl y"></span><span class="tl g"></span>
     <span class="term-title">platform — kubectl</span>
   </div>
   <div class="term-body">
-    <div class="term-cmd"><span class="p">➜</span> <span class="d">~/platform-orchestration</span> <span class="c">kubectl -n platform get pods -l tier=core</span></div>
+    <div class="term-cmd"><span class="p">➜</span> <span class="d">~/platform-orchestration</span> <span class="c">kubectl -n platform get pods -l 'app in (nginx,home,vmcp,platform-auth)'</span></div>
     <table class="ps">
       <thead><tr><th>NAME</th><th>READY</th><th>STATUS</th></tr></thead>
       <tbody>
