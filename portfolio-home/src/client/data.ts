@@ -5,16 +5,16 @@ export const NAME = 'Andres Irarragorri';
 export const TITLE = 'Software Engineer / DevOps';
 
 export const BIO =
-  'Hey — glad you stopped by. I spent half a decade at IBM on DataStage, where users author their ' +
-  "own ETL flows across hybrid cloud. Now I'm taking the agentic layer on top of it to the cloud, " +
-  'from the platform side. My degree is in physics, and it still sets how I build: nothing is ' +
-  "viable until it's demonstrated, and a hard problem gets broken down to its fundamentals until " +
-  "it's comprehensible.";
+  'Hey — glad you stopped by! I spent half a decade at IBM on DataStage, where customers create their ' +
+  "own ETL flows hosted on hybrid cloud. I'm currently helping promote the agentic layer for this to the cloud " +
+  'from the platform/infra/devOps side. My degree is in physics, and it still sets how I build: nothing is ' +
+  "viable until demonstrated and problems get broken down fundamentals until " +
+  "it's comprehended.";
 
 /** The closer, on its own line — it is the turn from "who I am" to "and here is the thing itself". */
 export const BIO_CODA =
   'Having learned how to launch a platform: welcome to mine. Everything below is built, hosted, ' +
-  'and running right here.';
+  'and running right here!';
 
 const GITHUB_USER = 'AndresI19';
 const EMAIL = 'andres.m.irarragorri@gmail.com';
