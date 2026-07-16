@@ -1,6 +1,6 @@
 {
   "name": "platform-auth",
-  "version": "0.2.0",
+  "version": "0.1.0",
   "private": true,
   "type": "module",
   "description": "Identity for the platform: a memorable code, exchanged for a signed JWT.",
