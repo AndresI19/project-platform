@@ -17,7 +17,7 @@ import { CICD_DIAGRAM } from './diagrams.js';
 // picture shrinks past legibility. Built as boxes in a grid, the diagram REFLOWS: columns collapse,
 // boxes go full width, and every label stays readable.
 //
-// THE GRID IS THE DIAGRAM (topology). The vault is column 1; the twelve content columns carry four
+// THE GRID IS THE DIAGRAM (topology). The sealed-secrets rail is column 1; the twelve content columns carry four
 // services at three columns each (home, quiz, vmcp, platform-auth), so the row fills the width and
 // every connector is a column SPAN rather than a measured pixel offset — which is what keeps it exact
 // across reflow. It mirrors the "whole picture" section of the orchestration wiki, the source of truth.
@@ -88,8 +88,15 @@ function topologyDiagram(): string {
         <span class="arch-tag arch-tag-hw r5">one Fedora workstation · Colima QEMU VM</span>
         <span class="arch-tag arch-tag-k8s r6">minikube cluster · namespace: platform</span>
 
+        <!-- Not "the vault", which is what this said and what it is not. A vault is a service you
+             FETCH from at runtime (Vault, an agent, a CSI driver); nothing here fetches anything.
+             The credential is encrypted with the controller's public key, committed to a public
+             repo as ciphertext, and unsealed ONCE at apply time into an ordinary k8s Secret — which
+             is what the pods actually read. Naming the mechanism is the point: the interesting
+             claim is not "the secrets are safe", it is that they are safe IN THE OPEN. -->
         <div class="arch-box b-vault vault">
-          <span class="vault-t">sealed-secrets · the vault</span>
+          <span class="vault-t">sealed-secrets</span>
+          <span class="vault-m">public key seals · committed to git as ciphertext · only this controller's private key unseals → k8s Secret → env</span>
         </div>
 
         ${box('b-edge w r3', 'Cloudflare', 'terminates TLS · the only thing the internet can see')}
@@ -152,7 +159,7 @@ function topologyDiagram(): string {
           <span class="arch-chip b-edge">edge</span>
           <span class="arch-chip b-infra">platform</span>
           <span class="arch-chip b-vol">volume mount</span>
-          <span class="arch-chip b-vault">vault</span>
+          <span class="arch-chip b-vault">sealed secrets</span>
           <span class="arch-chip k-agent">agent path</span>
         </div>
         <a class="arch-more" href="${WIKI}" target="_blank" rel="noopener">Full write-up in the wiki →</a>
