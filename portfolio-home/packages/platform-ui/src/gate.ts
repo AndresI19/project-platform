@@ -5,7 +5,6 @@ import {
   continueAsGuest,
   current,
   isAdmin,
-  isSignedIn,
   onIdentity,
   signIn,
   signOut,
@@ -13,8 +12,17 @@ import {
   type Identity,
 } from './auth.js';
 
-const esc = (s: string): string =>
-  s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!);
+// Hoisted, not rebuilt per match. Inline in the replacer, this five-key object was reallocated once
+// per escaped CHARACTER — a fresh throwaway object for every character escaped on every render.
+const ESC_MAP: Record<string, string> = {
+  '&': '&amp;',
+  '<': '&lt;',
+  '>': '&gt;',
+  '"': '&quot;',
+  "'": '&#39;',
+};
+
+const esc = (s: string): string => s.replace(/[&<>"']/g, (c) => ESC_MAP[c]!);
 
 export function needsGate(): boolean {
   return current() === null;
@@ -363,5 +371,4 @@ export function mountAccountFab(opts: FabOptions = {}): void {
   // and its nudge never show a stale state.
   onIdentity(() => render());
   render();
-  void isSignedIn;
 }

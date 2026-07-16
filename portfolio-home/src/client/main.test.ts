@@ -10,12 +10,7 @@ import { BIO, BIO_CODA, CONTACTS, ENTRIES, EXPERIENCE, NAME, TITLE, isGroup } fr
  * should not break the suite; rendering one *wrong* should.
  */
 
-const GREETED_KEY = 'portfolio-home:greeted';
-
 interface MountOptions {
-  greeted?: boolean;
-  /** e.g. '?greet' — the escape hatch that re-opens the dialog. */
-  search?: string;
   /** What GET /api/config answers with. */
   vmcpApiBase?: string;
 }
@@ -26,8 +21,6 @@ let fetchMock: ReturnType<typeof vi.fn>;
 async function mountPage(opts: MountOptions = {}): Promise<void> {
   document.body.innerHTML = '<div id="app"></div>';
   localStorage.clear();
-  if (opts.greeted) localStorage.setItem(GREETED_KEY, '2026-01-01T00:00:00.000Z');
-  window.history.replaceState({}, '', `/${opts.search ?? ''}`);
 
   fetchMock = vi.fn(async (input: RequestInfo | URL) => {
     const url = String(input);

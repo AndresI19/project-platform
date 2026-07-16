@@ -5,7 +5,7 @@ import '@platform/ui/gate.css';
 import './styles.css';
 
 import { mountAccountFab, mountGate } from '@platform/ui/gate';
-import { architectureToggle } from './architecture.js';
+import { architectureToggle } from './architecture-toggle.js';
 import { loadConfig, refreshLiveness } from './liveness.js';
 import { paintVersions } from './versions.js';
 import { pageHtml } from './view.js';

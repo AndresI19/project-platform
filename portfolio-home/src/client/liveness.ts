@@ -18,7 +18,7 @@ export async function loadConfig(): Promise<void> {
   }
 }
 /** `/api/servers` → `/vmcp/api/servers` locally, or `https://api.…/api/servers` in production. */
-export const vmcpApi = (path: string): string => (vmcpApiBase ? `${vmcpApiBase}${path}` : `/vmcp${path}`);
+const vmcpApi = (path: string): string => (vmcpApiBase ? `${vmcpApiBase}${path}` : `/vmcp${path}`);
 
 /** The vMCP registry, fetched once per refresh and shared by the probes and the link resolver. */
 type Server = { id: string; slug: string; enabled: boolean };
@@ -72,9 +72,3 @@ export async function refreshLiveness(): Promise<void> {
     }),
   );
 }
-
-// ---------------------------------------------------------------------------
-// First-visit greeting. Asks who is looking, and forwards the answer to me as a push
-// notification. Answering is entirely optional and the copy says so plainly: the page is
-// identical either way, and skipping is a first-class button, not a hidden ✕.
-// ---------------------------------------------------------------------------

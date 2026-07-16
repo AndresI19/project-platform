@@ -17,6 +17,10 @@ export interface Env {
   vmcpApiBase: string;
   /** Discord webhook that receives the optional "who are you?" greeting. Empty = log it instead. */
   discordWebhookUrl: string;
+  /** The /api/hello fixed-window cap: greetings allowed per IP per window. */
+  helloRateMax: number;
+  /** The length of that window, in seconds. */
+  helloRateWindowSeconds: number;
 }
 
 function fail(name: string, value: string, why: string): never {
@@ -78,10 +82,23 @@ function port(raw: string | undefined): number {
   return n;
 }
 
+/** A positive integer with a default when unset. Like PORT above, a value that IS set but is not a
+ *  positive integer fails here, named, rather than silently weakening or disabling the cap. */
+function positiveInt(name: string, raw: string | undefined, fallback: number): number {
+  if (raw === undefined || raw.trim() === '') return fallback;
+  const n = Number(raw);
+  if (!Number.isInteger(n) || n < 1) {
+    return fail(name, raw, 'must be a positive integer');
+  }
+  return n;
+}
+
 export function loadEnv(e: NodeJS.ProcessEnv = process.env): Env {
   return {
     port: port(e.PORT),
     vmcpApiBase: absoluteOrigin('VMCP_API_BASE', e.VMCP_API_BASE ?? ''),
     discordWebhookUrl: webhook(e.DISCORD_WEBHOOK_URL ?? ''),
+    helloRateMax: positiveInt('HELLO_RATE_MAX', e.HELLO_RATE_MAX, 5),
+    helloRateWindowSeconds: positiveInt('HELLO_RATE_WINDOW', e.HELLO_RATE_WINDOW, 3600),
   };
 }

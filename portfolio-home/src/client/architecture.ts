@@ -1,3 +1,4 @@
+import { CICD_DIAGRAM } from './diagrams.js';
 // The platform architecture, revealed by a pull-down in the masthead banner. THREE diagrams now, paged
 // by a slider:
 //
@@ -154,129 +155,6 @@ function topologyDiagram(): string {
         </div>
         <a class="arch-more" href="${WIKI}" target="_blank" rel="noopener">Full write-up in the wiki →</a>
       </footer>
-    </div>`;
-}
-
-/* ── Diagram (CICD) — how a merge reaches the cluster ──────────────────────────────────────────────
-   The design lives in cicd-design/design.html; this is that same picture, translated shape-for-shape
-   and recoloured to the palette above (its --warn/--ok zones become --gold/--proj via .arch-cicd).
-   Three worlds — GitHub's, this machine's, the cluster's — and every arrow is opened from our side.
-   No prose outside the boxes on purpose; the picture carries it. */
-function cicdDiagram(): string {
-  return `
-    <div class="arch-diagram arch-cicd">
-      <svg viewBox="0 0 1280 560" width="100%" role="img" aria-label="A pull request makes a CI job; a merge starts version-tag and release on the same event — version-tag cuts the git tag, release reads it and posts a repository_dispatch. Every job lands in one queue, dispatched by label: ubuntu-latest jobs run on a fresh GitHub-hosted VM, self-hosted jobs are taken by our runner, which polls the queue, builds and pushes to the local registry, checks out the Helm chart and runs helm upgrade to roll the release forward, and the kubelet pulls the new image. On failure Helm rolls the release back and it alerts Discord, outbound.">
-        <defs>
-          <marker id="cicdA" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-            <path d="M0 0 L10 5 L0 10 z" fill="currentColor" style="color:var(--muted)"/>
-          </marker>
-        </defs>
-
-        <!-- GitHub-hosted -->
-        <rect class="zone z-gh" x="6" y="8" width="594" height="544" rx="12"/>
-        <rect class="ztag-gh" x="16" y="12" width="238" height="22" rx="11"/>
-        <text class="ztt" x="28" y="27">GitHub-hosted · GitHub's infrastructure</text>
-
-        <rect class="box" x="20" y="36" width="160" height="32" rx="7"/>
-        <text class="t" x="34" y="56">Service repo 1</text>
-        <rect class="box" x="58" y="66" width="160" height="32" rx="7"/>
-        <text class="t" x="72" y="86">Service repo 2</text>
-        <rect class="box" x="96" y="96" width="160" height="32" rx="7"/>
-        <text class="t" x="110" y="116">Service repo 3</text>
-
-        <path class="ln" style="marker-end:url(#cicdA)" d="M110 128 V 148"/>
-        <path class="ln" style="marker-end:url(#cicdA)" d="M256 112 H 330 V 146"/>
-
-        <rect class="box" x="20" y="150" width="230" height="44" rx="8"/>
-        <text class="t" x="34" y="176">PR</text>
-
-        <path class="ln" style="marker-end:url(#cicdA)" d="M70 194 V 212"/>
-
-        <rect class="box" x="20" y="212" width="230" height="76" rx="8"/>
-        <text class="t" x="34" y="230">CI job</text>
-        <text class="t m" x="34" y="247">ci.yml</text>
-        <text class="t m" x="34" y="262">codeql.yml</text>
-        <text class="t m" x="34" y="277">secret-scan.yml</text>
-
-        <rect class="box" x="290" y="150" width="270" height="44" rx="8"/>
-        <text class="t" x="304" y="176">Merge</text>
-
-        <path class="ln" style="marker-end:url(#cicdA)" d="M425 194 V 212"/>
-
-        <rect class="box" x="290" y="212" width="270" height="76" rx="8"/>
-        <text class="t" x="304" y="232">Version tag and release</text>
-        <text class="t m" x="304" y="256">version-tag.yml</text>
-        <text class="t m" x="304" y="273">release.yml</text>
-
-        <path class="ln hot" style="marker-end:url(#cicdA)" d="M425 288 V 330"/>
-        <path class="ln" style="marker-end:url(#cicdA)" d="M70 288 V 330"/>
-
-        <rect class="box here" x="20" y="330" width="540" height="106" rx="8"/>
-        <text class="t big" x="34" y="362">The job queue · every repo's jobs land here</text>
-        <text class="t s" x="34" y="388">dispatched BY LABEL: a job reaches only a runner whose labels match.</text>
-        <text class="t s" x="34" y="412">The runner is registered solely to platform-cicd, isolated from the application repositories.</text>
-
-        <path class="ln" style="marker-end:url(#cicdA)" d="M303 436 V 475"/>
-
-        <rect class="box vm" x="170" y="475" width="266" height="50" rx="8"/>
-        <text class="t" x="184" y="497">GitHub-hosted VM · fresh per job</text>
-        <text class="t s" x="184" y="514">provisioned for ONE job, then DESTROYED.</text>
-
-        <!-- Outside K8s -->
-        <rect class="zone z-out" x="616" y="8" width="304" height="544" rx="12"/>
-        <rect class="ztag-out" x="626" y="12" width="278" height="22" rx="11"/>
-        <text class="ztt" x="638" y="27">Outside K8s · this machine, not in the cluster</text>
-
-        <rect class="box here" x="630" y="110" width="276" height="76" rx="8"/>
-        <text class="t" x="644" y="130">registry:5000 · TLS, our own CA</text>
-        <text class="t s" x="644" y="147">pinned .10 · keeps the latest 2</text>
-        <text class="t s" x="644" y="164">the kubelet trusts our CA</text>
-
-        <path class="ln hot" style="marker-end:url(#cicdA)" d="M768 300 V 192"/>
-        <text class="t s" x="776" y="250">(2) push</text>
-
-        <rect class="box here" x="630" y="300" width="276" height="155" rx="8"/>
-        <text class="t big" x="644" y="326">Self-hosted runner · ephemeral</text>
-        <text class="t s" x="644" y="346">ONE job at a time — that IS the serialization</text>
-        <text class="t s" x="644" y="360">one job, de-register, restart</text>
-        <text class="t m" x="644" y="380">1 · docker build --build-arg VERSION</text>
-        <text class="t m" x="644" y="397">2 · docker push registry:5000/quiz:…</text>
-        <text class="t m" x="644" y="414">3 · helm upgrade platform --reuse-values</text>
-        <text class="t s" x="644" y="434">on failure → helm rollback, and Discord</text>
-
-        <path class="ln hot" style="marker-end:url(#cicdA)" d="M630 385 H 566"/>
-        <text class="t s" x="570" y="378">(1) polls</text>
-
-        <!-- an outbound alert to Discord on failure — it LEAVES the box: starts inside, crosses out -->
-        <path class="ln" style="marker-end:url(#cicdA)" d="M855 440 V 545"/>
-        <text class="t s" x="700" y="500">outbound → Discord ↗</text>
-
-        <!-- Inside K8s -->
-        <rect class="zone z-k8s" x="936" y="8" width="338" height="544" rx="12"/>
-        <rect class="ztag-k8s" x="946" y="12" width="156" height="22" rx="11"/>
-        <text class="ztt" x="958" y="27">Inside K8s · the cluster</text>
-
-        <rect class="box here" x="950" y="110" width="310" height="76" rx="8"/>
-        <text class="t" x="964" y="130">kubelet · the minikube node</text>
-        <text class="t m" x="964" y="149">pull registry:5000/quiz:0.1.22</text>
-
-        <path class="ln hot" style="marker-end:url(#cicdA)" d="M950 148 H 912"/>
-        <text class="t s" x="916" y="102">(4) pull</text>
-
-        <path class="ln" style="stroke-dasharray:4 3; marker-end:url(#cicdA)" d="M1105 300 V 192"/>
-        <text class="t s" x="1113" y="240">schedules a Pod for an image</text>
-        <text class="t s" x="1113" y="254">the node has yet to pull</text>
-
-        <rect class="box here" x="950" y="300" width="310" height="155" rx="8"/>
-        <text class="t big" x="964" y="326">apiserver · platform namespace</text>
-        <text class="t s" x="964" y="348">the release's new image → a new ReplicaSet →</text>
-        <text class="t m" x="964" y="368">helm --wait, else roll the release back</text>
-        <text class="t s" x="964" y="388">reached at its NATIVE address — the one</text>
-        <text class="t s" x="964" y="402">the host cannot route to, but the runner can</text>
-
-        <path class="ln hot" style="marker-end:url(#cicdA)" d="M906 352 H 946"/>
-        <text class="t s" x="912" y="344">(3)</text>
-      </svg>
     </div>`;
 }
 
@@ -447,7 +325,7 @@ export function architecturePanel(): string {
           <div class="arch-viewport">
             <div class="arch-track">
               <section class="arch-slide" role="tabpanel" aria-label="Platform Topography">${topologyDiagram()}</section>
-              <section class="arch-slide" role="tabpanel" aria-label="CICD">${cicdDiagram()}</section>
+              <section class="arch-slide" role="tabpanel" aria-label="CICD">${CICD_DIAGRAM}</section>
               <section class="arch-slide" role="tabpanel" aria-label="Auth and Entrypoint">${authDiagram()}</section>
               <section class="arch-slide" role="tabpanel" aria-label="Security posture">${securityDiagram()}</section>
             </div>
@@ -456,73 +334,4 @@ export function architecturePanel(): string {
       </div>
     </div>
   `;
-}
-
-/** Wire the pull-down AND the diagram slider. Called by mount(), after the markup exists. */
-export function architectureToggle(): void {
-  const btn = document.querySelector<HTMLButtonElement>('[data-act="architecture"]');
-  const mast = document.querySelector<HTMLElement>('.masthead');
-  if (!btn || !mast) return;
-
-  const label = btn.querySelector('.arch-pull-t');
-
-  const setOpen = (open: boolean): void => {
-    mast.classList.toggle('arch-open', open);
-    btn.setAttribute('aria-expanded', String(open));
-    if (label) {
-      label.textContent = open ? 'Hide the platform architecture' : 'Show me the platform architecture';
-    }
-    if (open) syncHeight(); // the panel just gained its real height; size the viewport to the live slide
-  };
-
-  btn.addEventListener('click', (e) => {
-    e.stopPropagation(); // else the document handler below closes it again in the same tick
-    setOpen(!mast.classList.contains('arch-open'));
-  });
-
-  document.addEventListener('click', (e) => {
-    if (mast.classList.contains('arch-open') && !mast.contains(e.target as Node)) setOpen(false);
-  });
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && mast.classList.contains('arch-open')) setOpen(false);
-  });
-
-  /* ── The slider ──────────────────────────────────────────────────────────────────────────────
-     A transform track, not a scroll container: the two diagrams are different heights, and a
-     transform lets the VIEWPORT own the height so it can animate to the active slide instead of
-     leaving a lake of whitespace under the shorter one. */
-  const tabs = [...mast.querySelectorAll<HTMLButtonElement>('.arch-tab')];
-  const track = mast.querySelector<HTMLElement>('.arch-track');
-  const viewport = mast.querySelector<HTMLElement>('.arch-viewport');
-  const slides = [...mast.querySelectorAll<HTMLElement>('.arch-slide')];
-  if (!track || !viewport || !slides.length) return;
-
-  let active = 0;
-
-  const syncHeight = (): void => {
-    // Only meaningful once the panel is open and laid out; a closed panel reports height 0.
-    if (!mast.classList.contains('arch-open')) return;
-    viewport.style.height = `${slides[active].offsetHeight}px`;
-  };
-
-  const show = (i: number): void => {
-    active = Math.max(0, Math.min(slides.length - 1, i));
-    track.style.transform = `translateX(${-active * 100}%)`;
-    syncHeight();
-    tabs.forEach((t, j) => {
-      t.classList.toggle('is-active', j === active);
-      t.setAttribute('aria-selected', String(j === active));
-    });
-  };
-
-  tabs.forEach((t, i) => t.addEventListener('click', () => show(i)));
-
-  // Reflow changes a diagram's height (columns collapse on a phone), so re-measure the live slide.
-  let raf = 0;
-  window.addEventListener('resize', () => {
-    cancelAnimationFrame(raf);
-    raf = requestAnimationFrame(syncHeight);
-  });
-
-  show(0);
 }
