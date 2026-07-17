@@ -14,23 +14,21 @@ It holds only what those apps must **agree on**. Everything else stays in the ap
 ## Where this lives
 
 This package lives in **[portfolio-home](https://github.com/AndresI19/portfolio-home)**, at
-`packages/platform-ui`. That is the only copy: it is edited here, and consumed from here.
+`packages/platform-ui` — the only copy, edited and consumed from here.
 
-There is deliberately no published mirror. A mirror is one more artefact that can fall out of step
-with the thing it mirrors — and falling out of step is the entire failure this package exists to
-prevent.
+There is deliberately no published mirror: a mirror is one more artefact that can fall out of step,
+which is the exact failure this package exists to prevent.
 
 ## Why it exists
 
 The home page's stylesheet used to open with a comment saying its tokens were *"copied verbatim from
-the quiz so the two sites match."* That invariant was enforced by copy-paste, and it broke the first
-time one site's accent changed and the other's did not. Defining the tokens once makes that failure
-impossible: change the accent, and both sites move.
+the quiz so the two sites match."* Copy-paste enforced that, and it broke the first time one site's
+accent changed and the other's did not. Define the tokens once and both sites move together.
 
-It is deliberately small. The apps share roughly a hundred lines — tokens, a page background, and a
-static-file middleware. They do **not** share components, state, or routing, because they genuinely do
-not have those in common, and a shared package that reaches further than the shared reality is just a
-slower way to write two different things.
+It is deliberately small: the apps share roughly a hundred lines — tokens, a page background, a
+static-file middleware — and **no** components, state, or routing, because they have none of those in
+common. A shared package reaching further than the shared reality is just a slower way to write two
+different things.
 
 ## Consuming it
 

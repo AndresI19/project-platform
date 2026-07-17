@@ -24,7 +24,7 @@ npm start           # cross-env NODE_ENV=production tsx src/server/index.ts
 npm run serve       # build && start
 npm run typecheck   # tsc --noEmit
 npm run lint        # biome check src   — CI runs this; it fails the build
-npm test            # vitest run  (7 files, ~142 cases)
+npm test            # vitest run  (8 files, 160 cases)
 ```
 
 **Static gates: `lint` and `typecheck`, and CI enforces both.** `npm run lint` is Biome (formatting +
@@ -50,12 +50,12 @@ fixes. Run it before opening a PR: formatting alone will fail the `home` job.
 `{ version, platform }` · `GET /api/versions` → `{ platform, components: {…} }` ·
 `GET /resume.pdf` · `PUT /api/content/*` (admin) · then `serveClient()`.
 
-Two different things, hence two fields. `version` is **this image's own**, baked in and fixed for the
-life of the container. `platform` is the **orchestration repo's**, read from `platform-version.json`
-on the shared volume (mounted read-only at `/content`): the platform ships no image, so its version
-cannot ride in one. It is read **per request** — a deploy rewrites that file, and reading it at
-startup would mean a rollout just to report the truth. In `/api/versions`, `platform` is a sibling of
-`components`, not a member: it has no image, no Pod and no Service.
+Two things, two fields. `version` is **this image's own**, baked in and fixed for the container's
+life. `platform` is the **orchestration repo's**, read from `platform-version.json` on the shared
+volume at `/content`: the platform ships no image, so its version can't ride in one. It is read **per
+request** — a deploy rewrites that file, and reading it at startup would mean a rollout just to report
+the truth. In `/api/versions`, `platform` is a sibling of `components`, not a member: no image, no
+Pod, no Service.
 
 `/api/versions` fans out to the other components over in-cluster service DNS (`src/server/versions.ts`).
 That fan-out is **on the server on purpose**: `rs-mcp-server` and `platform-auth` have no public route

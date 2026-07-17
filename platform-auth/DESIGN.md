@@ -94,19 +94,20 @@ design anticipated this.)
 ```json
 {
   "iss": "https://api-andres.project-platform.me/auth",
-  "sub": "0b7f…-uuid",         // the identity. NOT the code.
-  "handle": "K7R2M",           // safe to display
-  "aud": ["vmcp", "quiz"],
+  "sub": "0b7f…-uuid",         // the identity. NOT the password.
+  "username": "andres",        // safe to display
+  "admin": false,              // computed by the issuer from a sealed list — see tokens.ts
+  "aud": "platform",
   "iat": 1752460000,
   "exp": 1752546400,           // 24h
   "jti": "…"
 }
 ```
 
-**24-hour access tokens, no refresh tokens.** The browser already holds the code (it must, or the
+**24-hour access tokens, no refresh tokens.** The browser already holds the password (it must, or the
 user would re-type it every visit), so re-minting is a single call to `POST /auth/token`. A refresh
-token would be a second long-lived credential guarding a credential we already store — complexity
-with nothing to show for it.
+token would be a second long-lived credential guarding one we already store — complexity with nothing
+to show for it.
 
 ---
 
@@ -225,7 +226,7 @@ It already has a `users` table keyed on `external_id`, populated from a token cl
 1. Implement real verification (the `verify: true` path is currently **dead code** — setting the flag
    changes nothing, which is a trap in waiting).
 2. Point `jwksUri` at this service and map `sub` → `userId`.
-3. Show `handle` in the dashboard, never the code.
+3. Show `username` in the dashboard, never the password.
 
 ### The quiz — the work is the migration, not the schema
 
@@ -244,8 +245,8 @@ a garden, which is why they are decided up front rather than discovered.
 
 ## 8. Phases
 
-1. **platform-auth** — codes, tokens, JWKS, rate limiting, its own database. *(this)*
-2. **vMCP verification** — implement `verify: true`, wire it to JWKS, display handles. *(this)*
+1. **platform-auth** — passwords, tokens, JWKS, rate limiting, its own database. *(this)*
+2. **vMCP verification** — implement `verify: true`, wire it to JWKS, display usernames. *(this)*
 3. **Quiz progress API** — a database, an authenticated read/write endpoint, a localStorage migration
    and a conflict rule. *(next)*
 4. **Front end** — sign-up, sign-in, "remember this code" UI. *(deliberately not yet)*

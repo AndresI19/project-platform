@@ -1,25 +1,22 @@
 import { readFileSync } from 'node:fs';
 
 /**
- * What every component of the platform reports as its version, answered as one object.
+ * What every component reports as its version, as one object.
  *
- * Each service bakes a VERSION file into its image — `k8s/deploy.sh` stamps it from that repo's
- * latest git tag, suffixed `-snapshot` when the source differs from main — and serves it from
- * `/version`. This module asks all of them and returns a single map, so the browser makes ONE request
- * per page load instead of five.
+ * Each service bakes a VERSION file into its image (`k8s/deploy.sh` stamps it from that repo's latest
+ * git tag, `-snapshot` when the source differs from main) and serves it at `/version`. This module
+ * asks all of them and returns one map, so the browser makes ONE request per page load, not five.
  *
- * The fan-out is on the SERVER, not in the browser, and that is the whole reason this file exists:
+ * The fan-out is on the SERVER, not the browser, and that is why this file exists:
+ *   - `rs-mcp-server` and `platform-auth` have no public route — the browser can't reach their
+ *     `/version` without new nginx routes that exist purely to expose build metadata.
+ *   - In production the front end and API are on different hostnames, so browser fetches would be
+ *     cross-origin and need a CORS entry each.
+ * From inside the cluster they are just service DNS names — no routing, no CORS.
  *
- *   - `rs-mcp-server` and `platform-auth` have no public route at all. The browser cannot reach their
- *     `/version` without inventing new nginx routes that exist purely to expose build metadata.
- *   - In production the front end and the API are on different hostnames, so browser-side fetches
- *     would be cross-origin and need CORS entries for each.
- *
- * From inside the cluster they are all just service DNS names, reachable with no routing and no CORS.
- *
- * There is NO polling and NO cache. The browser asks once when the page loads; a refresh asks again.
- * A version cannot change without a new image, and a new image means new Pods — so the only event
- * that could invalidate this is one the visitor already has to reload the page to see.
+ * NO polling, NO cache: the browser asks once per page load. A version cannot change without a new
+ * image, and a new image means new Pods, so the only thing that invalidates this is a change the
+ * visitor must already reload to see.
  */
 
 /**
@@ -39,32 +36,27 @@ const TARGETS: Record<string, string> = {
 
 /**
  * The version spec, written onto the shared PersistentVolume by platform-orchestration's
- * k8s/deploy.sh and mounted here read-only.
+ * k8s/deploy.sh and read here per request.
  *
  * The PLATFORM's version cannot arrive the way every component's does. The other five are services:
- * each is an image, so each carries a VERSION file inside it. The orchestration repo ships no image —
- * it *is* the description of what gets deployed — so its version has nowhere to ride. It travels on
- * the volume instead, for the same reason the résumé and the card decks do: it is content, and it
- * changes on a different clock than the code that serves it.
+ * each is an image carrying its own VERSION file. The orchestration repo ships no image — it *is* the
+ * description of what gets deployed — so its version travels on the volume instead, for the same
+ * reason the résumé and card decks do: it is content, and changes on a different clock than the code.
  */
-/** The mount path is fixed by the manifest (home.yaml mounts the volume read-only at /content). It is
-    a parameter with a default rather than a bare constant purely so the tests can point it at a real
-    fixture file instead of stubbing out node:fs — the failure modes here (missing file, truncated
-    JSON) are precisely the ones a stub would paper over. */
+/** The mount path is fixed by the manifest (home.yaml mounts the content volume at /content). It is a
+    parameter with a default, not a bare constant, so tests can point it at a real fixture instead of
+    stubbing node:fs — the failure modes here (missing file, truncated JSON) are exactly what a stub
+    would paper over. */
 const SPEC_PATH = '/content/platform-version.json';
 
 /**
- * Read per REQUEST, not once at startup — and that is the point of it being on the volume.
+ * Read per REQUEST, not at startup — the point of keeping it on the volume.
  *
- * A deploy rewrites this file. If it were read at boot (as every component's own VERSION is, since a
- * VERSION file genuinely cannot change under a running image), the home page would keep reporting
- * the platform version it happened to start with, and would need a pointless rollout to tell the
- * truth again. Reading it per request means a redeploy is visible on the next page load, with no
- * restart of anything.
- *
- * It is a small local file and the endpoint is hit once per page load, so the read is not worth
- * caching — and a cache here would reintroduce exactly the staleness the per-request read exists to
- * avoid.
+ * A deploy rewrites this file. Read at boot (as each component's own VERSION is, since that genuinely
+ * cannot change under a running image), the page would keep reporting the platform version it started
+ * with and need a pointless rollout to tell the truth. Per-request means a redeploy shows on the next
+ * page load, no restart. It is a small local file hit once per page load, so caching would only
+ * reintroduce the staleness the per-request read exists to avoid.
  */
 export function platformVersion(specPath: string = SPEC_PATH): string | null {
   try {
