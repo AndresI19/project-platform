@@ -39,13 +39,8 @@
      "database", and drawing a Postgres server as the volume beside it was the confusion this fixes. */
   --db: #2c6da3;
   --db-2: #21567f;
-  /* Home-page white-mode background scheme, tuned in the colour lab: a bluer base, stronger accent
-     washes, and a lighter card tint. base.css reads --wash-1/2/3 (with the old values as fallbacks so
-     other apps are unaffected); .feat reads --card-tint. Dark keeps the platform defaults below. */
-  --bg: #e5edff;
-  --wash-1: 30%;
-  --wash-2: 28.2%;
-  --wash-3: 15.9%;
+  /* The card accent tint — the wash of --accent inside a featured card. Home-only (the quiz has no
+     featured cards); the page ground and corner washes it sits within live in @platform/ui tokens. */
   --card-tint: 7.5%;
 }
 @media (prefers-color-scheme: dark) {
@@ -68,12 +63,7 @@
     --wip: #ff8c42;
     --db: #5ea3d8;
     --db-2: #8fc3ea;
-    /* Dark keeps the platform defaults — the lab tuning is white-mode only, so re-declare here (this
-       block wins over the :root values above in dark mode). */
-    --bg: #0c0e15;
-    --wash-1: 19.6%;
-    --wash-2: 18.4%;
-    --wash-3: 10.4%;
+    /* Dark keeps the quieter card tint. */
     --card-tint: 5%;
   }
 }

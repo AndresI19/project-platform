@@ -28,8 +28,14 @@
  * Light mode's TEXT was never the problem and is unchanged: --ink is 17.6:1 on a panel.
  */
 :root {
-  /* Deepened from #eceef5 (panel/bg 1.16 -> 1.23) so a white card has somewhere to sit. */
-  --bg: #e4e8f2;
+  /* The page ground, tuned in the colour lab: a bluer, brighter base than the old #e4e8f2. Cards sit
+     on it via their shadow and a stronger accent tint rather than a big lightness step. */
+  --bg: #e5edff;
+  /* The three accent washes bleeding off the page corners (consumed by base.css). Light carries a
+     stronger wash than dark; each is a percentage of --accent mixed into transparent. */
+  --wash-1: 30%;
+  --wash-2: 28.2%;
+  --wash-3: 15.9%;
   --panel: #ffffff;
   --panel-2: #eef1f9;
   --ink: #161922;
@@ -56,6 +62,10 @@
 @media (prefers-color-scheme: dark) {
   :root {
     --bg: #0c0e15;
+    /* Dark keeps the quieter original washes — the stronger light values would haze a dark page. */
+    --wash-1: 19.6%;
+    --wash-2: 18.4%;
+    --wash-3: 10.4%;
     --panel: #161a24;
     --panel-2: #1e2330;
     --ink: #edf0f7;
