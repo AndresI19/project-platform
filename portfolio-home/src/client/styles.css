@@ -39,6 +39,14 @@
      "database", and drawing a Postgres server as the volume beside it was the confusion this fixes. */
   --db: #2c6da3;
   --db-2: #21567f;
+  /* Home-page white-mode background scheme, tuned in the colour lab: a bluer base, stronger accent
+     washes, and a lighter card tint. base.css reads --wash-1/2/3 (with the old values as fallbacks so
+     other apps are unaffected); .feat reads --card-tint. Dark keeps the platform defaults below. */
+  --bg: #e5edff;
+  --wash-1: 30%;
+  --wash-2: 28.2%;
+  --wash-3: 15.9%;
+  --card-tint: 3.5%;
 }
 @media (prefers-color-scheme: dark) {
   :root {
@@ -60,6 +68,13 @@
     --wip: #ff8c42;
     --db: #5ea3d8;
     --db-2: #8fc3ea;
+    /* Dark keeps the platform defaults — the lab tuning is white-mode only, so re-declare here (this
+       block wins over the :root values above in dark mode). */
+    --bg: #0c0e15;
+    --wash-1: 19.6%;
+    --wash-2: 18.4%;
+    --wash-3: 10.4%;
+    --card-tint: 5%;
   }
 }
 
@@ -347,7 +362,7 @@ section {
   width: 292px;
   scroll-snap-align: start;
   overflow: hidden;
-  background: color-mix(in srgb, var(--accent) 5%, var(--panel));
+  background: color-mix(in srgb, var(--accent) var(--card-tint, 5%), var(--panel));
   border: 1px solid color-mix(in srgb, var(--accent) 22%, var(--line));
   border-left: 3px solid var(--accent);
   border-radius: 16px;

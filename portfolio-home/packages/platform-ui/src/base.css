@@ -41,9 +41,9 @@ body {
      the accent re-tints the whole platform in one edit. Each is cut to `transparent 50%` so it
      falls off completely by the halfway point rather than hazing across the entire viewport. */
   background:
-    radial-gradient(1100px 560px at 12% -8%, color-mix(in srgb, var(--accent) 19.6%, transparent), transparent 50%),
-    radial-gradient(900px 520px at 104% 4%, color-mix(in srgb, var(--accent) 18.4%, transparent), transparent 50%),
-    radial-gradient(760px 700px at 50% 120%, color-mix(in srgb, var(--accent) 10.4%, transparent), transparent 50%),
+    radial-gradient(1100px 560px at 12% -8%, color-mix(in srgb, var(--accent) var(--wash-1, 19.6%), transparent), transparent 50%),
+    radial-gradient(900px 520px at 104% 4%, color-mix(in srgb, var(--accent) var(--wash-2, 18.4%), transparent), transparent 50%),
+    radial-gradient(760px 700px at 50% 120%, color-mix(in srgb, var(--accent) var(--wash-3, 10.4%), transparent), transparent 50%),
     var(--bg);
   background-attachment: fixed;
 }
