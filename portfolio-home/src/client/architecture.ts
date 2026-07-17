@@ -146,11 +146,10 @@ function topologyDiagram(): string {
 
         ${box('b-infra s3 r14', 'rs-mcp-server', '17 RuneScape tools')}
 
-        <div class="pad r15" aria-hidden="true"></div>
-
-        <!-- OUTSIDE the machine: other people's servers, on the internet. -->
-        ${arrow('a-user s3 r16', 'outbound HTTPS')}
-        <div class="arch-box b-ext arch-ext-box s3 r17">
+        <!-- The outbound call is rs-mcp-server's: the arrow starts at its box and leaves the cluster,
+             rather than appearing from the frame's edge. OUTSIDE the machine: other people's servers. -->
+        ${arrow('a-user s3 r15 outbound', 'outbound HTTPS')}
+        <div class="arch-box b-ext arch-ext-box s3 r16">
           <span class="arch-name">Public APIs</span>
           <table class="arch-tbl">
             ${OUTBOUND.map(([n, w]) => `<tr><th>${n}</th><td>${w}</td></tr>`).join('')}

@@ -161,8 +161,7 @@ export const ENTRIES: Entry[] = [
     tech: 'Vanilla TS · Vite · Express',
     live: { type: 'health', url: '/cloud-developer-quiz/api/health' },
     component: 'quiz',
-    blurb:
-      'Data-driven flashcards for cloud & system-design interviews — grow an isometric garden by answering correctly.',
+    blurb: 'Data-driven cloud & system-design flashcards — grow an isometric garden as you answer.',
     // The question first, the garden second. Led by the garden alone, the card reads as a game and
     // the word "quiz" gets lost — so an actual fill-in-the-blank card carries the top slot.
     // The garden art carries a version in its NAME on purpose. public/ is served verbatim — no build
@@ -208,7 +207,7 @@ export const ENTRIES: Entry[] = [
     // home server reads it back. It is the version of the platform as a whole.
     component: 'platform',
     blurb:
-      'A minikube cluster: nginx fronts every app on one port, published through an outbound Cloudflare tunnel — no open ports, secrets sealed into git.',
+      'A minikube cluster: nginx fronts every app on one port, behind an outbound Cloudflare tunnel. Merges deploy themselves, with rollback on failure.',
     diagram: 'k8s',
     // The CI/CD that builds and ships everything above, featured in the same tile — the platform is
     // the thing being run, this is the thing that runs it. Its own list entry lives below too.
