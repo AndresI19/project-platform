@@ -323,15 +323,22 @@ function securityDiagram(): string {
           <tbody>${rows}</tbody>
         </table>
       </div>
-      <table class="arch-tbl sec-what">${legend}</table>
-      <div class="sec-rt-h">Runtime defenses — what a pen test actually meets</div>
-      <table class="arch-tbl sec-rt">
-        <tr><th>No public origin</th><td>every service is <code>ClusterIP</code> behind an outbound Cloudflare tunnel — no origin IP and no open port to reach the cluster directly.</td></tr>
-        <tr><th>Edge DDoS + WAF</th><td>Cloudflare absorbs volumetric floods and screens L7 traffic before it ever reaches nginx.</td></tr>
-        <tr><th>Rate limiting</th><td>per-IP caps on mutating routes; the auth <code>/token</code> endpoint is hard-limited against credential-stuffing.</td></tr>
-        <tr><th>Signed identity</th><td>RS256 JWTs verified against a JWKS; admin actions require a signed admin claim, not just a valid token.</td></tr>
-        <tr><th>Least privilege</th><td>the deploy ServiceAccount can patch Deployments but <strong>cannot read Secrets</strong>, so a CI job can't exfiltrate them.</td></tr>
-      </table>
+      <div class="sec-tables">
+        <div class="sec-col">
+          <div class="sec-rt-h">Scans — the tool behind each ✓</div>
+          <table class="arch-tbl sec-what">${legend}</table>
+        </div>
+        <div class="sec-col">
+          <div class="sec-rt-h">Runtime — what a pen test meets</div>
+          <table class="arch-tbl sec-rt">
+            <tr><th>No public origin</th><td>ClusterIP behind an outbound tunnel — no origin IP, no open port.</td></tr>
+            <tr><th>Edge DDoS + WAF</th><td>Cloudflare eats floods and screens L7 before nginx.</td></tr>
+            <tr><th>Rate limiting</th><td>per-IP caps on writes; auth <code>/token</code> hard-limited vs credential-stuffing.</td></tr>
+            <tr><th>Signed identity</th><td>RS256 JWTs via JWKS; admin needs a signed admin claim.</td></tr>
+            <tr><th>Least privilege</th><td>deploy SA patches Deployments, <strong>can't read Secrets</strong>.</td></tr>
+          </table>
+        </div>
+      </div>
       <footer class="arch-foot">
         <div class="arch-key">
           <span class="arch-chip sec-chip-y">✓ blocking scan</span>
