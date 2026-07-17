@@ -7,33 +7,40 @@ import { esc } from './util.js';
 // a single gateway, stacked top-to-bottom. The edges are labelled with the transport, because
 // "streams over HTTP/SSE" is the part of MCP a box-and-line drawing otherwise leaves out.
 // Inline SVG, so it needs no network request and recolours with the theme.
-export const VMCP_DIAGRAM = `<svg class="dgm" viewBox="0 0 300 176" role="img" aria-label="An agent streams to the vMCP reverse proxy over MCP on HTTP/SSE; the proxy fans out to two MCP servers over SSE.">
-  <defs>
-    <marker id="ah" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
-      <path d="M0 0.5 5 3 0 5.5Z" fill="currentColor"/>
-    </marker>
-  </defs>
-  <g class="dgm-line" marker-end="url(#ah)">
-    <path d="M150 20V42"/>
-    <path d="M92 92V126"/>
-    <path d="M208 92V126"/>
+// Drawn as a transit line rather than a flat box-and-arrow: one line runs from the Agent station down
+// to the vMCP interchange, which is where every MCP server the gateway fronts branches off. Taller
+// than the old wide-and-short drawing so it fills the card instead of floating at its foot.
+export const VMCP_DIAGRAM = `<svg class="dgm" viewBox="0 0 300 226" role="img" aria-label="A transit map: an Agent line runs over MCP (HTTP/SSE) down to the vMCP reverse proxy, one interchange that branches over SSE to several MCP servers including rs-mcp.">
+  <g class="dgm-trunk">
+    <path d="M150 40 V 92"/>
+    <path d="M150 150 V 170 H 58 V 186"/>
+    <path d="M150 150 V 186"/>
+    <path d="M150 150 V 170 H 242 V 186"/>
+  </g>
+  <g class="dgm-stn">
+    <circle cx="150" cy="34" r="6.5"/>
+    <circle cx="58" cy="186" r="5"/>
+    <circle cx="150" cy="186" r="5"/>
+    <circle cx="242" cy="186" r="5"/>
   </g>
   <g class="dgm-box">
-    <rect class="hub" x="14" y="44" width="272" height="46" rx="10"/>
-    <rect x="24" y="128" width="112" height="36" rx="8"/>
-    <rect x="164" y="128" width="112" height="36" rx="8"/>
+    <rect class="hub" x="54" y="96" width="192" height="48" rx="12"/>
+    <rect x="20" y="188" width="76" height="32" rx="8"/>
+    <rect x="112" y="188" width="76" height="32" rx="8"/>
+    <rect x="204" y="188" width="76" height="32" rx="8"/>
   </g>
   <g class="dgm-t">
-    <text class="you" x="150" y="10">Agent</text>
-    <text class="edge" x="214" y="31">MCP over HTTP/SSE</text>
-    <text class="hub-t" x="150" y="62">vMCP</text>
-    <text class="sub" x="150" y="77">reverse proxy · one endpoint</text>
-    <text class="edge" x="66" y="109">SSE</text>
-    <text class="edge" x="234" y="109">SSE</text>
-    <text x="80" y="141">MCP server</text>
-    <text class="sub" x="80" y="154">rs-mcp</text>
-    <text x="220" y="141">MCP server</text>
-    <text class="sub" x="220" y="154">…</text>
+    <text class="you" x="150" y="20">Agent</text>
+    <text class="edge" x="160" y="70" text-anchor="start">MCP · HTTP/SSE</text>
+    <text class="hub-t" x="150" y="116">vMCP</text>
+    <text class="sub" x="150" y="132">reverse proxy · one endpoint</text>
+    <text class="edge" x="160" y="164" text-anchor="start">SSE</text>
+    <text x="58" y="200">MCP server</text>
+    <text class="sub" x="58" y="212">rs-mcp</text>
+    <text x="150" y="200">MCP server</text>
+    <text class="sub" x="150" y="212">…</text>
+    <text x="242" y="200">MCP server</text>
+    <text class="sub" x="242" y="212">…</text>
   </g>
 </svg>`;
 

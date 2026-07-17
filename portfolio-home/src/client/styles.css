@@ -789,6 +789,20 @@ section {
   fill: color-mix(in srgb, var(--accent) 12%, var(--panel));
   stroke: var(--accent);
 }
+/* The transit line and its station stops — the accent thread that ties the Agent to the servers
+   through the one interchange. */
+.dgm-trunk path {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 3;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+.dgm-stn circle {
+  fill: var(--panel);
+  stroke: var(--accent);
+  stroke-width: 3;
+}
 .dgm-t text {
   fill: var(--ink);
   font-size: 10px;
@@ -1855,15 +1869,16 @@ section {
    quiet piece of the cluster rather than another box in the traffic path. Horizontal now that it is a
    short wide chip rather than a tall left rail. */
 .vault {
-  grid-column: 2 / 7;
-  grid-row: 15;
-  align-self: center;
+  grid-column: 2 / 6;
+  grid-row: 14;
+  align-self: start;
   justify-self: start;
-  flex-direction: row;
-  align-items: baseline;
-  justify-content: flex-start;
-  gap: 8px;
-  padding: 5px 12px;
+  margin-top: 18px;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 2px;
+  padding: 7px 12px;
   border: 1.5px dotted color-mix(in srgb, var(--muted) 55%, var(--line));
   background: color-mix(in srgb, var(--accent) 4%, transparent);
   border-radius: 8px;
@@ -1920,6 +1935,12 @@ section {
 }
 .arch-arrow.short {
   height: 30px;
+}
+/* The outbound arrow rises to meet rs-mcp-server's box instead of starting at the frame edge, so it
+   is taller than a one-row arrow and sits flush under that box. */
+.arch-arrow.outbound {
+  height: 72px;
+  align-self: start;
 }
 .arch-arrow::before {
   /* shaft */
