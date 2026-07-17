@@ -48,8 +48,15 @@ export function featuredChip(e: Entry): string {
 /** The artwork that fills a featured card's empty space — image(s), or a drawn schematic. */
 export function media(p: Project): string {
   if (p.images) {
+    // A .gif is oversized artwork (the garden) — wrap it in a drag-to-pan frame so a visitor can swipe
+    // around the whole scene; garden-pan.ts wires the [data-pan] frames. A still (the question png)
+    // stays a plain contained image. draggable=false stops the browser's native image-drag ghost.
+    const cell = (src: string): string =>
+      src.endsWith('.gif')
+        ? `<div class="pan" data-pan><img class="pan-img" src="${esc(src)}" alt="" loading="lazy" draggable="false"></div>`
+        : `<img src="${esc(src)}" alt="" loading="lazy">`;
     return `<div class="media stack">
-      ${p.images.map((src) => `<img src="${esc(src)}" alt="" loading="lazy">`).join('')}
+      ${p.images.map(cell).join('')}
     </div>`;
   }
   if (p.image) return `<div class="media"><img src="${esc(p.image)}" alt="" loading="lazy"></div>`;
@@ -188,15 +195,15 @@ export function featGroupCard(g: Group): string {
     : g.diagram
       ? `<div class="media diagram ${esc(g.diagram)}">${DIAGRAMS[g.diagram]}</div>`
       : '';
-  return `<article class="feat wide lux">
+  return `<article class="feat wide lux${g.hereMarker ? ' has-here' : ''}">
     <div class="feat-top">
       <h3>${esc(g.name)}</h3>
       <span class="grouped">${g.members.length} repos</span>
     </div>
     <p class="feat-blurb">${esc(g.blurb)}</p>
     ${logo}
-    <div class="members">${members}</div>
     ${g.hereMarker ? hereMarker() : ''}
+    <div class="members">${members}</div>
   </article>`;
 }
 

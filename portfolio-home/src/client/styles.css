@@ -488,17 +488,25 @@ section {
   margin-top: 5px;
 }
 
-/* "You are here" — the map pin on the card that IS this site. margin-top:auto floats it into the
-   card's leftover height (the members are short, so a stretched banner card has room to spare), which
-   is the whole point: it pads the empty space rather than adding a fixed block. A pin over a ground
-   ring that pulses outward, the way a live location dot does on a map. */
+/* "You are here" — the map pin on the card that IS this site. It sits between the description and the
+   member bubbles as its own centered band: a pin over a ground ring that pulses outward, the way a
+   live location dot does on a map. */
 .here {
-  margin-top: auto;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 7px;
-  padding: 20px 0 6px;
+  padding: 6px 0 14px;
+}
+/* On the here-marker card, the blurb must NOT keep its `flex: 1` — grown, it opens a dead gap between
+   the one-line description and the pin. Hand that growth to the pin band instead, centred, so it fills
+   the space between the description and the bubbles rather than leaving a hole above itself. */
+.feat.has-here .feat-blurb {
+  flex: none;
+}
+.feat.has-here .here {
+  flex: 1;
+  justify-content: center;
 }
 .here-pin {
   position: relative;
@@ -688,6 +696,51 @@ section {
   height: auto;
   object-fit: contain;
   background: #fbfbfe;
+}
+/* The garden's drag-to-pan frame: the artwork is wider/taller than this window, and a press-and-swipe
+   (garden-pan.ts) moves it inside. touch-action:none hands the vertical swipe to the pan instead of
+   the page scroll; grab/grabbing cursors say it is draggable. */
+.media.stack .pan {
+  position: relative;
+  height: 150px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  cursor: grab;
+  touch-action: none;
+}
+.media.stack .pan.grabbing {
+  cursor: grabbing;
+}
+.media.stack .pan .pan-img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: none;
+  border-radius: 0;
+  user-select: none;
+  -webkit-user-drag: none;
+  will-change: transform;
+}
+/* A one-line hint that fades on first interaction, so the pan is discoverable without a permanent
+   chrome sitting over the art. */
+.media.stack .pan::after {
+  content: "⤢ drag to explore";
+  position: absolute;
+  right: 7px;
+  bottom: 7px;
+  padding: 2px 7px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 20px;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+.media.stack .pan.grabbing::after {
+  opacity: 0;
 }
 /* The garden keeps its original full 118px — the question sits above it rather than eating into it,
    which is the whole reason the two are separately framed. */
