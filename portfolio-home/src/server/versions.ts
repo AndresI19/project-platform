@@ -36,6 +36,11 @@ const TARGETS: Record<string, string> = {
  */
 const SPEC_PATH = '/content/platform-version.json';
 
+/** A present, non-empty string, or null. A version read off the wire or a file is only ever one of
+ *  those two things: something real to show, or "unknown" — which is null, never '' and never a
+ *  non-string. Both readers below coerce through here so they agree on what "no version" means. */
+const nonEmptyString = (value: unknown): string | null => (typeof value === 'string' && value ? value : null);
+
 /**
  * Read per REQUEST, not at startup — the point of keeping it on the volume. A deploy rewrites this
  * file; read at boot, the page would report the platform version it started with and need a pointless
@@ -45,7 +50,7 @@ const SPEC_PATH = '/content/platform-version.json';
 export function platformVersion(specPath: string = SPEC_PATH): string | null {
   try {
     const spec = JSON.parse(readFileSync(specPath, 'utf8')) as { platform?: unknown };
-    return typeof spec.platform === 'string' && spec.platform ? spec.platform : null;
+    return nonEmptyString(spec.platform);
   } catch {
     // No spec: a dev checkout, or a cluster deployed before the spec existed. Both are "unknown",
     // which is null — not "snapshot", which would be a claim about the source tree we cannot make.
@@ -61,7 +66,7 @@ async function probe(url: string): Promise<string | null> {
     const r = await fetch(url, { signal: AbortSignal.timeout(2000) });
     if (!r.ok) return null;
     const body = (await r.json()) as { version?: unknown };
-    return typeof body.version === 'string' && body.version ? body.version : null;
+    return nonEmptyString(body.version);
   } catch {
     return null;
   }

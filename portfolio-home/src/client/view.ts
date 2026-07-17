@@ -45,6 +45,11 @@ export function featuredChip(e: Entry): string {
   return e.featured ? chip('featured', STAR_ICON, 'Featured') : '';
 }
 
+/** A drawn schematic in a card's media slot — the same markup wherever a diagram fills one, so a
+    featured card and a group card can't drift on how a diagram is framed. */
+const diagramMedia = (name: NonNullable<Project['diagram']>): string =>
+  `<div class="media diagram ${esc(name)}">${DIAGRAMS[name]}</div>`;
+
 /** The artwork that fills a featured card's empty space — image(s), or a drawn schematic. */
 export function media(p: Project): string {
   if (p.images) {
@@ -55,7 +60,7 @@ export function media(p: Project): string {
     </div>`;
   }
   if (p.image) return `<div class="media"><img src="${esc(p.image)}" alt="" loading="lazy"></div>`;
-  if (p.diagram) return `<div class="media diagram ${esc(p.diagram)}">${DIAGRAMS[p.diagram]}</div>`;
+  if (p.diagram) return diagramMedia(p.diagram);
   return '';
 }
 
@@ -181,7 +186,7 @@ export function featGroupCard(g: Group): string {
   const logo = g.logo
     ? `<div class="media logo"><img src="${esc(g.logo)}" alt="${esc(g.name)}" loading="lazy"></div>`
     : g.diagram
-      ? `<div class="media diagram ${esc(g.diagram)}">${DIAGRAMS[g.diagram]}</div>`
+      ? diagramMedia(g.diagram)
       : '';
   return `<article class="feat wide lux${g.hereMarker ? ' has-here' : ''}">
     <div class="feat-top">

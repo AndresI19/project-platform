@@ -161,6 +161,26 @@ export function mountGate({ onDone, greetUrl }: GateOptions): void {
     }
   };
 
+  // Create and Sign-in are the same gesture: read the two fields, run the auth call, and on failure
+  // paint its message into the form. They differ only in which call runs and what a success does, so
+  // the shape — and the single place the credential inputs are read — lives here.
+  const submitCredentials = (
+    authCall: (username: string, password: string) => Promise<unknown>,
+    onSuccess: () => void,
+    failure: string,
+  ): void => {
+    const name = host.querySelector<HTMLInputElement>('#pg-user')!.value;
+    const password = host.querySelector<HTMLInputElement>('#pg-pass')!.value;
+    void (async () => {
+      try {
+        await authCall(name, password);
+        onSuccess();
+      } catch (e2) {
+        err(e2 instanceof Error ? e2.message : failure);
+      }
+    })();
+  };
+
   shell(chooseView());
 
   host.addEventListener('click', (e) => {
@@ -182,34 +202,17 @@ export function mountGate({ onDone, greetUrl }: GateOptions): void {
     if (act === 'done') return close();
 
     if (act === 'create') {
-      const name = host.querySelector<HTMLInputElement>('#pg-user')!.value;
-      const password = host.querySelector<HTMLInputElement>('#pg-pass')!.value;
-      void (async () => {
-        try {
-          await signUp(name, password);
-          // Signed in already — a chosen password means there is nothing to hand back and nothing to
-          // write down. Straight to the optional greeting if the app offers one; otherwise this ends.
-          if (greetUrl) shell(greetView());
-          else close();
-        } catch (e2) {
-          err(e2 instanceof Error ? e2.message : 'could not create the account');
-        }
-      })();
-      return;
+      // Signed in already — a chosen password means there is nothing to hand back and nothing to write
+      // down. Straight to the optional greeting if the app offers one; otherwise this ends.
+      return submitCredentials(
+        signUp,
+        () => (greetUrl ? shell(greetView()) : close()),
+        'could not create the account',
+      );
     }
 
     if (act === 'go') {
-      const name = host.querySelector<HTMLInputElement>('#pg-user')!.value;
-      const password = host.querySelector<HTMLInputElement>('#pg-pass')!.value;
-      void (async () => {
-        try {
-          await signIn(name, password);
-          close();
-        } catch (e2) {
-          err(e2 instanceof Error ? e2.message : 'could not sign in');
-        }
-      })();
-      return;
+      return submitCredentials(signIn, close, 'could not sign in');
     }
 
     if (act === 'send') {
