@@ -7,6 +7,7 @@ import './styles.css';
 import { mountAccountFab, mountGate } from '@platform/ui/gate';
 import { architectureToggle } from './architecture-toggle.js';
 import { featRail } from './feat-rail.js';
+import { mountGardenPan } from './garden-pan.js';
 import { loadConfig, refreshLiveness } from './liveness.js';
 import { paintVersions } from './versions.js';
 import { pageHtml } from './view.js';
@@ -24,6 +25,8 @@ export function mount(): void {
   architectureToggle();
   // Same reason, and it must run after the cards exist: it measures them.
   featRail();
+  // Drag-to-pan the garden artwork — also after pageHtml, since it binds to the [data-pan] frames.
+  mountGardenPan();
 
   // Wheel over the featured banner scrolls it horizontally — the same gesture the quiz's shop rows
   // use. A vertical wheel on a horizontal-scroll strip is otherwise dead, or worse, scrolls the page

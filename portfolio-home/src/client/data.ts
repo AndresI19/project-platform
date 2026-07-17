@@ -169,7 +169,7 @@ export const ENTRIES: Entry[] = [
     // fingerprint — under `cache-control: max-age=14400` behind Cloudflare, so replacing this file in
     // place left every browser and CDN edge showing the previous garden for four hours. Bump the
     // suffix when the art changes and the new URL is fetched at once, by everyone.
-    images: ['/quiz-sharding.png', '/home-page-garden-v2.gif'],
+    images: ['/quiz-sharding.png', '/home-page-garden-v3.gif'],
     links: [
       { label: 'Check out! →', href: '/cloud-developer-quiz/', primary: true },
       { label: 'Repository', href: `${GITHUB_ORG}/data-driven-quiz-server`, external: true },
