@@ -136,8 +136,8 @@ function topologyDiagram(): string {
         ${arrow('a-user s4 r12 short authq', 'SQL')}
 
         ${box('b-vol pc r13', 'platform-content', 'PersistentVolume — mounted into home + quiz')}
-        ${box('b-vol s3 r13 db', 'vmcp-db', 'PersistentVolume')}
-        ${box('b-vol s4 r13 authdb', 'platform-db', 'PersistentVolume')}
+        ${box('b-vol b-db s3 r13 db', 'vmcp-db', 'Postgres 16 — the gateway’s database')}
+        ${box('b-vol b-db s4 r13 authdb', 'platform-db', 'Postgres 16 — auth + quiz databases')}
 
         <!-- Down the right edge of the gateway's column, PAST the database. rs-mcp-server sits directly
              below the databases now — fvt-traffic used to occupy this band from the left lane, but it
@@ -167,6 +167,7 @@ function topologyDiagram(): string {
           <span class="arch-chip b-edge">edge</span>
           <span class="arch-chip b-infra">platform</span>
           <span class="arch-chip b-vol">volume mount</span>
+          <span class="arch-chip b-db">database</span>
           <span class="arch-chip b-vault">sealed secrets</span>
           <span class="arch-chip k-agent">agent path</span>
         </div>
@@ -179,7 +180,6 @@ function topologyDiagram(): string {
 // Desktop uses the restored inline SVG (CICD_DIAGRAM, imported above); the phone gets mobileCicd().
 // The SVG was briefly rebuilt as HTML so ONE picture could serve both widths, but a separate mobile
 // diagram already exists, so the desktop slide is back to the SVG that reads best at full width.
-
 
 /* ── Diagram 3 — auth & the browser ────────────────────────────────────────────────────────────── */
 // TWO stacked pictures, because a front end touches platform-auth for two different reasons and the
@@ -210,7 +210,7 @@ function authDiagram(): string {
           <div class="auth-col provider">
             ${box('b-auth au-cbox', 'platform-auth', 'mints &amp; signs an RS256 token')}
             ${vconn('verifies the password')}
-            ${box('b-vol au-cbox', 'platform-db', 'usernames + hashed passwords')}
+            ${box('b-vol b-db au-cbox', 'platform-db', 'Postgres — usernames + hashed passwords')}
           </div>
         </div>
         <p class="auth-expl">
@@ -259,7 +259,7 @@ function authDiagram(): string {
         <div class="arch-key">
           <span class="arch-chip b-app">consuming service</span>
           <span class="arch-chip b-auth">identity</span>
-          <span class="arch-chip b-vol">database</span>
+          <span class="arch-chip b-db">database</span>
           <span class="arch-chip au-chip-verify">public-key fetch</span>
         </div>
         <span class="arch-more" style="cursor:default">Issued by one service · checked by every service.</span>

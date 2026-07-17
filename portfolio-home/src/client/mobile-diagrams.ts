@@ -139,12 +139,12 @@ export function mobileTopology(): string {
     <text class="mt-mono" x="84" y="504">platform-content</text>
 
     <path class="mt-siding" d="M210 458 V 502"/>
-    <rect class="mt-depot" x="204" y="502" width="12" height="12" rx="2"/>
+    <rect class="mt-depot mt-db" x="204" y="502" width="12" height="12" rx="2"/>
     <text class="mt-mono" x="222" y="512">platform-db</text>
 
     <!-- Hangs off the red lane, label end-anchored to its left so it never touches the line. -->
     <path class="mt-siding" d="M330 476 H 308"/>
-    <rect class="mt-depot" x="296" y="470" width="12" height="12" rx="2"/>
+    <rect class="mt-depot mt-db" x="296" y="470" width="12" height="12" rx="2"/>
     <text class="mt-mono" x="292" y="480" text-anchor="end">vmcp-db</text>
 
     <!-- DOWNSTREAM OF vmcp — the only thing that earns a lower rank, and now the only thing the red
@@ -175,6 +175,7 @@ export function mobileTopology(): string {
         <span class="mdg-k"><i class="mdg-sw" style="background:#C2185B"></i>Agent · MCP</span>
         <span class="mdg-k"><i class="mdg-sw mdg-sw-both"></i>both lines stop</span>
         <span class="mdg-k"><i class="mdg-sw mdg-sw-dash"></i>siding — a store</span>
+        <span class="mdg-k"><i class="mdg-sw mdg-sw-db"></i>Postgres database</span>
       </div>
     </div>`;
 }

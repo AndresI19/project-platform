@@ -35,6 +35,10 @@
   --gold: #c08a12;
   --gold-2: #8a610a;
   --wip: #e2660c;
+  /* Postgres blue — the two database boxes in the architecture map. None of the section hues meant
+     "database", and drawing a Postgres server as the volume beside it was the confusion this fixes. */
+  --db: #2c6da3;
+  --db-2: #21567f;
 }
 @media (prefers-color-scheme: dark) {
   :root {
@@ -54,6 +58,8 @@
     --gold: #e8b23c;
     --gold-2: #f2cd77;
     --wip: #ff8c42;
+    --db: #5ea3d8;
+    --db-2: #8fc3ea;
   }
 }
 
@@ -1795,6 +1801,18 @@ section {
 .b-vol .arch-name {
   color: var(--exp-2);
 }
+/* The two databases are Postgres servers, not the volume beside them — a solid border and the DB blue,
+   so the map stops drawing a Postgres server as "PersistentVolume". Their data still outlives a pod
+   (via the PVC beneath), but the box is a workload that speaks SQL, and now reads as one. Ordered
+   after .b-vol so it overrides the shared dashed-volume styling the boxes keep for their positioning. */
+.b-db {
+  border-style: solid;
+  border-color: var(--db);
+  background: color-mix(in srgb, var(--db) 13%, var(--panel));
+}
+.b-db .arch-name {
+  color: var(--db-2);
+}
 .b-vault {
   border-color: var(--wip);
   background: color-mix(in srgb, var(--wip) 13%, var(--panel));
@@ -2045,7 +2063,6 @@ section {
   stroke: var(--accent);
   stroke-width: 2;
 }
-
 
 /* THE RIGHT LANE — column 13. The gateway's line to the tool server, running down beside the
    database rather than through it. It is a column, not an offset, so it stays put at any width. */
@@ -2367,6 +2384,10 @@ section {
 }
 .arch-chip.b-infra {
   color: var(--muted);
+}
+.arch-chip.b-db {
+  color: var(--db-2);
+  border-color: color-mix(in srgb, var(--db) 40%, var(--line));
 }
 .arch-chip.b-net {
   color: color-mix(in srgb, var(--accent2) 72%, var(--ink));
@@ -3234,6 +3255,15 @@ section {
   fill: var(--mt-paper);
   stroke: var(--mt-muted);
   stroke-width: 1.5;
+}
+/* platform-db and vmcp-db are Postgres servers — the blue depot tells them apart from the plain
+   content store beside them, matching the desktop map's database colour. */
+.arch-mobile .mt-depot.mt-db {
+  fill: color-mix(in srgb, var(--db) 22%, var(--mt-paper));
+  stroke: var(--db);
+}
+.arch-mobile .mdg-sw-db {
+  background: var(--db);
 }
 .arch-mobile .mt-cap {
   font-size: 8.5px;
