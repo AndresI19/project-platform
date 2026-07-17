@@ -19,9 +19,6 @@
 // content to TRANSPARENT rather than to a guessed colour, so whatever is really behind shows through.
 // It cannot mismatch a background it never has to name.
 
-/** Width of each curtain. Wide enough to read as a fade, narrow enough not to eat a card's content. */
-const FADE = 56;
-
 /**
  * Show a curtain on each side that has somewhere to go, and none on a side that doesn't.
  *
@@ -31,6 +28,10 @@ const FADE = 56;
  */
 export function featRail(): void {
   for (const rail of document.querySelectorAll<HTMLElement>('.feat-banner')) {
+    // The stylesheet owns the curtain's width — see --feat-fade there. A phone also sizes the cards
+    // against it, so the number has three readers and must have exactly one writer.
+    const fade = getComputedStyle(rail).getPropertyValue('--feat-fade').trim() || '56px';
+
     const sync = (): void => {
       const first = rail.firstElementChild;
       const last = rail.lastElementChild;
@@ -56,8 +57,8 @@ export function featRail(): void {
       // is more when there is not: a curtain at the end costs the reader a swipe to disprove.
       const r = last.getBoundingClientRect().right > port.right + 1;
 
-      rail.style.setProperty('--fade-l', l ? `${FADE}px` : '0px');
-      rail.style.setProperty('--fade-r', r ? `${FADE}px` : '0px');
+      rail.style.setProperty('--fade-l', l ? fade : '0px');
+      rail.style.setProperty('--fade-r', r ? fade : '0px');
     };
 
     rail.addEventListener('scroll', sync, { passive: true });
