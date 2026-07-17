@@ -181,10 +181,8 @@ authRouter.post('/token', async (req, res) => {
     .limit(1);
 
   // Verify whether or not the row exists: skipping scrypt on a missing username would answer faster
-  // than "wrong password" — a timing oracle — so a miss still burns one hash against a throwaway.
-  const ok = row
-    ? await verifyPassword(row.passwordHash, password, env.codePepper)
-    : await verifyPassword(DUMMY_HASH, password, env.codePepper);
+  // than "wrong password" — a timing oracle — so a miss still burns one hash against the throwaway.
+  const ok = await verifyPassword(row?.passwordHash ?? DUMMY_HASH, password, env.codePepper);
 
   if (!row || !ok) {
     await deny();

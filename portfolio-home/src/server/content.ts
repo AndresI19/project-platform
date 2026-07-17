@@ -257,10 +257,12 @@ export const resumePath = (uid: string): string => `/resume-${uid}.pdf`;
  * first try ~99.999% of the time; the loop is correctness, not a hot path.
  */
 export function mintResumeUid(prev: string | null = null): string {
-  let uid = prev;
-  while (uid === null || uid === prev) {
+  // do/while, so a UID is minted first and re-rolled only on the rare `=== prev` collision — the plain
+  // `while` needed a redundant `uid === null` seed clause just to force the first pass.
+  let uid: string;
+  do {
     uid = String(Math.floor(Math.random() * 100000)).padStart(5, '0');
-  }
+  } while (uid === prev);
   return uid;
 }
 
