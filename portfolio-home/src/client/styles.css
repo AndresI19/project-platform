@@ -352,7 +352,7 @@ section {
   border-left: 3px solid var(--accent);
   border-radius: 16px;
   box-shadow: var(--shadow);
-  padding: 16px 16px 15px;
+  padding: 13px 15px 12px;
   display: flex;
   flex-direction: column;
   transition: transform .16s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow .16s, border-color .16s;
@@ -422,7 +422,7 @@ section {
 .feat-blurb {
   color: var(--muted);
   font-size: 14.5px;
-  margin: 10px 0 14px;
+  margin: 8px 0 11px;
   flex: 1;
 }
 .feat-actions {
@@ -1577,7 +1577,9 @@ section {
    into: no elbow, because with a fine enough grid there is no offset to bridge.                  */
 .arch-grid {
   display: grid;
-  grid-template-columns: 40px repeat(12, 1fr);
+  /* Col 1 used to be a 40px rail for the vertical sealed-secrets label; that label is now a small chip
+     in the cluster's bottom-left corner, so the rail shrinks and the content reclaims the width. */
+  grid-template-columns: 22px repeat(12, 1fr);
   column-gap: 10px;
   row-gap: 2px;
   grid-auto-rows: min-content;
@@ -1848,34 +1850,36 @@ section {
   margin-top: 18px;
 }
 
+/* A sealed Secret is a cluster object, not a running service, so it sits low in the k8s frame's
+   bottom-left corner and dresses down: a dotted outline and a near-background fill, so it reads as a
+   quiet piece of the cluster rather than another box in the traffic path. Horizontal now that it is a
+   short wide chip rather than a tall left rail. */
 .vault {
-  grid-column: 1;
-  grid-row: 7 / 15;
-  align-self: stretch;
-  justify-content: center;
-  gap: 6px;
-  padding: 8px 2px;
+  grid-column: 2 / 7;
+  grid-row: 15;
+  align-self: center;
+  justify-self: start;
+  flex-direction: row;
+  align-items: baseline;
+  justify-content: flex-start;
+  gap: 8px;
+  padding: 5px 12px;
+  border: 1.5px dotted color-mix(in srgb, var(--muted) 55%, var(--line));
+  background: color-mix(in srgb, var(--accent) 4%, transparent);
+  border-radius: 8px;
 }
 .vault-t {
-  writing-mode: vertical-rl;
-  transform: rotate(180deg);
   font-weight: 800;
   font-size: 11px;
-  letter-spacing: .3px;
-  white-space: nowrap;
-}
-
-/* The mechanism, beside the name. Vertical like its title — the rail is ~30px wide and eight rows
-   tall, so the long side is the only side with room. `nowrap` because a wrapped vertical line breaks
-   into a SECOND COLUMN of sideways text, which reads as a different label rather than a continuation;
-   the rail is tall enough to hold the string on one run. */
-.vault-m {
-  writing-mode: vertical-rl;
-  transform: rotate(180deg);
-  font-size: 9px;
   letter-spacing: .2px;
   white-space: nowrap;
   color: var(--muted);
+}
+.vault-m {
+  font-size: 9.5px;
+  letter-spacing: .2px;
+  white-space: nowrap;
+  color: color-mix(in srgb, var(--muted) 75%, transparent);
 }
 
 /* A MOUNT IS NOT TRAFFIC. A volume is attached to a pod; nothing flows along it. So it gets a plain
@@ -2196,6 +2200,14 @@ section {
   align-items: center;
   gap: 6px;
   flex-wrap: wrap;
+}
+/* The topology drops its legend, so its footer is just the wiki link — no chip row to divide off,
+   and it sits tight to the diagram rather than in a full footer band. */
+.arch-foot-slim {
+  justify-content: flex-end;
+  margin-top: 6px;
+  padding-top: 0;
+  border-top: none;
 }
 .arch-chip {
   padding: 3px 9px;

@@ -102,9 +102,9 @@ function topologyDiagram(): string {
              repo as ciphertext, and unsealed ONCE at apply time into an ordinary k8s Secret — which
              is what the pods actually read. Naming the mechanism is the point: the interesting
              claim is not "the secrets are safe", it is that they are safe IN THE OPEN. -->
-        <div class="arch-box b-vault vault">
+        <div class="arch-box vault">
           <span class="vault-t">sealed-secrets</span>
-          <span class="vault-m">sealed with an asymmetric key — the ciphertext lives in git; only the cluster can unseal it</span>
+          <span class="vault-m">asymmetric-key sealed</span>
         </div>
 
         ${box('b-edge w r3', 'Cloudflare', 'terminates TLS · the only thing the internet can see')}
@@ -136,8 +136,8 @@ function topologyDiagram(): string {
         ${arrow('a-user s4 r12 short authq', 'SQL')}
 
         ${box('b-vol pc r13', 'platform-content', 'PersistentVolume — mounted into home + quiz')}
-        ${box('b-vol b-db s3 r13 db', 'vmcp-db', 'Postgres 16 — the gateway’s database')}
-        ${box('b-vol b-db s4 r13 authdb', 'platform-db', 'Postgres 16 — auth + quiz databases')}
+        ${box('b-vol b-db s3 r13 db', 'vmcp-db', 'Postgres')}
+        ${box('b-vol b-db s4 r13 authdb', 'platform-db', 'Postgres')}
 
         <!-- Down the right edge of the gateway's column, PAST the database. rs-mcp-server sits directly
              below the databases now — fvt-traffic used to occupy this band from the left lane, but it
@@ -159,18 +159,7 @@ function topologyDiagram(): string {
 
       </div>
 
-      <footer class="arch-foot">
-        <div class="arch-key">
-          <span class="arch-chip b-app">app</span>
-          <span class="arch-chip b-auth">identity</span>
-          <span class="arch-chip b-net">router</span>
-          <span class="arch-chip b-edge">edge</span>
-          <span class="arch-chip b-infra">platform</span>
-          <span class="arch-chip b-vol">volume mount</span>
-          <span class="arch-chip b-db">database</span>
-          <span class="arch-chip b-vault">sealed secrets</span>
-          <span class="arch-chip k-agent">agent path</span>
-        </div>
+      <footer class="arch-foot arch-foot-slim">
         <a class="arch-more" href="${WIKI}" target="_blank" rel="noopener">Full write-up in the wiki →</a>
       </footer>
     </div>`;
@@ -253,16 +242,6 @@ function authDiagram(): string {
           routes, so it never reaches this row.
         </p>
       </section>
-
-      <footer class="arch-foot">
-        <div class="arch-key">
-          <span class="arch-chip b-app">consuming service</span>
-          <span class="arch-chip b-auth">identity</span>
-          <span class="arch-chip b-db">database</span>
-          <span class="arch-chip au-chip-verify">public-key fetch</span>
-        </div>
-        <span class="arch-more" style="cursor:default">Issued by one service · checked by every service.</span>
-      </footer>
     </div>`;
 }
 
@@ -354,19 +333,19 @@ export function architecturePanel(): string {
         <div class="arch-slider">
           <div class="arch-tabs" role="tablist" aria-label="Architecture diagrams">
             <!-- TWO LABELS PER TAB, and only ever one of them rendered. Four full labels do not fit
-                 390px — "Platform Topography" and "Auth and Entrypoint" are ~130px each — so the bar
+                 390px — "Platform Topology" and "Authentication" are ~130px each — so the bar
                  became a scroller and the 4th tab lived off-screen, which is a tab bar that hides a
                  tab. A phone gets the short name. display:none (not visibility) is what keeps the
                  hidden one out of the accessibility tree, so a screen reader hears one name; the
                  aria-label carries the full one at every width. -->
-            <button class="arch-tab is-active" type="button" role="tab" aria-selected="true" data-slide="0" aria-label="Platform Topography"><span class="tab-full">Platform Topography</span><span class="tab-brief">Topology</span></button>
+            <button class="arch-tab is-active" type="button" role="tab" aria-selected="true" data-slide="0" aria-label="Platform Topology"><span class="tab-full">Platform Topology</span><span class="tab-brief">Topology</span></button>
             <button class="arch-tab" type="button" role="tab" aria-selected="false" data-slide="1" aria-label="CICD"><span class="tab-full">CICD</span><span class="tab-brief">CICD</span></button>
-            <button class="arch-tab" type="button" role="tab" aria-selected="false" data-slide="2" aria-label="Auth and Entrypoint"><span class="tab-full">Auth and Entrypoint</span><span class="tab-brief">Auth</span></button>
+            <button class="arch-tab" type="button" role="tab" aria-selected="false" data-slide="2" aria-label="Authentication"><span class="tab-full">Authentication</span><span class="tab-brief">Auth</span></button>
             <button class="arch-tab" type="button" role="tab" aria-selected="false" data-slide="3" aria-label="Security"><span class="tab-full">Security</span><span class="tab-brief">Security</span></button>
           </div>
           <div class="arch-viewport">
             <div class="arch-track">
-              <section class="arch-slide" role="tabpanel" aria-label="Platform Topography">
+              <section class="arch-slide" role="tabpanel" aria-label="Platform Topology">
                 <div class="arch-desktop">${topologyDiagram()}</div>
                 <div class="arch-mobile">${mobileTopology()}</div>
               </section>
@@ -374,7 +353,7 @@ export function architecturePanel(): string {
                 <div class="arch-desktop">${CICD_DIAGRAM}</div>
                 <div class="arch-mobile">${mobileCicd()}</div>
               </section>
-              <section class="arch-slide" role="tabpanel" aria-label="Auth and Entrypoint">
+              <section class="arch-slide" role="tabpanel" aria-label="Authentication">
                 <div class="arch-desktop">${authDiagram()}</div>
                 <div class="arch-mobile">${mobileAuth()}</div>
               </section>
