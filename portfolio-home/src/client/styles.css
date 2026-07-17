@@ -276,6 +276,49 @@ section {
   padding: 2px 2px 12px;
   scroll-snap-type: x proximity;
   scrollbar-width: thin;
+
+  /* THE CURTAINS. See feat-rail.ts for why this is a mask and not an overlay — briefly: a pseudo
+     element here would scroll away with the cards, and the page background is two radial gradients
+     over --bg, so a curtain fading to a flat colour would be wrong wherever they tint. A mask fades
+     to transparent and never has to name the background it sits on.
+     Both widths default to 0, so with JS off the strip is exactly what it is today: no curtain, no
+     harm, and the scrollbar still says what it always said. */
+  --fade-l: 0px;
+  --fade-r: 0px;
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent 0,
+    #000 var(--fade-l),
+    #000 calc(100% - var(--fade-r)),
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to right,
+    transparent 0,
+    #000 var(--fade-l),
+    #000 calc(100% - var(--fade-r)),
+    transparent 100%
+  );
+  transition: --fade-l .18s ease, --fade-r .18s ease;
+}
+/* A custom property is a string to the cascade unless it is registered, and a string cannot tween —
+   without this the curtains would pop between 0 and 56px. @property gives --fade-* a type, which is
+   what makes the transition above mean anything. Unregistered, it degrades to the snap, not to a
+   broken mask. */
+@property --fade-l {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+@property --fade-r {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .feat-banner {
+    transition: none;
+  }
 }
 .feat-banner::-webkit-scrollbar {
   height: 7px;
