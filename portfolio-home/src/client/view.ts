@@ -102,7 +102,7 @@ export function btn(l: Link, cls = 'btn'): string {
     wrapping its columns, so a card carrying it gets the same width as a group card. */
 /** A companion repo credited inside a featured card — the thing that builds/deploys the card's
  *  project. The whole block is one link to its repo; `has-companion` on the card is what tells the
- *  stylesheet to squeeze the diagram above it so both fit. */
+ *  stylesheet to squeeze the diagram beneath it so both fit. */
 export function featCompanion(c: NonNullable<Project['companion']>): string {
   return `<a class="feat-companion" href="${esc(c.href)}" target="_blank" rel="noopener noreferrer">
     <span class="fc-label">Built &amp; deployed by</span>
@@ -125,8 +125,8 @@ export function featCard(p: Project): string {
     </div>
     <div class="tech">${esc(p.tech)}</div>
     <p class="feat-blurb">${esc(p.blurb)}</p>
-    ${media(p)}
     ${p.companion ? featCompanion(p.companion) : ''}
+    ${media(p)}
     ${p.links.length ? `<div class="feat-actions">${p.links.map((l) => btn(l)).join('')}</div>` : ''}
   </article>`;
 }
@@ -164,6 +164,19 @@ function groupBody(g: Group, linkCls: string, extra: string): string {
     <div class="members">${memberPanels(g.members, linkCls)}</div>`;
 }
 
+/** A "you are here" map-pin marker, drawn to fill the spare vertical space of the card that IS this
+    site — a pin over a pulsing ground ring. The pin is decorative (aria-hidden); the label carries
+    the meaning for a screen reader. margin-top:auto in CSS floats it into whatever room is left. */
+export function hereMarker(): string {
+  return `<div class="here">
+    <span class="here-pin">
+      <span class="here-ping" aria-hidden="true"></span>
+      <svg class="here-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5A2.5 2.5 0 1 1 12 6a2.5 2.5 0 0 1 0 5z"/></svg>
+    </span>
+    <span class="here-label">You are here</span>
+  </div>`;
+}
+
 /** Featured card for a group: one card, one shared blurb, then each member as a sub-panel —
     so a reader sees at a glance that the members are parts of a single project. */
 export function featGroupCard(g: Group): string {
@@ -183,6 +196,7 @@ export function featGroupCard(g: Group): string {
     <p class="feat-blurb">${esc(g.blurb)}</p>
     ${logo}
     <div class="members">${members}</div>
+    ${g.hereMarker ? hereMarker() : ''}
   </article>`;
 }
 
