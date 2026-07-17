@@ -2004,6 +2004,42 @@ section {
 .arch-slider {
   margin-top: 22px;
 }
+/* PAN / ZOOM, NOT REFLOW.
+   Every diagram renders at its DESKTOP layout at every width and is scaled to fit, so the lines
+   always follow the boxes. This replaces a hand-written SECOND topography (17 desktop rows became 26
+   mobile ones, re-ordered) that "worked" by DELETING the connectors it could no longer draw: the
+   agent road, three of nginx's four fan-outs, both volume mounts, the SSE rail. Collapsing 13 columns
+   to 1 destroys the column SPANS that encode every relationship (architecture.ts:20-23) — a map that
+   deletes its own roads to fit is not a smaller map, it is a wronger one.
+
+   Mechanism is the garden's, already proven here:
+     .arch-scale  carries the SCALED size as a real box. A transform does not affect layout, so
+                  without it the scroller AND the slider's syncHeight would size for a 1250px picture
+                  that is not on screen. (Named -scale, not -box: .arch-box is every diagram node.)
+     --afit       fit-to-width, set by architecture-toggle.ts. A scale is a RATIO and CSS cannot make
+                  one — a length over a number is a length, so a clamp() is a type error discarded in
+                  silence.
+     safe center  keeps the whole overflow reachable when zoomed past the fit. Plain center strands
+                  half of it where scrollLeft cannot go — this codebase's third time on that bug. */
+.arch-fit {
+  display: flex;
+  justify-content: safe center;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+}
+.arch-scale {
+  position: relative;
+  flex: none;
+  /* width/height written by fitDiagrams(): native x --afit. Height is per-diagram; the four differ. */
+}
+.arch-fit .arch-diagram {
+  /* Pinned to the desktop layout at every viewport — the diagram never learns it is on a phone, so
+     its grid, spans and connectors are always the real ones. */
+  width: var(--arch-native, 1250px);
+  transform: scale(var(--afit, 1));
+  transform-origin: top left;
+}
+
 .arch-tabs {
   display: flex;
   gap: 6px;
@@ -2436,200 +2472,3 @@ section {
    "row 11" would mean three different things: they would land in the same cell, stack, and two of
    them would vanish. So the mobile map addresses each box by WHAT IT IS, not by where it sat.
    It also cannot fall back to flex — the frames span rows, and only grid can draw them. */
-@media (max-width: 900px) {
-  .arch-grid {
-    grid-template-columns: 1fr;
-    column-gap: 0;
-  }
-  .arch-grid > * {
-    grid-column: 1 !important;
-  }
-
-  /* SCOPED UNDER .arch-grid ON PURPOSE — these four are not stylistic.
-     Each ties at (0,1,0) with a desktop rule the same element also matches (.b-you vs .r1,
-     .arch-tag-hw vs .r5, .vault vs .vault, .pad vs .r15), and a media query adds no specificity. They
-     were winning solely because they appear later in the file, so re-ordering the stylesheet — a
-     formatter, a merge, a tidy-up — would silently reshuffle the mobile map with nothing to catch it.
-     `.arch-grid` raises them to (0,2,0), so they win on their merits instead of their position. */
-  .arch-grid .b-you {
-    grid-row: 1;
-    max-width: none;
-  }
-  .a-user.r2 {
-    grid-row: 2;
-  }
-  .b-agent {
-    grid-row: 3;
-    max-width: none;
-  }
-  .a-agent.r2 {
-    grid-row: 4;
-  }
-  .b-edge.r3 {
-    grid-row: 5;
-  }
-  .a-user.pierce {
-    grid-row: 6;
-    align-self: center;
-  }
-  .arch-grid .arch-tag-hw {
-    grid-row: 7;
-  }
-  .arch-tag-k8s {
-    grid-row: 8;
-  }
-  .b-edge.r7 {
-    grid-row: 9;
-  }
-  .a-user.r8 {
-    grid-row: 10;
-  }
-  .b-net.r9 {
-    grid-row: 11;
-  }
-
-  /* The agent's parallel arrows have no second lane to run down, so they would sit on top of the
-     browser's. One arrow into the gateway still says where the agent ends up. */
-  .a-agent.pierce,
-  .a-agent.r8,
-  .a-user.s1,
-  .a-user.s2,
-  .a-user.s4.r10 {
-    display: none;
-  }
-  .a-agent.s3 {
-    grid-row: 12;
-  }
-
-  .b-app.s1 {
-    grid-row: 13;
-  } /* home */
-  .b-app.s2 {
-    grid-row: 14;
-  } /* quiz */
-  .b-vol.pc {
-    grid-row: 15;
-  } /* platform-content */
-  .b-app.s3 {
-    grid-row: 16;
-  } /* vmcp */
-  .a-user.s3.short {
-    grid-row: 17;
-  } /* vmcp SQL */
-  .b-vol.db {
-    grid-row: 18;
-  } /* vmcp-db */
-  .b-auth.s4 {
-    grid-row: 19;
-  } /* platform-auth */
-  .a-user.short.authq {
-    grid-row: 20;
-  } /* platform-auth SQL */
-  .b-vol.authdb {
-    grid-row: 21;
-  } /* platform-db */
-  .arch-grid .vault {
-    grid-row: 22;
-    align-self: auto;
-    padding: 9px 11px;
-  }
-  .b-infra.s3 {
-    grid-row: 23;
-  } /* rs-mcp-server */
-  .arch-grid .pad {
-    grid-row: 24;
-  }
-  .a-user.r16 {
-    grid-row: 25;
-  } /* outbound */
-  .b-ext.s3 {
-    grid-row: 26;
-  }
-
-  /* Both lines turn with the rail. Once the grid collapses to one column this is a full-width box
-     like any other, and vertical text inside it is a ~700px tall column of sideways words beside an
-     empty orange field. `nowrap` has to go with the rotation: horizontal, the string is far wider
-     than a phone. */
-  .vault-t,
-  .vault-m {
-    writing-mode: horizontal-tb;
-    transform: none;
-    white-space: normal;
-  }
-  .vault-m {
-    text-align: center;
-  }
-  /* Nothing to run past, nothing to run along, and no shared column to join through. */
-  .vm-rail,
-  .mount {
-    display: none;
-  }
-
-  .arch-hw {
-    grid-row: 7 / 25;
-    margin: 0 -8px;
-  }
-  .arch-k8s {
-    grid-row: 8 / 25;
-    margin: 0 -3px;
-  }
-  .arch-tag {
-    grid-column: 1;
-    margin-left: 0;
-  }
-
-  /* A long label offset beside an arrow runs off a phone. Wrap it — the diagram must never be the
-     thing that makes the page scroll sideways. */
-  .arch-arrow-l {
-    left: calc(50% + 11px);
-    max-width: 44vw;
-    white-space: normal;
-    line-height: 1.2;
-  }
-  .arch-diagram {
-    padding: 18px 12px 8px;
-  }
-  .arch-foot {
-    justify-content: center;
-  }
-
-  /* Diagram 2 (CICD): the three worlds stack, in the order the pipeline actually runs — GitHub, then
-     this machine, then the cluster. Nothing is hidden and nothing is re-authored: it is the same boxes
-     in the same order, one per row. The connectors are .auth-h, so they degrade with the rule below
-     rather than needing one of their own.
-
-     The PR/merge fork goes single-column too. Two 135px branches side by side on a phone is how the
-     quiz's .match mode became unreadable; a fork that narrow is not a fork, it is two crushed columns. */
-  .cicd-flow,
-  .cicd-split {
-    grid-template-columns: 1fr;
-    gap: 8px;
-  }
-
-  /* Diagram 3: each picture's three-part row (consumer | arrows | provider) stacks into one column.
-     The horizontal arrows have no width to run across, so their shafts/heads are dropped and each
-     label becomes a plain centred caption between the boxes it used to join. */
-  .auth-flow {
-    grid-template-columns: 1fr;
-    gap: 8px;
-  }
-  .auth-conn {
-    flex-direction: column;
-    gap: 6px;
-    padding: 2px 0;
-  }
-  .auth-h {
-    height: auto;
-  }
-  .auth-h::before,
-  .auth-h::after {
-    display: none;
-  }
-  .auth-h-l {
-    position: static;
-    transform: none;
-    display: block;
-    text-align: center;
-    background: none;
-  }
-}

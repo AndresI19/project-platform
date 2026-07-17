@@ -27,9 +27,33 @@ export function architectureToggle(): void {
 
   let active = 0;
 
+  /* FIT EACH DIAGRAM TO THE SLIDE, and let the wrapper carry the scaled size.
+     The diagram is pinned to --arch-native (1250px) at every viewport, so it always lays out as the
+     desktop picture and offsetHeight is its honest native height. A transform does not affect layout,
+     so .arch-scale must be given the scaled box explicitly — otherwise the scroller and syncHeight
+     below would both size for a 1250px picture that is not on screen.
+     Per diagram: the four are different heights, so one number cannot serve them. */
+  const NATIVE = 1250;
+  const fitDiagrams = (): void => {
+    for (const slide of slides) {
+      const dia = slide.querySelector<HTMLElement>('.arch-diagram');
+      const scale = slide.querySelector<HTMLElement>('.arch-scale');
+      if (!dia || !scale) continue;
+      const room = slide.clientWidth;
+      if (!room) continue;
+      const fit = Math.min(1, room / NATIVE);
+      scale.style.setProperty('--afit', String(fit));
+      scale.style.width = `${NATIVE * fit}px`;
+      scale.style.height = `${dia.offsetHeight * fit}px`;
+    }
+  };
+
   const syncHeight = (): void => {
     // Only meaningful once the panel is open and laid out; a closed panel reports height 0.
     if (!viewport || !slides.length || !mast.classList.contains('arch-open')) return;
+    // Scale BEFORE measuring: the slide's height comes from .arch-scale, so measuring first would
+    // pin the viewport to the previous width's box.
+    fitDiagrams();
     viewport.style.height = `${slides[active].offsetHeight}px`;
   };
 

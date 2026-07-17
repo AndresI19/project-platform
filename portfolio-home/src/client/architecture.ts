@@ -431,10 +431,10 @@ export function architecturePanel(): string {
           </div>
           <div class="arch-viewport">
             <div class="arch-track">
-              <section class="arch-slide" role="tabpanel" aria-label="Platform Topography">${topologyDiagram()}</section>
-              <section class="arch-slide" role="tabpanel" aria-label="CICD">${cicdDiagram()}</section>
-              <section class="arch-slide" role="tabpanel" aria-label="Auth and Entrypoint">${authDiagram()}</section>
-              <section class="arch-slide" role="tabpanel" aria-label="Security posture">${securityDiagram()}</section>
+              <section class="arch-slide" role="tabpanel" aria-label="Platform Topography"><div class="arch-fit"><div class="arch-scale">${topologyDiagram()}</div></div></section>
+              <section class="arch-slide" role="tabpanel" aria-label="CICD"><div class="arch-fit"><div class="arch-scale">${cicdDiagram()}</div></div></section>
+              <section class="arch-slide" role="tabpanel" aria-label="Auth and Entrypoint"><div class="arch-fit"><div class="arch-scale">${authDiagram()}</div></div></section>
+              <section class="arch-slide" role="tabpanel" aria-label="Security posture"><div class="arch-fit"><div class="arch-scale">${securityDiagram()}</div></div></section>
             </div>
           </div>
         </div>
