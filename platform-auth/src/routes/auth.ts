@@ -17,23 +17,18 @@ import { jwks, mint } from '../tokens.js';
 export const authRouter = Router();
 
 /**
- * A real, well-formed hash of a throwaway value, computed once at boot. The sign-in path verifies
- * against THIS when the username does not exist, so a miss costs exactly one scrypt derivation just
- * like a hit — otherwise the endpoint would answer "no such user" measurably faster than "wrong
- * password" and hand an attacker a timing oracle for which usernames are real.
+ * A real hash of a throwaway value, computed once at boot. Sign-in verifies against THIS when the
+ * username doesn't exist, so a miss costs one scrypt derivation just like a hit — otherwise "no such
+ * user" would answer faster than "wrong password", a timing oracle for which usernames are real.
  */
 const DUMMY_HASH = await hashPassword('timing-equaliser', env.codePepper);
 
 /**
- * The rate limiter — the code's ONLY defence.
- *
- * In-process, and that is a deliberate single-replica choice: a Redis-backed limiter would be correct
- * across replicas, but this service is one pod, and an in-memory Map is one fewer thing that can be
- * down when nobody can sign in. If this is ever scaled out, THIS breaks first, and it breaks quietly
- * — each replica would enforce its own limit, multiplying the real ceiling by the replica count.
- *
- * What it buys and what it does not: it stops the keyspace being walked QUICKLY. It does not protect
- * any individual user. See DESIGN.md §4.
+ * The rate limiter — the code's ONLY defence. In-process, a deliberate single-replica choice: a Redis
+ * limiter would be correct across replicas, but this is one pod and a Map is one fewer thing that can
+ * be down. Scaled out, THIS breaks quietly — each replica enforces its own limit, multiplying the real
+ * ceiling by the replica count. It stops the keyspace being walked QUICKLY; it does not protect any
+ * individual user. See DESIGN.md §4.
  */
 const attempts = new Map<string, number[]>();
 
@@ -62,18 +57,11 @@ async function audit(ip: string, ok: boolean): Promise<void> {
     .catch(() => {});
 }
 
-/* ── Sign up ─────────────────────────────────────────────────────────────────────────────────────
- * The user brings a USERNAME and a PASSWORD. The server brings the UUID.
- *
- * Splitting the username from the secret is still the whole point. The username is public — it is
- * printed in vMCP's dashboard, which anyone can read — so it must be safe for a stranger to see. The
- * password is the proof that the username is yours, and nobody ever sees it but you: it is hashed on
- * arrival and the plaintext is never stored, never logged, never put in a token.
- *
- * What changed from the old design is who chooses the secret. The server used to generate a
- * high-entropy code; now the user picks a password, so the entropy floor is a minimum length and the
- * defence against a weak choice is a slow, salted, peppered hash (credential.ts). There is still no
- * recovery — a reset would need an email, and an email is PII.
+/* Sign up. The user brings a USERNAME and PASSWORD; the server brings the UUID. Splitting username
+ * from secret is the point: the username is public (printed in vMCP's dashboard) so must be safe for a
+ * stranger, the password proves the username is yours and is hashed on arrival — never stored, logged,
+ * or put in a token. The entropy floor is a minimum length and the defence a slow, salted, peppered
+ * hash (credential.ts). Still no recovery — a reset would need an email, and an email is PII.
  */
 const CredentialsBody = z.object({
   username: z.string().min(1).max(64),
@@ -109,9 +97,9 @@ authRouter.post('/identities', async (req, res) => {
     return;
   }
 
-  // Hash BEFORE the insert, so the plaintext never travels further than this handler and a failed
-  // insert leaves nothing half-written. The username is the only unique column now, so a conflict can
-  // mean exactly one thing — the name is taken — and is answered directly, with no retry loop.
+  // Hash BEFORE the insert, so plaintext never leaves this handler and a failed insert writes nothing.
+  // Username is the only unique column, so a conflict means exactly one thing — name taken — answered
+  // directly, no retry loop.
   const passwordHash = await hashPassword(parsed.data.password, env.codePepper);
 
   const [row] = await db
@@ -129,10 +117,9 @@ authRouter.post('/identities', async (req, res) => {
   res.status(201).json({ username: row.username, token, expiresIn });
 });
 
-/* ── Check a username before committing to it ─────────────────────────────────────────────────────
- * Usernames are public by design, so telling a caller whether one exists leaks nothing that reading
- * the dashboard would not. Worth having: discovering your name is taken AFTER being handed a code you
- * were told to write down would be a miserable first experience.
+/* Check a username before committing. Usernames are public, so saying whether one exists leaks nothing
+ * the dashboard wouldn't — and discovering your name is taken only after signing up is a miserable
+ * first experience.
  */
 authRouter.get('/usernames/:name', async (req, res) => {
   const username = normaliseUsername(req.params.name ?? '');
@@ -148,9 +135,8 @@ authRouter.get('/usernames/:name', async (req, res) => {
   res.json({ username, valid: true, available: !row });
 });
 
-/* ── Sign in ─────────────────────────────────────────────────────────────────────────────────────
- * Username + password. Without the password a username is a claim and anyone could make it, so both
- * are required and both are checked the same generic way on failure.
+/* Sign in. Username + password — without the password a username is a claim anyone could make, so both
+ * are required and both fail the same generic way.
  */
 authRouter.post('/token', async (req, res) => {
   const ip = clientIp(req);
@@ -169,11 +155,10 @@ authRouter.post('/token', async (req, res) => {
   const username = normaliseUsername(parsed.data.username);
   const password = parsed.data.password;
 
-  // EVERY failure below returns the same generic message. Distinguishing "no such username" from
-  // "wrong password" would hand an attacker a free oracle: they could confirm which usernames exist
-  // and then spend the whole rate-limit budget on passwords for one that does. The username being
-  // public elsewhere does not make it free to confirm HERE, on the endpoint credentials are attacked
-  // through.
+  // EVERY failure returns the same generic message. Distinguishing "no such username" from "wrong
+  // password" would hand an attacker an oracle to confirm which usernames exist, then spend the whole
+  // rate-limit budget on one that does. Being public elsewhere doesn't make it free to confirm HERE,
+  // the endpoint credentials are attacked through.
   const deny = async () => {
     await audit(ip, false);
     res.status(401).json({ error: 'unknown username or password' });
@@ -187,9 +172,8 @@ authRouter.post('/token', async (req, res) => {
     .where(eq(identities.username, username))
     .limit(1);
 
-  // Verify whether or not the row exists. If we skipped scrypt on a missing username, the endpoint
-  // would answer "no such user" faster than "wrong password" — a timing oracle for which usernames
-  // are real. So on a miss we still burn one hash against a throwaway value before denying.
+  // Verify whether or not the row exists: skipping scrypt on a missing username would answer faster
+  // than "wrong password" — a timing oracle — so a miss still burns one hash against a throwaway.
   const ok = row
     ? await verifyPassword(row.passwordHash, password, env.codePepper)
     : await verifyPassword(DUMMY_HASH, password, env.codePepper);

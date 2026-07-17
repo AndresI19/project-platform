@@ -53,9 +53,8 @@
 
 /* ── The account FAB ──────────────────────────────────────────────────────────────────────────── */
 .pg-fab-host{position:fixed;top:14px;right:14px;z-index:8500}
-/* Sized to read as a control and not a footnote — a first visitor is meant to notice it (see the red
-   nudge below). Trimmed 20% from its original scale, so it stays a control without dominating the
-   corner. */
+/* Sized to read as a control, not a footnote — a first visitor should notice it (see the red nudge).
+   Trimmed 20% from its original scale, so it doesn't dominate the corner. */
 .pg-fab{display:inline-flex;align-items:center;gap:9px;padding:11px 19px;border-radius:999px;
   position:relative;
   border:1px solid var(--line);background:var(--panel);color:var(--ink);box-shadow:var(--shadow);

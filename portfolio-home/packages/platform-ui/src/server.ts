@@ -16,16 +16,12 @@ export interface ServeClientOptions {
 }
 
 /**
- * Mount a built Vite client: a health probe, the static assets with a correct caching policy, and
- * an SPA fallback — plus a legible 503 when the client has not been built.
+ * Mount a built Vite client: a health probe, static assets with a correct caching policy, an SPA
+ * fallback, and a legible 503 when the client isn't built. Shared not to save thirty lines but because
+ * the caching rule is subtle and silent to get wrong: hashed assets are immutable for a year,
+ * index.html must NOT be, or a deploy never reaches anyone holding a cached copy.
  *
- * This is the block both front ends had copied byte-for-byte. It is shared not to save the thirty
- * lines but because the caching rule inside it is subtle and getting it wrong is silent: hashed
- * assets are immutable for a year, and index.html must NOT be, or a deploy would never reach anyone
- * still holding a cached copy. That is the kind of rule that should exist once.
- *
- * Call this LAST. It registers a catch-all for the SPA fallback, so any API route mounted after it
- * would be shadowed by index.html.
+ * Call this LAST — it registers a catch-all for the SPA fallback, so any API route after it is shadowed.
  */
 export function serveClient(app: Express, opts: ServeClientOptions): void {
   const { clientDir, base = '/', appName = 'app' } = opts;
@@ -57,21 +53,12 @@ export function serveClient(app: Express, opts: ServeClientOptions): void {
   );
 
   // The SPA fallback — for NAVIGATION only. A request that looks like a file and reaches here means
-  // express.static did not find it, i.e. the file is gone; answering index.html would be a lie with a
-  // 200 on it.
-  //
-  // That lie has a specific, ugly failure. Vite fingerprints every bundle, so each deploy retires the
-  // previous hashes. A browser still holding an older index.html then asks for `/assets/index-OLD.js`
-  // and gets HTML back, with a 200 and a JS content-type expectation: `Unexpected token '<'`, and the
-  // page renders nothing. The page had worked moments earlier, a fresh device is fine (it fetches a
-  // current index.html), and clearing site data "fixes" it — so it reads as a browser problem rather
-  // than a server one. A 404 is the honest answer, and the one a client can recover from.
-  //
-  // Same lie, second victim: a missing `/resume.pdf` used to fall through here and return index.html
-  // (see portfolio-home's CLAUDE.md — Vite's publicDir once dropped it from the build), so a broken
-  // asset looked like a working page. Anything with an extension gets the truth now.
-  //
-  // Client routes are extension-free ('/home', '/quiz', '/garden'), so this cannot swallow one.
+  // express.static didn't find it, so answering index.html would be a 200-stamped lie with an ugly
+  // failure: Vite fingerprints bundles, so a browser holding an older index.html asks for
+  // `/assets/index-OLD.js`, gets HTML with a JS content-type, and dies on `Unexpected token '<'` —
+  // reading as a browser problem (a fresh device is fine, clearing site data "fixes" it). A 404 is the
+  // honest, recoverable answer. Same lie once hit a missing `/resume.pdf` (see portfolio-home's
+  // CLAUDE.md). Client routes are extension-free, so this can't swallow one.
   app.get(`${b}/*`, (req, res) => {
     if (req.path.includes('/assets/') || /\.[a-z0-9]{2,5}$/i.test(req.path)) {
       res.status(404).end();

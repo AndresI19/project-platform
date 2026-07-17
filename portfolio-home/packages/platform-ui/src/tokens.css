@@ -1,32 +1,15 @@
-/* The platform's design tokens. Imported by every front end; this file is the single definition of
-   what the platform looks like.
- *
- * It exists because "the two sites match" used to be enforced by copy-paste — the home page's
- * stylesheet literally said its tokens were "copied verbatim from the quiz". That held right up
- * until the accent moved to navy on one site and not the other, and the two silently stopped
- * matching. A shared file makes that failure impossible: change a colour here and both sites move.
- *
- * What belongs here: values that MUST be identical across apps (surfaces, text, lines, the accent,
- * elevation). What does not: anything one app alone has an opinion about — the quiz's correct/wrong
- * greens and reds, the home page's per-section hues (green for employment, amber for the archive)
- * and its brand-coloured contact chips. Those live in the app that uses them. A token nothing else
- * consumes is not a design system, it is a global variable.
- */
-/* LIGHT AND DARK ARE NOT SYMMETRIC, and the light values below are what that costs.
- *
- * In dark, --panel sits BETWEEN --bg and --line: the border is lighter than both, so it separates
- * from each cheaply. In light, --panel is #fff — the end of the scale — so --line has to be darker
- * than the page AND the card, and every step toward the page is a bigger step away from the card.
- * Pushing --line dark enough to read against --bg as well as dark's does (1.45:1) lands it at
- * 1.68:1 on white, which is a heavier border than this design wants. So light does not chase dark's
- * ratios; it buys a visible edge (1.51:1 on the card, where the eye actually looks for it) and lets
- * --panel/--bg and the shadow carry the separation from the page.
- *
- * The failure this fixes: --line used to be #e5e8f1, which is 1.06:1 against --bg. It is the most
- * used token in the stylesheet, and against the page it was invisible — cards had no border, no
- * shadow worth the name (2.5% alpha), and a 1.16:1 surface step, so they dissolved into the wash.
- * Light mode's TEXT was never the problem and is unchanged: --ink is 17.6:1 on a panel.
- */
+/* The platform's design tokens — the single definition of what the platform looks like, imported by
+   every front end. It exists because "the two sites match" was once enforced by copy-paste, which
+   broke the first time one site's accent changed. What belongs here: values that MUST be identical
+   across apps (surfaces, text, lines, accent, elevation). What doesn't: anything one app alone has an
+   opinion about — those live in that app. A token nothing else consumes is a global variable, not a
+   design system. */
+/* LIGHT AND DARK ARE NOT SYMMETRIC. In dark, --panel sits BETWEEN --bg and --line, so the border
+   separates from each cheaply. In light, --panel is #fff (end of the scale), so --line must be darker
+   than page AND card; pushing it dark enough to read on --bg (1.45:1) lands it at a heavier 1.68:1 on
+   white. So light buys a visible edge on the card (1.51:1, where the eye looks) and lets --panel/--bg
+   and the shadow carry separation from the page. The failure this fixes: --line was #e5e8f1 (1.06:1 on
+   --bg) — the most-used token, invisible against the page, so cards dissolved into the wash. */
 :root {
   /* The page ground, tuned in the colour lab: a bluer, brighter base than the old #e4e8f2. Cards sit
      on it via their shadow and a stronger accent tint rather than a big lightness step. */
@@ -45,9 +28,9 @@
      the page, and bluer rather than greyer, so it reads as the palette and not as a border. */
   --line: #ccd2e2;
 
-  /* The platform accent: navy. Both front ends key off this — buttons, rails, links, the page wash,
-     and the gradient wordmark. It is the one token most likely to be reached for by an app that
-     wants to look different; resist that, and add a named app-level token instead. */
+  /* The platform accent: navy. Both front ends key off it — buttons, rails, links, the page wash, the
+     gradient wordmark. The one token most likely to be reached for by an app wanting to look different;
+     resist that, add a named app-level token instead. */
   --accent: #1e3a8a;
   --accent2: #1fb6d0;
   --accent-ink: #fff;

@@ -1,30 +1,17 @@
 /**
  * The shared content volume: serving the résumé off it, and the admin route that replaces it.
  *
- * ── Why this file exists ────────────────────────────────────────────────────────────────────────
- * The résumé lives on a PersistentVolume rather than in this image, because it changes on a different
- * clock than the code that serves it (the same reason platform-version.json and the quiz's card decks
- * do). Replacing it used to need `pv-content.sh set-resume`, which needs kubectl, a throwaway writer
- * pod, AND a rollout of this deployment.
+ * The résumé lives on a PersistentVolume, not in this image, because it changes on a different clock
+ * than the code (like platform-version.json and the quiz's card decks). It used to arrive as a subPath
+ * single-file mount over /app/dist/client/resume.pdf — a bind mount pinned to the source file's INODE
+ * at container start. Replacing the file gives it a new inode (`kubectl cp` untars = unlink + create),
+ * and the mount serves the old, unlinked inode for the pod's life; a DIRECTORY mount resolves names per
+ * lookup and saw the new inode immediately. So the fix is not a cache flush — there was none — but to
+ * read through the directory mount per request, exactly as versions.ts reads platform-version.json. The
+ * subPath mount is gone from the values file; this module replaces it.
  *
- * ── Why the rollout was needed, and why it no longer is ─────────────────────────────────────────
- * The résumé used to arrive as a subPath single-file mount over /app/dist/client/resume.pdf. A subPath
- * mount is a bind mount resolved to the source file's INODE at container start. Replacing the file on
- * the volume gives it a new inode — `kubectl cp` untars, which unlinks and recreates — and the mount
- * goes on serving the old inode, which is unlinked but still referenced, forever. Measured, not
- * theorised: volume inode 2495958, the pod's subPath mount still reading 2496037, same bytes served
- * indefinitely. The DIRECTORY mount in the same pod saw the new inode immediately, because a directory
- * mount resolves names on every lookup.
- *
- * So the fix is not a cache flush — there was never a cache to flush. It is to read through the
- * directory mount, per request, exactly as versions.ts already reads platform-version.json and for
- * exactly the same stated reason. The subPath mount is gone from the values file; this module is what
- * replaces it.
- *
- * ── Shape ───────────────────────────────────────────────────────────────────────────────────────
- * One module, because the guard, the allowlist and the write are three faces of one decision: what a
- * caller is allowed to put on this volume. Mirrors the quiz's progress.ts (guard + routes +
- * mountX(app, …) in one file).
+ * One module, because guard, allowlist and write are three faces of one decision — what a caller may
+ * put on this volume. Mirrors the quiz's progress.ts.
  */
 
 import { randomUUID } from 'node:crypto';
@@ -35,23 +22,17 @@ import express, { type Express, type NextFunction, type Request, type Response }
 import { type JWTVerifyGetKey, createRemoteJWKSet, jwtVerify } from 'jose';
 import type { Env } from './env.js';
 
-// ---------------------------------------------------------------------------------------------
-// What may be written
-// ---------------------------------------------------------------------------------------------
+// --- What may be written ---
 
 /**
- * An ALLOWLIST, not a sanitiser — and the difference is the whole security argument here.
+ * An ALLOWLIST, not a sanitiser. A sanitiser accepts an arbitrary path and tries to prove it harmless
+ * — a game you lose to the next encoding. This matches exactly two SHAPES and refuses everything else:
+ * `..` cannot match `[a-z0-9]`, so traversal is unrepresentable, not defended against.
  *
- * A sanitiser accepts an arbitrary path and tries to prove it harmless, which is a game you lose to
- * the next encoding nobody thought of. This accepts an arbitrary string and asks whether it is one of
- * exactly two SHAPES. Everything else is refused without being reasoned about. `..` cannot match
- * `[a-z0-9]`, so traversal here is not defended against — it is unrepresentable.
- *
- * platform-version.json is deliberately absent. It is the record of what is deployed, written by the
- * version-writer hook on every release; a web server able to rewrite it could lie about the platform's
- * own version. Note that NOTHING ELSE stops it: /content is owned 1000:1000 and this process is uid
- * 1000, and POSIX takes rename/unlink permission from the DIRECTORY's write bit, not the target file's
- * owner. Once /content is writable, this list is the only control that exists. It has a test.
+ * platform-version.json is deliberately absent: the deploy pipeline owns it, and a web server able to
+ * rewrite it could lie about the platform's version. Nothing else stops that — /content is owned
+ * 1000:1000, this process is uid 1000, and POSIX takes rename/unlink permission from the DIRECTORY's
+ * write bit, not the file's owner — so once /content is writable this list is the only control. Tested.
  */
 const RESUME = 'resume.pdf';
 const CARD = /^cards\/[a-z0-9][a-z0-9-]{0,63}\.yaml$/;
@@ -59,14 +40,12 @@ const CARD = /^cards\/[a-z0-9][a-z0-9-]{0,63}\.yaml$/;
 /**
  * The résumé's cache-busting UID, written beside it on the volume.
  *
- * #37 made a résumé swap live on the next request from THIS server — no cache here, read per request.
- * But this server is not the only cache in front of the file: Cloudflare edge-caches /resume.pdf under
- * a Browser-Cache-TTL it stamps itself (measured: max-age=14400), overriding the origin's no-cache, so
- * a replaced PDF still shows stale in a visitor's browser for hours. That is an edge cache we cannot
- * flush from here. The fix is to make the URL itself change: the page links the extensionless /resume,
- * which the server 302s to /resume-<uid>.pdf — a url the edge has never seen — and that versioned url,
- * naming one exact version, is then cached hard, which is correct. Every writer of the résumé mints a
- * fresh UID here: `pv-content.sh set-resume`, and the admin PUT route below.
+ * A swap is live on the next request from THIS server (no cache, read per request), but Cloudflare
+ * edge-caches /resume.pdf under its own Browser-Cache-TTL (max-age=14400), overriding the origin's
+ * no-cache, so a replaced PDF shows stale for hours and we cannot flush that edge. The fix is to change
+ * the URL: the page links extensionless /resume, the server 302s to /resume-<uid>.pdf (a url the edge
+ * has never seen), and that versioned url is cached hard — correct, since it names one exact version.
+ * Every writer of the résumé mints a fresh UID: `pv-content.sh set-resume` and the admin PUT below.
  */
 const RESUME_UID = 'resume-uid';
 
@@ -82,9 +61,8 @@ export interface Target {
 /**
  * Resolve a request path to a writable target, or null if it is not one.
  *
- * `contentDir` is a parameter rather than a module constant so the tests can point it at a real temp
- * directory instead of stubbing node:fs — the same convention, for the same reason, as SPEC_PATH in
- * versions.ts. The failure modes worth testing here are precisely the ones a stub would paper over.
+ * `contentDir` is a parameter, not a constant, so tests point it at a real temp dir instead of stubbing
+ * node:fs (as SPEC_PATH does in versions.ts) — a stub would paper over the failure modes worth testing.
  */
 export function resolveTarget(name: string, contentDir: string): Target | null {
   const root = resolve(contentDir);
@@ -97,32 +75,24 @@ export function resolveTarget(name: string, contentDir: string): Target | null {
   if (!spec) return null;
 
   const abs = resolve(root, name);
-  // Belt and braces, and deliberately unreachable: the patterns above cannot express a traversal, so
-  // this can never fire today. That is exactly why it is here — it is what catches the day someone
-  // widens CARD to allow a slash or a dot.
+  // Deliberately unreachable today (the patterns can't express a traversal) — here to catch the day
+  // someone widens CARD to allow a slash or a dot.
   if (abs !== root && !abs.startsWith(root + sep)) return null;
   return { abs, ...spec };
 }
 
-// ---------------------------------------------------------------------------------------------
-// Who may write
-// ---------------------------------------------------------------------------------------------
+// --- Who may write ---
 
 /**
  * Bearer required, and the token must carry a signed `admin` claim.
  *
- * Copied from data-driven-quiz-server's requireAuth and open-vMCP's requireAdminForWrites rather than
- * imported: they live in other repos and there is no shared server package. A third copy is the signal
- * to make one.
+ * Copied from the quiz's requireAuth and open-vMCP's requireAdminForWrites, not imported (other repos,
+ * no shared server package); a third copy is the signal to make one. The `admin` claim is computed and
+ * SIGNED by platform-auth from the AUTH_ADMINS secret this service cannot read (platform-auth/src/
+ * tokens.ts) — so home enforces a policy it cannot grant itself or widen from this repo's config.
  *
- * The `admin` claim is computed and SIGNED by platform-auth, from the AUTH_ADMINS secret that this
- * service cannot read (platform-auth/src/tokens.ts). home therefore enforces a policy it is not
- * allowed to know, which is the point: nothing here can grant itself the role, and nothing in this
- * repo's config can widen it.
- *
- * `jwks` is a parameter with a default purely so the tests can verify REAL RS256 tokens against a real
- * local key set instead of stubbing jose. The failures worth testing — alg confusion, a wrong issuer,
- * an expired token — are the exact ones a stubbed verifier asserts out of existence.
+ * `jwks` is a parameter with a default so tests verify REAL RS256 tokens against a real local key set
+ * instead of stubbing jose — alg confusion, wrong issuer, expiry are exactly what a stub asserts away.
  */
 export function requireAdmin(env: Env, jwks: JWTVerifyGetKey = createRemoteJWKSet(new URL(env.authJwksUri))) {
   return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
@@ -154,33 +124,24 @@ export function requireAdmin(env: Env, jwks: JWTVerifyGetKey = createRemoteJWKSe
   };
 }
 
-// ---------------------------------------------------------------------------------------------
-// The write
-// ---------------------------------------------------------------------------------------------
+// --- The write ---
 
 /**
- * Write, then rename. A reader sees either the whole old file or the whole new one, never a torn PDF.
+ * Write, then rename — a reader sees the whole old file or the whole new one, never a torn PDF.
  *
- * The temp file MUST live in the target's own directory. /tmp is the chart's emptyDir — a different
- * filesystem — and rename(2) across filesystems fails EXDEV. That is the classic version of this bug:
- * it passes every local test, where both paths are one disk, and fails only in the cluster.
+ * The temp file MUST live in the target's own directory: /tmp is the chart's emptyDir, a different
+ * filesystem, and rename(2) across filesystems fails EXDEV — passes every local test (one disk), fails
+ * only in the cluster. Atomic replace works here only BECAUSE the subPath mount is gone; while the
+ * résumé was bind-mounted, rename gave it a new inode and the mount kept serving the old one.
  *
- * Atomic replace is available here only BECAUSE the subPath mount is gone. While the résumé was a
- * bind-mounted file, rename gave it a new inode and the mount kept serving the old one — the safe way
- * to write and the way that worked were opposites. Removing the mount reconciled them.
- *
- * The temp name is dot-prefixed and .part-suffixed so a crashed write leaves something matching
- * neither CARD above nor the *.yaml glob the quiz loads. It is inert, and `pv-content.sh ls` will show
- * it — which is the right amount of visible.
+ * The temp name is dot-prefixed and .part-suffixed so a crashed write leaves something matching neither
+ * CARD nor the quiz's *.yaml glob — inert, and visible to `pv-content.sh ls`.
  */
 export async function writeAtomic(abs: string, data: Buffer, root: string): Promise<void> {
-  // The volume must already BE there, and this is what insists on it.
-  //
-  // Without it, mkdir(recursive) below would cheerfully CREATE /content on the container's own
-  // filesystem whenever the volume is not mounted, and the upload would report ok:true while writing
-  // to a directory that vanishes with the pod. In the cluster that is masked today only by
-  // readOnlyRootFilesystem — i.e. correctness resting on an unrelated flag staying set. A missing
-  // mount is ENOENT, and it stays ENOENT: this code does not get to invent the volume.
+  // The volume must already BE there. Without this, mkdir(recursive) below would CREATE /content on the
+  // container's own filesystem when the volume is unmounted, reporting ok:true while writing to a
+  // directory that vanishes with the pod (masked today only by readOnlyRootFilesystem — correctness
+  // resting on an unrelated flag). A missing mount is ENOENT and stays ENOENT.
   await access(root, constants.F_OK);
 
   const dir = dirname(abs);
@@ -227,11 +188,9 @@ export async function contentWritable(dir: string): Promise<boolean> {
 }
 
 /**
- * A volume problem is 503, not 500 and never 4xx.
- *
- * The request was fine and the server simply cannot do it right now — and the distinction is what
- * tells whoever is reading whether to look at their curl or at the values file. Anything not listed
- * here is a bug in this code and is allowed to 500 rather than be dressed up as a config problem.
+ * A volume problem is 503, not 500 and never 4xx: the request was fine, the server just can't do it
+ * now — which tells the reader to look at the values file, not their curl. Anything not listed here is
+ * a bug in this code and is allowed to 500 rather than be dressed up as a config problem.
  */
 function volumeFault(err: NodeJS.ErrnoException): { status: number; error: string; code: string } | null {
   switch (err.code) {
@@ -248,29 +207,22 @@ function volumeFault(err: NodeJS.ErrnoException): { status: number; error: strin
   }
 }
 
-// ---------------------------------------------------------------------------------------------
-// Serving
-// ---------------------------------------------------------------------------------------------
+// --- Serving ---
 
 /**
- * The résumé, read per request. No cache — that is the entire point of the change.
+ * The résumé, read per request. No cache — the point of the change. Same reasoning as platformVersion()
+ * in versions.ts: a cache would invisibly reintroduce the staleness the per-request read removes, and
+ * be defeated by `pv-content.sh`, which writes the volume directly and calls no invalidation hook.
  *
- * Same reasoning as platformVersion() in versions.ts: a cache here would reintroduce precisely the
- * staleness the per-request read exists to remove, and it would do it invisibly. It would also be
- * defeated by the writer that is not this process — `pv-content.sh` still writes this volume directly
- * and would never call an invalidation hook.
- *
- * `seed` is the copy Vite bakes into the image from public/resume.pdf. It answers before the volume is
- * seeded and when there is no volume at all (npm run dev). It is not a fallback bolted on: it is the
- * same file express.static would have served, now reached deliberately rather than by accident of a
- * mount. Both are parameters, not constants, so tests use real files.
+ * `seed` is the copy Vite bakes in from public/resume.pdf — it answers before the volume is seeded and
+ * when there is none (npm run dev), the same file express.static would serve, reached deliberately.
+ * Both are parameters, not constants, so tests use real files.
  */
 export function serveResume(contentDir: string, seed: string, cacheControl = 'no-cache') {
   return (_req: Request, res: Response): void => {
-    // no-cache = revalidate every time (it does NOT mean "do not store"). serve-static's default for
-    // this path is already equivalent; saying it means the rule survives someone changing that default.
-    // The versioned /resume-<uid>.pdf route overrides this with `immutable`: that url names one exact
-    // version that will never change, so caching it for a year is correct rather than a bug.
+    // no-cache = revalidate every time (NOT "do not store"). serve-static's default here is already
+    // equivalent; stating it survives a default change. The versioned /resume-<uid>.pdf route overrides
+    // with `immutable` — that url names one unchanging version, so a year's cache is correct.
     const opts = { headers: { 'Cache-Control': cacheControl } };
     res.sendFile(join(contentDir, RESUME), opts, (err) => {
       // headersSent means the stream died mid-flight — the response is already committed and there is
@@ -284,10 +236,9 @@ export function serveResume(contentDir: string, seed: string, cacheControl = 'no
 }
 
 /**
- * The current résumé UID off the volume, or null when the file is absent (a dev checkout, or before
- * the first résumé write) or malformed. `contentDir` is a parameter for the same reason serveResume's
- * is — the tests point it at a real temp dir. Callers treat null as "no versioned url yet" and serve
- * the résumé at its bare path, so a missing UID degrades to #37's behaviour rather than 404ing.
+ * The current résumé UID off the volume, or null when the file is absent (dev checkout, or pre-first-
+ * write) or malformed. `contentDir` is a parameter as in serveResume, for tests. Callers treat null as
+ * "no versioned url yet" and serve the bare path, so a missing UID degrades rather than 404ing.
  */
 export function resumeUid(contentDir: string): string | null {
   try {
@@ -304,10 +255,9 @@ export function resumeUid(contentDir: string): string | null {
 export const resumePath = (uid: string): string => `/resume-${uid}.pdf`;
 
 /**
- * A fresh five-digit UID that differs from `prev`. Differing is the whole point — an identical UID
- * would leave the url unchanged and the edge cache unbusted — so this re-rolls until it does. The
- * space is 100k and only the previous value is excluded, so it returns on the first try ~99.999% of
- * the time; the loop is correctness, not a hot path.
+ * A fresh five-digit UID differing from `prev` — an identical one would leave the url and the edge
+ * cache unchanged, so it re-rolls until it differs. 100k space, only `prev` excluded, so it returns
+ * first try ~99.999% of the time; the loop is correctness, not a hot path.
  */
 export function mintResumeUid(prev: string | null = null): string {
   let uid = prev;
@@ -317,9 +267,7 @@ export function mintResumeUid(prev: string | null = null): string {
   return uid;
 }
 
-// ---------------------------------------------------------------------------------------------
-// Mounting
-// ---------------------------------------------------------------------------------------------
+// --- Mounting ---
 
 export interface MountOpts {
   env: Env;
@@ -328,16 +276,12 @@ export interface MountOpts {
 }
 
 /**
- * Register the admin write route — but ONLY when a verifier exists.
- *
- * Same shape as the quiz's mountProgress, which returns early with no DATABASE_URL: the routes simply
- * do not exist. Not registered-and-disabled, and the difference matters more here than it does there.
- * A disabled route puts the safety of the whole feature on one `if` inside a handler staying correct
- * forever; an unregistered one makes "open by accident" unrepresentable. The quiz's worst case is
- * unsynced progress. This one's is an unauthenticated write to a shared volume.
- *
- * The 404 a caller then gets is also honest: in a dev checkout, the endpoint genuinely is not there.
- * The cost is silence, and the boot log in index.ts pays it.
+ * Register the admin write route — ONLY when a verifier exists. Like the quiz's mountProgress with no
+ * DATABASE_URL, the routes simply do not exist rather than being registered-and-disabled: an
+ * unregistered route makes "open by accident" unrepresentable, where a disabled one rests on one `if`
+ * staying correct forever. It matters more here — the worst case is an unauthenticated write to a
+ * shared volume. The resulting 404 is honest (in a dev checkout the endpoint really isn't there); the
+ * cost is silence, which the boot log in index.ts pays.
  */
 export function mountContent(app: Express, opts: MountOpts): void {
   const { env } = opts;
@@ -365,17 +309,12 @@ export function mountContent(app: Express, opts: MountOpts): void {
         });
         return;
       }
-      // Narrowed ONCE into a local, and then only the local is used — never req.body again.
-      //
-      // Not a Buffer means the global express.json already consumed the stream — i.e. the caller sent
-      // Content-Type: application/json, which this endpoint does not accept. Naming that explicitly
-      // turns a confusing interaction between two parsers into a clean, tested 415.
-      //
-      // Reading `req.body.length` later would also be a genuine type-confusion hazard rather than a
-      // pedantic one: req.body is whatever a parser put there, so on another path it could be an array
-      // or a string, and `.length` would then silently mean "number of elements" or "number of UTF-16
-      // code units" instead of bytes — the same name, three meanings, no error. The guard is what makes
-      // it a Buffer; the local is what makes that guarantee survive to the places that use it.
+      // Narrowed ONCE into a local; req.body is never read again. Not a Buffer means the global
+      // express.json already consumed the stream — the caller sent Content-Type: application/json,
+      // which this endpoint rejects with a clean 415. Reading req.body.length later would be a real
+      // type-confusion hazard: on another path req.body could be an array or string, and `.length`
+      // would silently mean elements or UTF-16 units, not bytes. The local makes the Buffer guarantee
+      // survive to its uses.
       const body: unknown = req.body;
       if (!Buffer.isBuffer(body) || body.length === 0) {
         res.status(415).json({ error: `send the bytes with Content-Type: ${target.accepts[0]}` });
@@ -401,65 +340,45 @@ export function mountContent(app: Express, opts: MountOpts): void {
       } catch (err) {
         const fault = volumeFault(err as NodeJS.ErrnoException);
         if (!fault) throw err;
-        // Newlines stripped INLINE, the same idiom index.ts uses on the greeting it relays. Belt and
-        // braces — nothing is logged until `name` has passed the allowlist, and neither shape it
-        // admits can hold a newline — but a log is read by people and parsed by machines, and a
-        // value carrying \r\n can forge a second entry. Hold the property where the value is used
-        // rather than re-deriving it from a regex further up that a later edit may widen.
-        // The regex and its empty replacement are both deliberate — see the note at the sink below.
-        // `fault.code` is a literal from volumeFault's own switch, not err.code off the caught error:
-        // the error came from a filesystem call on a caller-supplied path, so its fields are the
-        // caller's data. The switch has already decided which of four codes this is, so echoing its
-        // own constant says exactly the same thing while owning the string.
+        // Newlines stripped at the sink (see the note below the success log for why the exact regex
+        // form is load-bearing): `name` passed the allowlist so can't hold a newline, but hold the
+        // property where the value is used. `fault.code` is volumeFault's own switch constant, not
+        // err.code off the caught error — that error's fields are caller data from a filesystem call.
         console.error(`[content] write ${name.replace(/\n|\r/g, '')} failed: ${fault.code}`);
         res.status(fault.status).json({ error: fault.error });
         return;
       }
 
-      // A new résumé is a new version, so it gets a new cache-busting UID — the same mint the deploy
-      // script does, so both write paths behave identically. After the résumé write, not before: a UID
-      // pointing at a résumé that failed to land would 302 visitors to a 404. The tiny window between
-      // the two writes (both atomic, same volume) can only leave the OLD UID against the NEW résumé,
-      // which still serves — never a dangling pointer. See resumeUid/mintResumeUid.
+      // A new résumé gets a new cache-busting UID (same mint as the deploy script). After the write,
+      // not before: a UID pointing at a résumé that failed to land would 302 visitors to a 404. The
+      // window between the two atomic writes can only leave the OLD UID against the NEW résumé, which
+      // still serves — never a dangling pointer.
       if (name === RESUME) {
         const next = mintResumeUid(resumeUid(env.contentDir));
         await writeAtomic(join(env.contentDir, RESUME_UID), Buffer.from(next), env.contentDir);
       }
 
-      // The size is READ BACK off the volume rather than taken from the request body's length, and it
-      // is worth the extra stat(2). This repo's deploy script states the principle outright — "read it
-      // back rather than trusting the command that set it; every silent failure this platform has had
-      // was a step that reported success without being checked" — and it applies exactly here: this
-      // number is the receipt for a write, so it should describe the file that now exists rather than
-      // the buffer we hoped we wrote. It also cannot disagree with the volume, which `body.length`
-      // could if the write were ever partial.
+      // Size is READ BACK off the volume, not taken from body.length — worth the extra stat(2). This
+      // number is the receipt for a write, so it should describe the file that now exists, and cannot
+      // disagree with the volume the way body.length could on a partial write.
       const written = await stat(target.abs);
 
-      // Newlines stripped where the value is USED, not argued about. Belt and braces: nothing is
-      // logged until `name` has passed the allowlist, and neither shape it admits can hold a newline
-      // — but a log is read by people and parsed by machines, and a value carrying \r\n can forge a
-      // second entry. Better a property held at the sink than one re-derived from a regex further up
-      // that a later edit may widen.
+      // Newlines stripped at the sink: `name` passed the allowlist so can't hold a newline, but a \r\n
+      // in a log can forge a second entry, so hold the property where the value is used.
       //
-      // The EXACT form is load-bearing, and only for a reader outside this file: CodeQL's log-injection
-      // sanitiser recognises a global replace only when BOTH hold — the regex yields the constant "\n"
-      // or "\r", and the replacement is the empty string. So:
-      //
-      //   /[\r\n]/g -> ' '   taint flows straight through; a character class is not a constant term
-      //   /\n|\r/g  -> ' '   still flows; the replacement is not empty
+      // The EXACT form is load-bearing for CodeQL's log-injection sanitiser, which recognises the strip
+      // only when the regex yields the constant "\n"/"\r" AND the replacement is empty string:
+      //   /[\r\n]/g -> ' '   flows through — a character class is not a constant term
+      //   /\n|\r/g  -> ' '   flows through — the replacement is not empty
       //   /\n|\r/g  -> ''    recognised — the alert clears
-      //
-      // All three behave identically at runtime. Established by reading the SARIF dataflow, which showed
-      // the first two being STEPPED THROUGH rather than stopped at, not by guessing. Don't "simplify"
-      // this to a character class or a nicer-looking space: it silently re-opens a scanner finding.
+      // All three behave identically at runtime (established from the SARIF dataflow). Don't "simplify"
+      // to a character class or a space: it silently re-opens the finding.
       console.log(`[content] wrote ${name.replace(/\n|\r/g, '')}`);
       res.json({
         ok: true,
         bytes: written.size,
-        // The résumé is live on the very next request: nothing to notify, nothing to invalidate,
-        // because there is no cache. Cards are NOT — the quiz builds its decks once at startup, so a
-        // deck written here changes nothing until that pod restarts. Saying so is the difference
-        // between a response and a lie.
+        // The résumé is live on the next request (no cache). Cards are NOT — the quiz builds decks
+        // once at startup, so a deck written here changes nothing until that pod restarts.
         ...(name === RESUME ? {} : { note: 'cards take effect on the quiz’s next restart' }),
       });
     },

@@ -12,11 +12,8 @@ import { paintVersions } from './versions.js';
 import { pageHtml } from './view.js';
 
 /**
- * Put the page on the screen and start it running.
- *
- * Everything above this is a module that does one job: `view` builds HTML from data, `liveness` asks
- * the gateway what is up, `greet` handles the first-visit dialog, `util`/`icons`/`diagrams` are
- * plumbing and assets. This file is the only place that knows the order they go in.
+ * Put the page on the screen and start it running. Each import above does one job; this file is the
+ * only place that knows the order they go in.
  */
 export function mount(): void {
   document.getElementById('app')!.innerHTML = pageHtml();
@@ -25,9 +22,9 @@ export function mount(): void {
   // Same reason, and it must run after the cards exist: it measures them.
   featRail();
 
-  // Wheel over the featured banner scrolls it horizontally — the same gesture the quiz's shop rows
-  // use. A vertical wheel on a horizontal-scroll strip is otherwise dead, or worse, scrolls the page
-  // out from under the thing you are trying to pan. Only when there is actually overflow to pan.
+  // Wheel over the featured banner scrolls it horizontally (as the quiz's shop rows do). A vertical
+  // wheel on a horizontal strip is otherwise dead, or scrolls the page out from under you. Only when
+  // there's overflow to pan.
   document.querySelectorAll<HTMLElement>('.feat-banner').forEach((row) => {
     row.addEventListener(
       'wheel',
@@ -40,22 +37,17 @@ export function mount(): void {
     );
   });
 
-  // What every component is actually running. Fetched ONCE — no timer, unlike liveness below: a
-  // version cannot change without a new image, and a new image means new pods, so the only thing that
-  // can change it is a deploy the visitor has to reload the page to see anyway.
+  // What every component is running. Fetched ONCE — no timer, unlike liveness: a version can't change
+  // without a new image (hence new pods), a deploy the visitor must reload to see anyway.
   void paintVersions();
 
-  // Identity, shared with every other front end — the gate, the account FAB and sign-out all live in
-  // @platform/ui so the three apps cannot grow three different opinions about what signing out means.
-  //
-  // The home page has no gated routes, so a blocking sign-in wall on arrival would be pure friction —
-  // and a modal that greets a visitor with "pick an account" scares more people off than it converts.
-  // So a first visitor is defaulted to guest (silently, inside mountAccountFab) and the account FAB
-  // wears a one-time red nudge inviting them to create a real account — which is what benefits the
-  // quiz. The FAB opens straight onto the gate's three-option chooser (create / I have a code /
-  // continue as guest); creating an account ends on the optional "who stopped by?" greeting, which is
-  // relayed to a private Discord webhook (POST /api/hello) — home-page only, since that is where the
-  // webhook lives.
+  // Identity, shared with every other front end — gate, account FAB and sign-out all live in
+  // @platform/ui so the three apps can't grow three opinions about what signing out means. Home has no
+  // gated routes, so a blocking sign-in wall would be pure friction: a first visitor is defaulted to
+  // guest (silently, in mountAccountFab) and the FAB wears a one-time red nudge to create a real
+  // account. The FAB opens the gate's three-option chooser (create / I have a code / guest); creating
+  // one ends on the optional "who stopped by?" greeting, relayed to a private Discord webhook
+  // (POST /api/hello) — home-page only, since that's where the webhook lives.
   mountAccountFab({
     nudgeGuest: true,
     onUpgrade: () => mountGate({ greetUrl: '/api/hello', onDone: () => {} }),

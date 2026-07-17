@@ -1,9 +1,8 @@
 import { z } from 'zod';
 
 /**
- * Every value resolved and validated once, at import. A missing signing key or pepper is a fatal
- * misconfiguration, and it should stop the process at boot with a message naming the variable —
- * not surface later as a 500 on somebody's first sign-in.
+ * Every value resolved and validated once, at import. A missing signing key or pepper is fatal and
+ * should stop the process at boot naming the variable, not surface as a 500 on someone's first sign-in.
  */
 const Schema = z.object({
   PORT: z.coerce.number().default(8002),
@@ -13,18 +12,17 @@ const Schema = z.object({
   AUTH_SIGNING_KEY: z.string().min(1, 'AUTH_SIGNING_KEY is required (PKCS#8 PEM)'),
 
   /**
-   * The pepper folded into every password hash. The per-row salt defends users from one another; the
-   * pepper defends all of them from a dump. Without it a stolen database — salts and all — cannot be
-   * dictionary-attacked, because the secret it needs never lives alongside the data it protects. Kept
-   * under its original name so existing sealed secrets and deploys keep working across this change.
+   * The pepper folded into every password hash. The per-row salt defends users from each other; the
+   * pepper defends all from a dump — a stolen database (salts and all) can't be dictionary-attacked
+   * without a secret that never lives beside the data. Kept under its original name so existing sealed
+   * secrets and deploys keep working.
    */
   AUTH_CODE_PEPPER: z.string().min(32, 'AUTH_CODE_PEPPER must be at least 32 chars'),
 
   /**
-   * The elevated users, as a comma-separated list of usernames. A SECRET, not config — not because
-   * the names are hard to guess (they are printed on a dashboard), but because the list is a policy
-   * decision and policy belongs with the thing that enforces it. Changing who is an admin should
-   * require the same ceremony as changing a signing key, not a ConfigMap edit anyone can make.
+   * The elevated users, comma-separated usernames. A SECRET, not config — not because the names are
+   * secret (they're on a dashboard) but because the list is a policy decision, and changing who is an
+   * admin should take the same ceremony as changing a signing key, not a ConfigMap edit.
    */
   AUTH_ADMINS: z.string().default(''),
 

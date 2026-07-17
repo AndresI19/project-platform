@@ -15,10 +15,9 @@ const app = express();
 app.set('trust proxy', true);
 app.use(express.json({ limit: '8kb' }));
 
-// A coarse global cap, layered over the fine-grained per-identity login limiter in routes/auth.ts —
-// that one defends the login endpoint specifically against credential brute force; this covers every
-// route as defence-in-depth. Per-process (single replica), consistent with that limiter's own
-// deliberate single-replica design.
+// A coarse global cap over the fine-grained login limiter in routes/auth.ts (which defends the login
+// endpoint against credential brute force); this covers every route as defence-in-depth. Per-process
+// (single replica), like that limiter.
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   limit: 1000,
@@ -35,11 +34,10 @@ app.get('/health', (_req, res) => {
   res.json({ status: 'ok' });
 });
 
-// The version this image was built from. Baked into <root>/VERSION by the Dockerfile, which
-// k8s/deploy.sh stamps from the repo's latest git tag (suffixed -snapshot when the source differs
-// from main). This file is dist/index.js in the image, so the app root is one directory up. Read once
-// at startup — it cannot change without a new image. Absent in a dev checkout, hence "snapshot": an
-// untagged build must not claim to be a release.
+// The version this image was built from. Baked into <root>/VERSION by the Dockerfile, stamped by
+// k8s/deploy.sh from the git tag (-snapshot off main). This file is dist/index.js, so the root is one
+// dir up. Read once at startup — it can't change without a new image. Absent in a dev checkout, hence
+// "snapshot": an untagged build must not claim to be a release.
 const VERSION = ((): string => {
   try {
     const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -53,11 +51,9 @@ app.get('/version', (_req, res) => {
 });
 
 /**
- * The public keys. Everything downstream — the MCP gateway today, the quiz API next — fetches this
- * and verifies tokens on its own. That is the point of RS256: a verifier holds nothing that could
- * mint a token, so compromising one does not compromise every identity on the platform.
- *
- * Cached hard, because it changes only when the signing key rotates, and every verifier fetches it.
+ * The public keys. Everything downstream fetches this and verifies tokens on its own — the point of
+ * RS256: a verifier holds nothing that could mint a token, so compromising one doesn't compromise
+ * every identity. Cached hard, since it changes only when the signing key rotates.
  */
 app.get('/.well-known/jwks.json', async (_req, res) => {
   res.set('cache-control', 'public, max-age=300');

@@ -1,24 +1,14 @@
-/* The platform's base layer: reset, page background, and the content column.
+/* The platform's base layer: reset, page background, content column. Imported AFTER tokens.css and
+   BEFORE an app's stylesheet, so an app can override any of it.
  *
- * Imported AFTER tokens.css and BEFORE an app's own stylesheet, so an app can override any of it.
- *
- * THE CONTENT COLUMN IS SHARED, and this is the only place it is defined.
- *
- * It did not used to be. The apps were each allowed their own width — 1080px here, 940px in the quiz
- * — on the theory that a quiz card reads better tight than a grid of project cards. That was
- * defensible right up until the home page moved to a FLUID column and the quiz did not: the two then
- * differed in kind rather than in degree, and on a wide monitor a 940px quiz sat inside a 1440px
- * home page with visibly different gutters. Two knobs is how they drifted; one knob is how they stop.
- *
- * An app that genuinely needs a tighter measure for prose should reach for --wrap-max-reading below,
- * not re-declare --wrap-max. Re-declaring it is what caused this.
- */
+ * THE CONTENT COLUMN IS SHARED, defined only here. The apps once each had their own width (1080px
+ * here, 940px in the quiz), which drifted once the home page went FLUID and the quiz didn't — on a
+ * wide monitor a 940px quiz sat in a 1440px home page with visibly different gutters. An app needing a
+ * tighter measure for prose reaches for --wrap-max-reading below, not re-declaring --wrap-max. */
 :root {
-  /* Fluid, not fixed. The 1440px cap stops the column sprawling on an ultrawide (a fixed 1080px left
-     a 1920px monitor 44% empty); the 92vw term is what keeps it off the edges on everything narrower
-     — on a 1440px laptop the column becomes 1325px rather than pinning to the frame, and on a phone
-     it is simply 92% of the screen. One formula covers every viewport, which is why there are no
-     width media queries anywhere. */
+  /* Fluid, not fixed. The 1440px cap stops sprawl on an ultrawide (a fixed 1080px left a 1920px monitor
+     44% empty); the 92vw term keeps it off the edges everywhere narrower (1325px on a 1440px laptop,
+     92% of a phone). One formula covers every viewport, so there are no width media queries. */
   --wrap-max: min(1440px, 92vw);
   --wrap-pad: 0 14px 96px;
 

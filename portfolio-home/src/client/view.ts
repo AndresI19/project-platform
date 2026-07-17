@@ -1,7 +1,7 @@
 import { architecturePanel } from './architecture.js';
-// Every builder that turns data into HTML. Pure: data in, string out — no DOM, no fetch, no state.
-// That is the whole reason it is its own module. These were unreachable to a test before, because
-// main.ts rendered the page and started a poll as an import side effect.
+// Every builder that turns data into HTML. Pure: data in, string out — no DOM, no fetch, no state,
+// which is the whole reason it's its own module (main.ts used to render + poll as an import side
+// effect, making these untestable).
 import {
   BIO,
   BIO_CODA,
@@ -78,16 +78,10 @@ export function versionBadge(p: Project): string {
 }
 
 /**
- * The status badges of an entry, as one right-aligned group.
- *
- * Every badge answers the same kind of question — is it live, is it finished, is it featured — so
- * they all belong in the same corner of whatever they describe. They used to be scattered: `live`
- * sat top-right of a featured card while its `work in progress` tag sat on a line of its own
- * underneath, and in the list rows all three trailed the project name inline. Same information,
- * three different places to look for it.
- *
- * `featured` is only meaningful in the list (the banner IS the featured set), so the banner cards
- * pass it over.
+ * The status badges of an entry, as one right-aligned group. Every badge answers the same kind of
+ * question — live, finished, featured — so they belong in one corner; they used to be scattered
+ * across three places. `featured` is only meaningful in the list (the banner IS the featured set),
+ * so the banner cards pass it over.
  */
 function badges(...chips: string[]): string {
   const shown = chips.filter(Boolean);
@@ -100,11 +94,11 @@ export function btn(l: Link, cls = 'btn'): string {
   return `<a class="${cls} ${l.primary ? 'primary' : 'ghost'}" href="${esc(l.href)}"${tab(l.external)}${res}>${esc(l.label)}</a>`;
 }
 
-/** Featured card for a single project. The `kubectl get pods` table needs the full width to avoid
-    wrapping its columns, so a card carrying it gets the same width as a group card. */
+/** Featured card for a single project. The `kubectl get pods` table needs full width to avoid
+    wrapping, so a card carrying it gets the same width as a group card. */
 /** A companion repo credited inside a featured card — the thing that builds/deploys the card's
- *  project. The whole block is one link to its repo; `has-companion` on the card is what tells the
- *  stylesheet to squeeze the diagram beneath it so both fit. */
+ *  project. The block is one link to its repo; `has-companion` tells the stylesheet to squeeze the
+ *  diagram beneath it so both fit. */
 export function featCompanion(c: NonNullable<Project['companion']>): string {
   return `<a class="feat-companion" href="${esc(c.href)}" target="_blank" rel="noopener noreferrer">
     <span class="fc-label">Built &amp; shipped by</span>
@@ -133,10 +127,8 @@ export function featCard(p: Project): string {
   </article>`;
 }
 
-/** The member sub-panels of a group. The banner card and the list row draw these identically and
-    differ only in how their links are styled — a button in the card, a chip in the row — so the
-    panel itself is defined once. It was previously copied verbatim into both, which meant the two
-    could quietly disagree about what a member looks like. */
+/** The member sub-panels of a group. The banner card and the list row draw these identically, differing
+    only in link style (button vs chip), so the panel is defined once rather than copied into both. */
 export function memberPanels(members: Project[], linkCls: string): string {
   return members
     .map(
@@ -153,9 +145,8 @@ export function memberPanels(members: Project[], linkCls: string): string {
     .join('');
 }
 
-/** The head and body of a group — its name, its repo count, its blurb, and its members. The banner
-    card and the list row wrap this in different elements but say the same thing inside; they used to
-    build it separately, which is the same drift memberPanels() was extracted to prevent, one level up. */
+/** The head and body of a group — name, repo count, blurb, members. The banner card and the list row
+    wrap this differently but say the same thing inside; defined once, same reason as memberPanels(). */
 function groupBody(g: Group, linkCls: string, extra: string): string {
   return `<div class="proj-head">
       <span class="proj-name">${esc(g.name)}</span>
@@ -229,9 +220,8 @@ export function groupRow(g: Group): string {
 }
 
 export function expCard(e: Experience): string {
-  // Raised, filled bubbles rather than plain underlined text: these are shipped IBM products a
-  // reader can go read about, which is the strongest evidence on the card — it should not look
-  // like a footnote.
+  // Raised, filled bubbles rather than underlined text: these are shipped IBM products a reader can go
+  // read about — the strongest evidence on the card, so they shouldn't look like a footnote.
   const links = e.links
     .map(
       (l) => `<a class="exp-fab" href="${esc(l.url)}"${tab(true)}>
@@ -251,23 +241,17 @@ export function expCard(e: Experience): string {
 }
 
 /**
- * The whole page, as a string. Pure — the caller is what puts it in the document.
- *
- * It no longer takes a version. It used to be handed `__APP_VERSION__`, which Vite baked in from
- * package.json AT BUILD TIME — a number that changed only when someone remembered to run
- * `npm version`, and that described the source tree rather than the thing actually serving the page.
- * The footer tag is now just another `[data-ver]` slot, filled from /api/versions like every other
- * badge — and it shows the PLATFORM version, not this app's: a tag in the corner of the whole site
- * should say what the whole site is, and the per-project badges already say what each part is.
+ * The whole page, as a string. Pure — the caller puts it in the document. It no longer takes a
+ * version: the footer tag is now a `[data-ver]` slot filled from /api/versions like every other badge,
+ * and it shows the PLATFORM version, not this app's — a tag on the whole site should say what the
+ * whole site is, and the per-project badges already say what each part is.
  */
 export function pageHtml(): string {
   return `
-    <!-- Landscape on a phone. Every picture on this page is drawn for a tall, narrow viewport — the
-         transit maps are 366 units wide and ~700 tall, and the masthead diagram is wider still. Turned
-         sideways a phone has ~390px of HEIGHT, which none of it survives.
-         Gated on max-height, not on orientation alone: 'orientation: landscape' is true of every
-         desktop monitor ever made, and gating on width would catch a tablet held upright. Height is
-         the thing actually in short supply. -->
+    <!-- Landscape on a phone. Every picture here is drawn tall and narrow (the transit maps are 366×~700,
+         the masthead diagram wider); turned sideways a phone has ~390px of HEIGHT, which none survives.
+         Gated on max-height, not orientation: 'orientation: landscape' is true of every desktop monitor,
+         and width would catch a tablet held upright. Height is what's actually short. -->
     <div class="rotate-me">
       <div class="rotate-card">
         <svg viewBox="0 0 24 24" aria-hidden="true" class="rotate-i"><rect x="6" y="2" width="12" height="20" rx="2.5"/><path d="M10 19.5h4"/></svg>
@@ -283,16 +267,14 @@ export function pageHtml(): string {
         <p class="mast-bio coda">${esc(BIO_CODA)}</p>
         <nav class="contact">${CONTACTS.map(contactChip).join('')}</nav>
 
-        <!-- The diagram lives INSIDE the banner and the banner grows to fit it. The bio's closing
-             line is a claim — "everything below is built, hosted, and running right here" — and this
-             is the evidence for it, so it belongs in the same frame rather than in a dialog floating
-             over the page. -->
+        <!-- The diagram lives INSIDE the banner, which grows to fit it. The bio's closing claim
+             ("everything below is built, hosted, and running right here") needs its evidence in the
+             same frame, not a dialog floating over the page. -->
         ${architecturePanel()}
 
-        <!-- An embedded pull-down bar, not a floating button: it is part of the banner's own
-             furniture, spanning it and sitting flush inside its lower edge. A circular FAB read as
-             something stuck ON TOP of the banner; this reads as the banner's own handle, which is
-             what it is. The wide chevron is the affordance. -->
+        <!-- An embedded pull-down bar, not a floating button: it spans the banner flush inside its
+             lower edge, reading as the banner's own handle rather than a FAB stuck on top. The wide
+             chevron is the affordance. -->
         <button class="arch-pull" data-act="architecture" type="button"
                 aria-expanded="false" aria-controls="arch-panel">
           <span class="arch-pull-t">Show me the platform architecture</span>

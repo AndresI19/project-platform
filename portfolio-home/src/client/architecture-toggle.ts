@@ -1,6 +1,6 @@
-// The imperative controller for the architecture panel: the masthead pull-down and the diagram
-// slider. Split out from architecture.ts, which now only BUILDS the markup — this is the part that
-// wires the built DOM up and owns the runtime state (which slide is live, the viewport height).
+// The imperative controller for the architecture panel: the masthead pull-down and diagram slider.
+// Split from architecture.ts (which only BUILDS the markup) — this wires the DOM up and owns the
+// runtime state (which slide is live, the viewport height).
 
 /** Wire the pull-down AND the diagram slider. Called by mount(), after the markup exists. */
 export function architectureToggle(): void {
@@ -10,15 +10,11 @@ export function architectureToggle(): void {
 
   const label = btn.querySelector('.arch-pull-t');
 
-  /* ── The slider ──────────────────────────────────────────────────────────────────────────────
-     A transform track, not a scroll container: the diagrams are different heights, and a transform
-     lets the VIEWPORT own the height so it can animate to the active slide instead of leaving a lake
-     of whitespace under the shorter one.
-
-     Queried BEFORE setOpen is defined, and syncHeight tolerates their absence rather than the function
-     returning early. It used to read the other way round: an early `return` sat between the pull-down's
-     click listener and the `const syncHeight` that listener closes over — so markup without a slider
-     left setOpen holding a reference to a const that was never initialised, and the first click threw
+  /* The slider. A transform track, not a scroll container: the diagrams are different heights, and a
+     transform lets the VIEWPORT own the height so it animates to the active slide instead of leaving
+     whitespace under a shorter one. Queried BEFORE setOpen, and syncHeight tolerates their absence
+     rather than returning early: an early `return` between the click listener and the `const syncHeight`
+     it closes over left setOpen referencing an uninitialised const, so the first click threw
      ReferenceError. A no-op is the honest degradation; a temporal dead zone is not. */
   const tabs = [...mast.querySelectorAll<HTMLButtonElement>('.arch-tab')];
   const track = mast.querySelector<HTMLElement>('.arch-track');
@@ -74,11 +70,10 @@ export function architectureToggle(): void {
     raf = requestAnimationFrame(syncHeight);
   };
 
-  /* WIDTH, not `resize`. Two different things used to be conflated here.
-     `resize` fires on iOS every time the URL bar collapses or reveals on scroll — a HEIGHT change,
-     which cannot alter a diagram's layout. The viewport has `transition: height .4s`, so each one
-     kicked off a 400ms animation, and scrolling the page animated the panel continuously. The only
-     thing that can reflow a diagram is a WIDTH change, so that is what is watched. */
+  /* WIDTH, not `resize`. `resize` fires on iOS every time the URL bar collapses on scroll — a HEIGHT
+     change that can't alter layout — and the viewport's `transition: height .4s` turned each into a
+     400ms animation, so scrolling animated the panel continuously. Only a WIDTH change reflows a
+     diagram, so that's what's watched. */
   let lastWidth = window.innerWidth;
   window.addEventListener('resize', () => {
     if (window.innerWidth === lastWidth) return;
@@ -86,10 +81,9 @@ export function architectureToggle(): void {
     resync();
   });
 
-  /* And `resize` is not enough on its own: it says the WINDOW changed, not that this slide did. A late
-     web font, or an image settling, re-lays the diagram out with no window event at all — leaving the
-     viewport pinned to a stale height with `overflow:hidden` quietly clipping the bottom of the slide.
-     Observing the element asks the real question: did THIS box change size? */
+  /* And `resize` alone isn't enough: it says the WINDOW changed, not this slide. A late web font or a
+     settling image re-lays the diagram out with no window event, pinning the viewport to a stale height
+     while `overflow:hidden` clips the slide. Observing the element asks: did THIS box change size? */
   if (typeof ResizeObserver !== 'undefined') {
     const ro = new ResizeObserver(resync);
     for (const s of slides) ro.observe(s);

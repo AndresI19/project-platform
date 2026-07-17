@@ -1,10 +1,7 @@
 /**
- * The server's entire configuration surface, validated once at boot.
- *
- * Every one of these is optional — the app runs with an empty environment — but a value that IS set
- * and is wrong should fail here, loudly, with the variable named. The alternative is what this
- * replaces: a typo in VMCP_API_BASE meant the liveness probes quietly fetched a nonsense URL and
- * every badge sat at "offline" with nothing in the log to say why.
+ * The server's entire configuration surface, validated once at boot. Every one is optional — the app
+ * runs with an empty environment — but a value that IS set and wrong fails here, named. Otherwise a
+ * typo in VMCP_API_BASE quietly fetched a nonsense URL and every badge sat "offline" with no log.
  */
 
 export interface Env {
@@ -22,12 +19,10 @@ export interface Env {
   /** The length of that window, in seconds. */
   helloRateWindowSeconds: number;
   /**
-   * platform-auth's JWKS endpoint, where the public half of the token-signing key is published.
-   *
-   * UNSET IS A SUPPORTED MODE, and it means one specific thing: the admin upload route is never
-   * registered (see content.ts). It is a switch, not merely a value — which is why the pairing with
-   * AUTH_ISSUER below is validated rather than defaulted. Empty is how `npm run dev` stays one
-   * command with no auth service to talk to.
+   * platform-auth's JWKS endpoint (the public half of the token-signing key). UNSET IS A SUPPORTED
+   * MODE meaning one thing: the admin upload route is never registered (see content.ts) — a switch,
+   * not a value, which is why the AUTH_ISSUER pairing is validated not defaulted. Empty keeps
+   * `npm run dev` one command with no auth service.
    */
   authJwksUri: string;
   /** The issuer those tokens must claim. Required whenever authJwksUri is set — see loadEnv. */
@@ -35,9 +30,9 @@ export interface Env {
   /** The audience those tokens must claim. 'platform', as every other verifier on this cluster uses. */
   authAudience: string;
   /**
-   * The platform-content volume's DIRECTORY mount. The résumé is read from here per request and the
-   * admin route writes here. A directory, deliberately: a single-file subPath mount is pinned to the
-   * file's inode at container start, so a replaced file is never seen. See content.ts.
+   * The platform-content volume's DIRECTORY mount — résumé read per request, admin route writes here.
+   * A directory deliberately: a single-file subPath mount is pinned to the file's inode at container
+   * start, so a replaced file is never seen. See content.ts.
    */
   contentDir: string;
   /** Largest upload body accepted, in bytes. */
@@ -95,12 +90,9 @@ function webhook(raw: string): string {
 }
 
 /**
- * An absolute http(s) URL, PATH AND ALL.
- *
- * Deliberately not absoluteOrigin() above: that one's contract is "not a path", and it strips a
- * trailing slash to keep appended paths clean. A JWKS URI is nothing BUT a path
- * (…/.well-known/jwks.json) and nothing is appended to it. Reusing absoluteOrigin here would make its
- * own doc comment a lie, which is a worse cost than the six duplicated lines.
+ * An absolute http(s) URL, PATH AND ALL. Deliberately not absoluteOrigin(): that strips a trailing
+ * slash to keep appended paths clean, but a JWKS URI is nothing but a path (…/.well-known/jwks.json)
+ * with nothing appended — reusing it would make its own doc comment a lie, worse than six dup lines.
  */
 function absoluteUrl(name: string, raw: string): string {
   const value = raw.trim();
@@ -121,11 +113,9 @@ function absoluteUrl(name: string, raw: string): string {
   return value;
 }
 
-/** An absolute filesystem path, with a default when unset.
- *
- *  Existence is NOT checked, and that is the point: /content does not exist in a dev checkout, and a
- *  dev checkout is a supported mode — the seeded résumé in the image answers and uploads are simply
- *  not registered. Failing boot here would make `npm start` require a Kubernetes volume. */
+/** An absolute filesystem path, default when unset. Existence is NOT checked, deliberately: /content
+ *  doesn't exist in a dev checkout (a supported mode — the seeded résumé answers, uploads aren't
+ *  registered), and failing here would make `npm start` require a Kubernetes volume. */
 function absolutePath(name: string, raw: string | undefined, fallback: string): string {
   const value = (raw ?? '').trim();
   if (!value) return fallback;
@@ -156,10 +146,9 @@ function positiveInt(name: string, raw: string | undefined, fallback: number): n
 export function loadEnv(e: NodeJS.ProcessEnv = process.env): Env {
   const authJwksUri = absoluteUrl('AUTH_JWKS_URI', e.AUTH_JWKS_URI ?? '');
   const authIssuer = absoluteUrl('AUTH_ISSUER', e.AUTH_ISSUER ?? '');
-  // Auth is all-or-nothing. A JWKS URI with no issuer verifies the SIGNATURE and then accepts any
-  // issuer's token — a guard that looks configured, passes a smoke test, and checks nothing about who
-  // minted the claim. Unset is a mode; half-set is a mistake, and it belongs here with the missing
-  // variable named rather than at the first upload.
+  // Auth is all-or-nothing. A JWKS URI with no issuer verifies the SIGNATURE then accepts any issuer's
+  // token — configured-looking, passes a smoke test, checks nothing about who minted the claim. Unset
+  // is a mode; half-set is a mistake, caught here with the variable named, not at the first upload.
   if (authJwksUri && !authIssuer) {
     fail('AUTH_ISSUER', '', 'is required when AUTH_JWKS_URI is set — see content.ts');
   }
