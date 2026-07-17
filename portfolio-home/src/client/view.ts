@@ -100,11 +100,25 @@ export function btn(l: Link, cls = 'btn'): string {
 
 /** Featured card for a single project. The `kubectl get pods` table needs the full width to avoid
     wrapping its columns, so a card carrying it gets the same width as a group card. */
+/** A companion repo credited inside a featured card — the thing that builds/deploys the card's
+ *  project. The whole block is one link to its repo; `has-companion` on the card is what tells the
+ *  stylesheet to squeeze the diagram above it so both fit. */
+export function featCompanion(c: NonNullable<Project['companion']>): string {
+  return `<a class="feat-companion" href="${esc(c.href)}" target="_blank" rel="noopener noreferrer">
+    <span class="fc-label">Built &amp; deployed by</span>
+    <span class="fc-name">${esc(c.name)}</span>
+    <span class="fc-blurb">${esc(c.blurb)}</span>
+  </a>`;
+}
+
 export function featCard(p: Project): string {
   // `data-component` lets the stylesheet give one card its own accent — the quiz is themed gold this
   // way — without a bespoke class per project. Absent for entries that are not deployed components.
   const dc = p.component ? ` data-component="${esc(p.component)}"` : '';
-  return `<article class="feat lux${p.diagram === 'k8s' ? ' wide' : ''}"${dc}>
+  const cls = ['feat', 'lux', p.diagram === 'k8s' ? 'wide' : '', p.companion ? 'has-companion' : '']
+    .filter(Boolean)
+    .join(' ');
+  return `<article class="${cls}"${dc}>
     <div class="feat-top">
       <h3>${esc(p.name)}</h3>
       ${badges(tagChip(p), liveBadge(p), versionBadge(p))}
@@ -112,6 +126,7 @@ export function featCard(p: Project): string {
     <div class="tech">${esc(p.tech)}</div>
     <p class="feat-blurb">${esc(p.blurb)}</p>
     ${media(p)}
+    ${p.companion ? featCompanion(p.companion) : ''}
     ${p.links.length ? `<div class="feat-actions">${p.links.map((l) => btn(l)).join('')}</div>` : ''}
   </article>`;
 }
