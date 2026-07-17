@@ -432,10 +432,16 @@ export function architecturePanel(): string {
       <div class="arch-panel-in">
         <div class="arch-slider">
           <div class="arch-tabs" role="tablist" aria-label="Architecture diagrams">
-            <button class="arch-tab is-active" type="button" role="tab" aria-selected="true" data-slide="0">Platform Topography</button>
-            <button class="arch-tab" type="button" role="tab" aria-selected="false" data-slide="1">CICD</button>
-            <button class="arch-tab" type="button" role="tab" aria-selected="false" data-slide="2">Auth and Entrypoint</button>
-            <button class="arch-tab" type="button" role="tab" aria-selected="false" data-slide="3">Security</button>
+            <!-- TWO LABELS PER TAB, and only ever one of them rendered. Four full labels do not fit
+                 390px — "Platform Topography" and "Auth and Entrypoint" are ~130px each — so the bar
+                 became a scroller and the 4th tab lived off-screen, which is a tab bar that hides a
+                 tab. A phone gets the short name. display:none (not visibility) is what keeps the
+                 hidden one out of the accessibility tree, so a screen reader hears one name; the
+                 aria-label carries the full one at every width. -->
+            <button class="arch-tab is-active" type="button" role="tab" aria-selected="true" data-slide="0" aria-label="Platform Topography"><span class="tab-full">Platform Topography</span><span class="tab-brief">Topology</span></button>
+            <button class="arch-tab" type="button" role="tab" aria-selected="false" data-slide="1" aria-label="CICD"><span class="tab-full">CICD</span><span class="tab-brief">CICD</span></button>
+            <button class="arch-tab" type="button" role="tab" aria-selected="false" data-slide="2" aria-label="Auth and Entrypoint"><span class="tab-full">Auth and Entrypoint</span><span class="tab-brief">Auth</span></button>
+            <button class="arch-tab" type="button" role="tab" aria-selected="false" data-slide="3" aria-label="Security"><span class="tab-full">Security</span><span class="tab-brief">Security</span></button>
           </div>
           <div class="arch-viewport">
             <div class="arch-track">

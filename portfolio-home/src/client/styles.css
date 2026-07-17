@@ -1110,14 +1110,6 @@ section {
   margin-top: 10px;
 }
 
-.foot {
-  color: var(--muted);
-  font-size: 13px;
-  text-align: center;
-  margin-top: 44px;
-  font-style: italic;
-}
-
 /* Build version, pinned bottom-right. Fixed rather than in the footer so it is legible without
    scrolling to the end — it is a "what am I looking at" affordance, not a credit. */
 .vertag {
@@ -3257,5 +3249,205 @@ section {
   /* The body was never given a width — it took what the rail left. Now it takes the row. */
   .proj-body {
     width: 100%;
+  }
+}
+
+/* ══ THE PHONE ═════════════════════════════════════════════════════════════════════════════════════
+   Everything below is 640px-and-under only. The desktop page is unchanged. */
+
+/* ── The gutters ───────────────────────────────────────────────────────────────────────────────────
+   THIS RE-DECLARES --wrap-max, WHICH @platform/ui's base.css EXPLICITLY FORBIDS. Doing it anyway, on
+   purpose, and the reason it is not the drift that comment is guarding against:
+   That rule exists because the apps once each picked their own DESKTOP column — 1080 here, 940 in the
+   quiz — and a wide monitor then showed two different gutters side by side. The knob being turned
+   here is the phone term, and the formula's own comment says what that term is for: "the 92vw term is
+   what keeps it off the edges on everything narrower". On a 390px screen, 8% is 31px of a 390px
+   screen spent holding the content away from an edge it was never going to hit — and then --wrap-pad
+   spends 14 more on each side. 331px of usable width out of 390.
+   The cards are the whole page here, so that is 60px of nothing, and it is why everything inside them
+   was fighting for room. On a phone the edge IS the margin.
+   The quiz has this same 60px and does NOT get it back from here — this is portfolio-home's
+   stylesheet. The principled fix is a phone term in base.css, which is a submodule change and a
+   second PR. Noted rather than smuggled. */
+@media (max-width: 640px) {
+  :root {
+    --wrap-max: 100%;
+    /* 2px, not 0: at 0 the cards' 1px borders sit on the bezel and read as a rendering error rather
+       than an edge. 2px is the smallest gap that still says "this is a card". */
+    --wrap-pad: 0 2px 72px;
+  }
+}
+
+/* ── The bio ───────────────────────────────────────────────────────────────────────────────────────
+   16.5px/1.55 is tuned for the 1080px measure it sits in on a desktop, where it sets in three lines.
+   At 386px that same size sets it in TWELVE, and a 16.5px paragraph twelve lines deep is a wall. The
+   max-width is inert here (the column is narrower than the cap), so the only knobs that matter are
+   size and leading. Both come down; the measure is now the screen. */
+@media (max-width: 640px) {
+  .mast-bio {
+    font-size: 14.5px;
+    line-height: 1.5;
+    margin-top: 10px;
+  }
+  .mast-bio.coda {
+    font-size: 14px;
+    margin: 8px auto 12px;
+  }
+}
+
+/* ── The badges ────────────────────────────────────────────────────────────────────────────────────
+   `margin-left: auto` inside a `flex-wrap: wrap` head is a right-align that gives up: the moment the
+   title and the chips do not both fit — which on a phone is always — the chips wrap onto a line of
+   their own, and "top right" becomes "somewhere in the middle, later". The card is already
+   position:relative (.lux), and the date moved to a left-hand eyebrow when the rows stacked, so the
+   top-right corner is empty and can simply be claimed. Every badge answers the same question, so they
+   keep sharing one corner — the point of badges() in view.ts — it is now a corner they cannot leave. */
+@media (max-width: 640px) {
+  /* CHILD COMBINATORS ALL THE WAY DOWN, and that is the whole rule. `.projects li .badges` is a
+     DESCENDANT match, and a group row contains member panels that each emit their own badges() —
+     so every member's "live" chip was also torn out of its panel and stacked into the card's one
+     top-right corner, on top of the group's "Featured". Two group rows rendered "Featuredlive" as a
+     single smear while the plain rows looked perfect, which is exactly how a too-broad selector
+     presents: correct everywhere it was tested, wrong wherever the DOM is deeper. Only the ROW's own
+     head is the row's corner. */
+  .projects > li > .proj-body > .proj-head > .badges {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    margin-left: 0;
+    z-index: 1;
+  }
+  /* A member's badges stay in the member. They are that panel's business, not the card's. */
+  .projects .member .badges {
+    position: static;
+    margin-left: auto;
+  }
+  /* The head must not run under them. Only the first line needs the room, but reserving it on the
+     whole block is honest and costs nothing the badges were not already taking. */
+  .projects > li > .proj-body > .proj-head {
+    padding-right: 96px;
+    min-height: 20px;
+  }
+}
+
+/* ── The tab bar ───────────────────────────────────────────────────────────────────────────────────
+   With the short labels above, four tabs fit — so the bar stops being a scroller and becomes what it
+   claims to be. `safe center` stays: it is correct at every width and costs nothing once the content
+   fits, and it is what makes the overflow reachable if a fifth diagram ever arrives. */
+.tab-brief {
+  display: none;
+}
+@media (max-width: 640px) {
+  .tab-full {
+    display: none;
+  }
+  .tab-brief {
+    display: inline;
+  }
+  .arch-tabs {
+    width: 100%;
+    padding: 4px;
+    gap: 3px;
+  }
+  .arch-tab {
+    /* They fit now, so let them share the bar evenly rather than each hugging its own label — an
+       even rank reads as "these are the four", which is the fact the bar is for. */
+    flex: 1 1 0;
+    min-width: 0;
+    padding: 7px 4px;
+    font-size: 11.5px;
+    text-align: center;
+    white-space: nowrap;
+  }
+}
+
+/* ── Landscape on a phone ──────────────────────────────────────────────────────────────────────────
+   Gated on HEIGHT. `orientation: landscape` alone is true of every desktop monitor, and a width gate
+   would catch a tablet held upright — the scarce thing when a phone turns is vertical room, so that
+   is what is measured. 500px is above a landscape iPhone (~390) and below any laptop.
+   The max-width term stops a SHORT DESKTOP WINDOW from being told to rotate its phone: height alone
+   is true of a 1400x450 browser window, which is a thing people have. A landscape phone is the only
+   viewport that is both under 950 wide and under 500 tall.
+   The icon is drawn upright on purpose — it shows the phone as it should BE, not as it is. Rotated,
+   it depicted the very orientation being refused.
+   This does lock out someone who cannot rotate — a mounted phone, or a person who holds theirs one
+   way. It is a deliberate trade for a page whose every picture is drawn tall, and it is reversible in
+   one media query. */
+.rotate-me {
+  display: none;
+}
+@media (orientation: landscape) and (max-height: 500px) and (max-width: 950px) {
+  .rotate-me {
+    display: flex;
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    background: var(--bg);
+  }
+  /* The page behind it does not merely hide — it must not scroll under the overlay, or a stray swipe
+     moves a page nobody can see. */
+  body:has(.rotate-me) {
+    overflow: hidden;
+  }
+  .wrap,
+  .vertag {
+    display: none;
+  }
+}
+.rotate-card {
+  max-width: 320px;
+  text-align: center;
+  color: var(--ink);
+}
+.rotate-i {
+  width: 44px;
+  height: 44px;
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+}
+.rotate-t {
+  margin: 14px 0 6px;
+  font-size: 19px;
+  font-weight: 800;
+}
+.rotate-m {
+  margin: 0;
+  font-size: 13.5px;
+  color: var(--muted);
+}
+
+/* ── The masthead ──────────────────────────────────────────────────────────────────────────────────
+   Pulling --wrap-pad to 2px achieves nothing while the panel inside it spends 34px a side: the width
+   was handed back and immediately taken again, and the name — 34px type in the 318px that left —
+   clipped its own last letters against the panel edge. ("Irarragorri" rendered as "Irarragorñ",
+   which is a name, cut, in the largest type on the page.)
+   The type here is explicitly "sized for the column it now sits in" per the comment above; on a phone
+   that column is a different column, so the size follows it down. */
+@media (max-width: 640px) {
+  .masthead {
+    padding: 18px 12px 16px;
+  }
+  .masthead h1 {
+    /* 24, not 26: the account chip is position:fixed at the top-right and its left edge lands at
+       300px on a 390px screen. At 26px the centred name reached 303 and ran under it. The chip is
+       not in flow, so no amount of padding here would have been told about it — the only honest fix
+       is to measure where it actually sits and stay out of its way. */
+    font-size: 24px;
+    letter-spacing: -.4px;
+    /* Long single words in a gradient-clipped heading cannot be allowed to overflow: background-clip
+       does not wrap, it just stops painting. */
+    overflow-wrap: anywhere;
+  }
+  .mast-title {
+    font-size: 13.5px;
+  }
+  /* The cards do the same thing on a smaller scale — 16px a side against a 386px screen. */
+  .projects li {
+    padding: 12px 10px;
   }
 }

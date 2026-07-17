@@ -231,6 +231,19 @@ export function expCard(e: Experience): string {
  */
 export function pageHtml(): string {
   return `
+    <!-- Landscape on a phone. Every picture on this page is drawn for a tall, narrow viewport — the
+         transit maps are 366 units wide and ~700 tall, and the masthead diagram is wider still. Turned
+         sideways a phone has ~390px of HEIGHT, which none of it survives.
+         Gated on max-height, not on orientation alone: 'orientation: landscape' is true of every
+         desktop monitor ever made, and gating on width would catch a tablet held upright. Height is
+         the thing actually in short supply. -->
+    <div class="rotate-me">
+      <div class="rotate-card">
+        <svg viewBox="0 0 24 24" aria-hidden="true" class="rotate-i"><rect x="6" y="2" width="12" height="20" rx="2.5"/><path d="M10 19.5h4"/></svg>
+        <p class="rotate-t">Please rotate your phone</p>
+        <p class="rotate-m">This page is drawn tall — the diagrams need the height.</p>
+      </div>
+    </div>
     <div class="wrap">
       <header class="masthead">
         <h1>${esc(NAME)}</h1>
@@ -280,9 +293,6 @@ export function pageHtml(): string {
         </ol>
       </section>
 
-      <footer class="foot">
-        Built with Vanilla TypeScript + Vite · served behind an nginx reverse proxy.
-      </footer>
     </div>
     <div class="vertag" data-ver="platform" title="Platform version — the orchestration that runs this site">…</div>`;
 }
