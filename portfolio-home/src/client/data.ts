@@ -158,11 +158,11 @@ export const ENTRIES: Entry[] = [
     name: 'Cloud Developer Quiz',
     date: '2026-07',
     featured: true,
-    tech: 'Vanilla TS · Vite',
+    tech: 'Vanilla TS · Vite · Express',
     live: { type: 'health', url: '/cloud-developer-quiz/api/health' },
     component: 'quiz',
     blurb:
-      'A data-driven flashcard quiz for cloud & system-design interview prep, with an isometric garden you grow by answering correctly.',
+      'Data-driven flashcards for cloud & system-design interviews — grow an isometric garden by answering correctly.',
     // The question first, the garden second. Led by the garden alone, the card reads as a game and
     // the word "quiz" gets lost — so an actual fill-in-the-blank card carries the top slot.
     // The garden art carries a version in its NAME on purpose. public/ is served verbatim — no build
@@ -183,7 +183,7 @@ export const ENTRIES: Entry[] = [
     live: { type: 'health', url: '/vmcp/api/servers' },
     component: 'vmcp',
     blurb:
-      'A reverse proxy for MCP: one endpoint in front of every MCP server, with a data-driven registry, mocked identity/RBAC, and a dashboard recording each call that crosses it.',
+      'A reverse proxy for MCP: one endpoint in front of every MCP server, with a data-driven registry, mocked identity/RBAC, and a dashboard logging every call.',
     diagram: 'vmcp',
     links: [
       { label: 'Check out! →', href: '/vmcp/', primary: true },
@@ -208,14 +208,13 @@ export const ENTRIES: Entry[] = [
     // home server reads it back. It is the version of the platform as a whole.
     component: 'platform',
     blurb:
-      'A minikube cluster where nginx fronts every app on one port, published through an outbound Cloudflare tunnel with no open ports, its secrets vaulted.',
+      'A minikube cluster: nginx fronts every app on one port, published through an outbound Cloudflare tunnel — no open ports, secrets sealed into git.',
     diagram: 'k8s',
     // The CI/CD that builds and ships everything above, featured in the same tile — the platform is
     // the thing being run, this is the thing that runs it. Its own list entry lives below too.
     companion: {
       name: 'platform-cicd',
-      blurb:
-        'The self-hosted pipeline that ships it: a merge cuts a version, an ephemeral GitHub runner builds each image and Helm-rolls the cluster — on a ServiceAccount scoped so a CI job can’t read the platform’s secrets.',
+      blurb: 'The self-hosted pipeline that builds and ships every image here.',
       href: `${GITHUB_ORG}/platform-cicd`,
     },
     links: [
@@ -256,8 +255,7 @@ export const ENTRIES: Entry[] = [
         name: 'RS-Agent-Planning',
         date: '2026-07-09',
         tech: 'Docs · Architecture',
-        blurb:
-          'Architecture, infrastructure, and task planning — and the issue tracker the server is built from.',
+        blurb: 'Architecture, infrastructure, and task planning — plus the issue tracker driving the server.',
         // No repository link: the board is the useful view of this repo, and it links back to the
         // issues (and therefore the repo) itself.
         links: [
@@ -311,7 +309,7 @@ export const ENTRIES: Entry[] = [
         // the same signal they rely on.
         live: { type: 'health', url: '/.well-known/jwks.json' },
         component: 'platform-auth',
-        blurb: 'The identity service: a username, a chosen password, and an RS256-signed token.',
+        blurb: 'The identity service: a username, a password, and an RS256-signed token.',
         links: [
           {
             label: 'Repository →',
@@ -330,7 +328,7 @@ export const ENTRIES: Entry[] = [
     date: '2026-07-16',
     tech: 'GitHub Actions · self-hosted runner · Helm',
     blurb:
-      'The self-hosted CI/CD behind the platform: a merge cuts a version, an ephemeral runner builds each image and Helm-rolls the cluster, on a ServiceAccount scoped so a job can’t read secrets.',
+      'The self-hosted CI/CD behind the platform: a merge cuts a version; an ephemeral runner builds each image and Helm-rolls the cluster — on a ServiceAccount that can’t read secrets.',
     links: [{ label: 'Repository', href: `${GITHUB_ORG}/platform-cicd`, external: true }],
   },
   {
@@ -338,8 +336,7 @@ export const ENTRIES: Entry[] = [
     date: '2026-06-30',
     tech: 'Go',
     tag: { label: 'Work in progress', icon: 'wip' },
-    blurb:
-      'A Go pipeline that ingests job listings, verifies them with ATS matching + Claude, and emits a scored, ranked CSV.',
+    blurb: 'Ingests job listings, verifies them with ATS matching + Claude, and emits a scored, ranked CSV.',
     links: [{ label: 'Repository', href: `${GITHUB_ORG}/Job-Search-Go`, external: true }],
   },
   {
@@ -375,7 +372,7 @@ export const EXPERIENCE: Experience[] = [
     org: 'IBM',
     dates: 'Jul 2025 – Present',
     blurb:
-      'Took a custom DataStage / StreamSets agent (with mounted MCP tools) from proof-of-concept to cloud-production — containerizing five microservice pods, scripting CI/CD, and reconciling SSL + network communication.',
+      'Took a custom DataStage / StreamSets agent (with mounted MCP tools) from proof-of-concept to cloud production — containerizing five microservices, scripting CI/CD, and wiring up SSL and networking.',
     links: [
       {
         label: 'Data Integration Agent',
@@ -388,7 +385,7 @@ export const EXPERIENCE: Experience[] = [
     org: 'IBM',
     dates: 'Jan 2021 – Jul 2025',
     blurb:
-      'Built the service-suite components of a hybrid-cloud ETL engine bridging the control and data planes, plus migration tooling for a 1990s legacy desktop application.',
+      'Built service components of a hybrid-cloud ETL engine bridging the control and data planes, plus migration tooling for a legacy 1990s desktop app.',
     links: [
       {
         label: 'DataStage Remote Engine',

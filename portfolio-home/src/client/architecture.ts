@@ -104,7 +104,7 @@ function topologyDiagram(): string {
              claim is not "the secrets are safe", it is that they are safe IN THE OPEN. -->
         <div class="arch-box b-vault vault">
           <span class="vault-t">sealed-secrets</span>
-          <span class="vault-m">public key seals · committed to git as ciphertext · only this controller's private key unseals → k8s Secret → env</span>
+          <span class="vault-m">sealed with an asymmetric key — the ciphertext lives in git; only the cluster can unseal it</span>
         </div>
 
         ${box('b-edge w r3', 'Cloudflare', 'terminates TLS · the only thing the internet can see')}
@@ -214,12 +214,11 @@ function authDiagram(): string {
           </div>
         </div>
         <p class="auth-expl">
-          The <strong>gate</strong> (vMCP uses a slimmer account menu) reads the browser's local storage.
-          On a <strong>miss</strong> — a first visit, or after signing out — it calls platform-auth,
-          which verifies your username and password against platform-db and returns a signed token. That
-          token is the only thing kept. “Continue as guest” never reaches this row: it writes a local guest
-          marker and calls nothing. Because all three front ends share the one storage key, exactly one
-          sign-in fills it — the others then find it already set and never open the gate.
+          The <strong>gate</strong> reads the browser's local storage. On a <strong>miss</strong> —
+          first visit or after sign-out — it calls platform-auth, which checks your password against
+          platform-db and returns a signed token; that token is all it keeps. “Continue as guest” writes
+          a local marker and calls nothing. All three front ends share one storage key, so one sign-in
+          fills it for the rest.
         </p>
       </section>
 
@@ -248,10 +247,10 @@ function authDiagram(): string {
         <p class="auth-expl">
           The browser sends the token as an <code>Authorization: Bearer</code> header. Each pod's own
           <strong>middleware</strong> verifies the signature against platform-auth's public keys —
-          fetched once and cached, so there is no per-request call to auth and no database read. A good
-          signature is <strong>validation met</strong>, and the request runs as that user; anything else
-          (expired, forged, missing) falls to anonymous. No central gateway does this — every service
-          checks for itself. home has no gated routes, so it never reaches this row at all.
+          fetched once and cached, so there is no per-request call to auth. A good signature is
+          <strong>validation met</strong> and the request runs as that user; anything else (expired,
+          forged, missing) falls to anonymous. Every service checks for itself; home has no gated
+          routes, so it never reaches this row.
         </p>
       </section>
 
@@ -314,8 +313,7 @@ function securityDiagram(): string {
       <p class="sec-intro">
         Every service repo ships through the same gates. A <strong>✓</strong> is a <strong>blocking</strong>
         check on every pull request — plus branch protection on all of them, so nothing merges unscanned.
-        (The private <code>platform-cicd</code> repo is the deploy pipeline itself — it ships no service, so
-        these scan classes don't apply to it.)
+        (<code>platform-cicd</code> is the deploy pipeline itself — no service, so these scans don't apply.)
       </p>
       <div class="sec-wrap">
         <table class="sec-tbl">
