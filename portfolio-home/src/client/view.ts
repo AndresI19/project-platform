@@ -112,7 +112,7 @@ export function btn(l: Link, cls = 'btn'): string {
  *  stylesheet to squeeze the diagram beneath it so both fit. */
 export function featCompanion(c: NonNullable<Project['companion']>): string {
   return `<a class="feat-companion" href="${esc(c.href)}" target="_blank" rel="noopener noreferrer">
-    <span class="fc-label">Built &amp; deployed by</span>
+    <span class="fc-label">Built &amp; shipped by</span>
     <span class="fc-name">${esc(c.name)}</span>
     <span class="fc-blurb">${esc(c.blurb)}</span>
   </a>`;

@@ -100,7 +100,7 @@ export const CICD_DIAGRAM = `
         <!-- GitHub-hosted -->
         <rect class="zone z-gh" x="6" y="8" width="594" height="544" rx="12"/>
         <rect class="ztag-gh" x="16" y="12" width="238" height="22" rx="11"/>
-        <text class="ztt" x="28" y="27">GitHub-hosted · GitHub's infrastructure</text>
+        <text class="ztt" x="28" y="27">GitHub-hosted · fresh VMs</text>
 
         <rect class="box" x="20" y="36" width="160" height="32" rx="7"/>
         <text class="t" x="34" y="56">Service repo 1</text>
@@ -138,24 +138,23 @@ export const CICD_DIAGRAM = `
 
         <rect class="box here" x="20" y="330" width="540" height="106" rx="8"/>
         <text class="t big" x="34" y="362">The job queue · every repo's jobs land here</text>
-        <text class="t s" x="34" y="388">dispatched BY LABEL: a job reaches only a runner whose labels match.</text>
-        <text class="t s" x="34" y="412">The runner is registered solely to platform-cicd, isolated from the application repositories.</text>
+        <text class="t s" x="34" y="388">dispatched by label — reaches only a matching runner.</text>
+        <text class="t s" x="34" y="412">Registered only to platform-cicd, not the app repos.</text>
 
         <path class="ln" style="marker-end:url(#cicdA)" d="M303 436 V 475"/>
 
         <rect class="box vm" x="170" y="475" width="266" height="50" rx="8"/>
-        <text class="t" x="184" y="497">GitHub-hosted VM · fresh per job</text>
-        <text class="t s" x="184" y="514">provisioned for ONE job, then DESTROYED.</text>
+        <text class="t" x="184" y="504">GitHub-hosted VM</text>
 
         <!-- Outside K8s -->
         <rect class="zone z-out" x="616" y="8" width="304" height="544" rx="12"/>
         <rect class="ztag-out" x="626" y="12" width="278" height="22" rx="11"/>
-        <text class="ztt" x="638" y="27">Outside K8s · this machine, not in the cluster</text>
+        <text class="ztt" x="638" y="27">Outside K8s · this machine</text>
 
         <rect class="box here" x="630" y="110" width="276" height="76" rx="8"/>
-        <text class="t" x="644" y="130">registry:5000 · TLS, our own CA</text>
+        <text class="t" x="644" y="130">registry:5000 · TLS, our CA</text>
         <text class="t s" x="644" y="147">pinned .10 · keeps the latest 2</text>
-        <text class="t s" x="644" y="164">the kubelet trusts our CA</text>
+        <text class="t s" x="644" y="164">trusted by the kubelet</text>
 
         <path class="ln hot" style="marker-end:url(#cicdA)" d="M768 300 V 192"/>
         <text class="t s" x="776" y="250">(2) push</text>
@@ -163,7 +162,6 @@ export const CICD_DIAGRAM = `
         <rect class="box here" x="630" y="300" width="276" height="155" rx="8"/>
         <text class="t big" x="644" y="326">Self-hosted runner · ephemeral</text>
         <text class="t s" x="644" y="346">ONE job at a time — that IS the serialization</text>
-        <text class="t s" x="644" y="360">one job, de-register, restart</text>
         <text class="t m" x="644" y="380">1 · docker build --build-arg VERSION</text>
         <text class="t m" x="644" y="397">2 · docker push registry:5000/quiz:…</text>
         <text class="t m" x="644" y="414">3 · helm upgrade quiz · its own release</text>
@@ -198,8 +196,6 @@ export const CICD_DIAGRAM = `
         <text class="t m" x="964" y="368">a Job watches the rollout, in-cluster</text>
         <text class="t s" x="964" y="388">stalls → helm rollback; RollingUpdate means</text>
         <text class="t s" x="964" y="402">the old pods never stopped serving</text>
-        <text class="t s" x="964" y="422">reached at its NATIVE address — the one</text>
-        <text class="t s" x="964" y="436">the host cannot route to, but the runner can</text>
 
         <path class="ln hot" style="marker-end:url(#cicdA)" d="M906 352 H 946"/>
         <text class="t s" x="912" y="344">(3)</text>

@@ -54,7 +54,7 @@ const ALL_CONTACTS: Contact[] = [
   // Extensionless on purpose: the server 302s /resume to the current /resume-<uid>.pdf. Cloudflare
   // edge-caches by extension, so /resume is never pinned and always resolves to the latest résumé —
   // the cache-bust that lets a replaced PDF appear at once. See server/content.ts.
-  { icon: 'resume', value: 'Résumé (PDF)', url: '/resume', title: 'Résumé', external: true },
+  { icon: 'resume', value: 'Résumé', url: '/resume', title: 'Résumé', external: true },
 ];
 
 // Drop any contact still holding a placeholder, so the page never ships a dead link.
@@ -293,7 +293,7 @@ export const ENTRIES: Entry[] = [
         blurb: 'This site.',
         links: [
           {
-            label: 'Repository →',
+            label: 'Repository',
             href: `${GITHUB_ORG}/project-platform/tree/main/portfolio-home`,
             primary: true,
             external: true,
@@ -312,7 +312,7 @@ export const ENTRIES: Entry[] = [
         blurb: 'The identity service: a username, a password, and an RS256-signed token.',
         links: [
           {
-            label: 'Repository →',
+            label: 'Repository',
             href: `${GITHUB_ORG}/project-platform/tree/main/platform-auth`,
             primary: true,
             external: true,
