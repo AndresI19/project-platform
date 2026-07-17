@@ -487,6 +487,74 @@ section {
 .feat.has-companion .term-cmd.last {
   margin-top: 5px;
 }
+
+/* "You are here" — the map pin on the card that IS this site. margin-top:auto floats it into the
+   card's leftover height (the members are short, so a stretched banner card has room to spare), which
+   is the whole point: it pads the empty space rather than adding a fixed block. A pin over a ground
+   ring that pulses outward, the way a live location dot does on a map. */
+.here {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+  padding: 20px 0 6px;
+}
+.here-pin {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+}
+.here-ico {
+  position: relative;
+  z-index: 1;
+  width: 30px;
+  height: 30px;
+  fill: var(--accent);
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.28));
+}
+/* The ground ring: a flat ellipse under the pin's point that scales outward and fades, so the pin
+   reads as planted on a spot rather than floating. */
+.here-ping {
+  position: absolute;
+  bottom: 3px;
+  left: 50%;
+  width: 15px;
+  height: 6px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--accent) 45%, transparent);
+  transform: translateX(-50%);
+  animation: here-pulse 2.4s ease-out infinite;
+}
+@keyframes here-pulse {
+  0% {
+    transform: translateX(-50%) scale(0.5);
+    opacity: 0.75;
+  }
+  70% {
+    transform: translateX(-50%) scale(2);
+    opacity: 0;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .here-ping {
+    animation: none;
+    opacity: 0.4;
+  }
+}
+.here-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
 .btn {
   text-decoration: none;
   font-size: 13.5px;
@@ -3361,6 +3429,20 @@ section {
   /* The body was never given a width — it took what the rail left. Now it takes the row. */
   .proj-body {
     width: 100%;
+  }
+  /* Make the experience date agree with the list above — the eyebrow the projects comment CLAIMED the
+     two lists already shared but never actually delivered. The date lived inside .exp-head with
+     margin-left:auto, so on a phone it wrapped to its own line RIGHT-aligned below the role rather
+     than sitting over the title. flex-basis:100% puts it on a full line of its own, order:-1 lifts it
+     above the role, and dropping the auto-margin left-aligns it — the same top-left eyebrow the list
+     rows use, in this section's own accent. */
+  .exp-dates {
+    order: -1;
+    flex-basis: 100%;
+    margin-left: 0;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--exp-2);
   }
 }
 

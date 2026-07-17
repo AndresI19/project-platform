@@ -142,6 +142,9 @@ export interface Group {
   /** A drawn schematic, for a group whose identity is better shown than logo'd. Mutually useful
    *  with `logo`; a group can have either. */
   diagram?: Project['diagram'];
+  /** Draws a "you are here" map-pin marker filling the card's spare space — only true for the card
+   *  that IS this site, where the conceit lands. */
+  hereMarker?: boolean;
   members: Project[];
 }
 
@@ -188,52 +191,38 @@ export const ENTRIES: Entry[] = [
     ],
   },
   {
-    // Third in the banner now, by choice: the quiz leads, and this — the page you are on, and the
-    // source of truth for @platform/ui, the design system every other front end here builds from —
-    // follows it. A monorepo, so a group: the home page and the identity service behind it live in
-    // one repository because they version together, the home page rendering identities the auth
-    // service issues.
-    name: 'project-platform',
+    // The platform this page is served by — worth featuring, since it is the thing tying the
+    // other projects together into one host.
+    name: 'platform-orchestration',
     date: '2026-07-13',
     featured: true,
-    blurb: 'The home page and the identity service behind it.',
-    members: [
-      {
-        name: 'portfolio-home',
-        date: '2026-07-13',
-        tech: 'Vanilla TS · Vite · Express',
-        // Reaching this page at all means the server answered, so its own health probe is honest.
-        live: { type: 'health', url: '/api/health' },
-        component: 'home',
-        blurb: 'This site.',
-        links: [
-          {
-            label: 'Repository →',
-            href: `${GITHUB_ORG}/project-platform/tree/main/portfolio-home`,
-            primary: true,
-            external: true,
-          },
-        ],
-      },
-      {
-        name: 'platform-auth',
-        date: '2026-07-13',
-        tech: 'TS · Express · Postgres · jose',
-        // Its public keys ARE its liveness: if JWKS answers, the service is up and signing. Every
-        // other front end already verifies tokens against this exact endpoint, so probing it here is
-        // the same signal they rely on.
-        live: { type: 'health', url: '/.well-known/jwks.json' },
-        component: 'platform-auth',
-        blurb: 'The identity service: a username, a chosen password, and an RS256-signed token.',
-        links: [
-          {
-            label: 'Repository →',
-            href: `${GITHUB_ORG}/project-platform/tree/main/platform-auth`,
-            primary: true,
-            external: true,
-          },
-        ],
-      },
+    // Compose is gone: the platform was cut over to Kubernetes, and the public site is now served
+    // from the cluster through a Cloudflare tunnel. The old string said "Docker Compose" for a day
+    // after that stopped being true.
+    tech: 'Kubernetes · nginx · Cloudflare Tunnel',
+    // If this page answered at all, nginx routed to `home` — so the stack it orchestrates is up.
+    // Reaching the home page IS the liveliness signal for the thing that serves the home page.
+    live: { type: 'health', url: '/api/health' },
+    // The one entry whose version is not an image's. This repo ships none — it describes the platform
+    // rather than running on it — so the deploy writes its version onto the shared volume and the
+    // home server reads it back. It is the version of the platform as a whole.
+    component: 'platform',
+    blurb:
+      'A minikube cluster where nginx fronts every app on one port, published through an outbound Cloudflare tunnel with no open ports, its secrets vaulted.',
+    diagram: 'k8s',
+    // The CI/CD that builds and ships everything above, featured in the same tile — the platform is
+    // the thing being run, this is the thing that runs it. Its own list entry lives below too.
+    companion: {
+      name: 'platform-cicd',
+      blurb:
+        'The self-hosted pipeline that ships it: a merge cuts a version, an ephemeral GitHub runner builds each image and Helm-rolls the cluster — on a ServiceAccount scoped so a CI job can’t read the platform’s secrets.',
+      href: `${GITHUB_ORG}/platform-cicd`,
+    },
+    links: [
+      // The wiki is the real documentation — architecture, networking, secrets, backup/restore — so
+      // it leads. The repository is the artifact; the wiki is the explanation.
+      { label: 'Wiki', href: `${GITHUB_ORG}/platform-orchestration/wiki`, external: true },
+      { label: 'Repository', href: `${GITHUB_ORG}/platform-orchestration`, external: true },
     ],
   },
   {
@@ -283,38 +272,55 @@ export const ENTRIES: Entry[] = [
     ],
   },
   {
-    // The platform this page is served by — worth featuring, since it is the thing tying the
-    // other projects together into one host.
-    name: 'platform-orchestration',
+    // Third in the banner now, by choice: the quiz leads, and this — the page you are on, and the
+    // source of truth for @platform/ui, the design system every other front end here builds from —
+    // follows it. A monorepo, so a group: the home page and the identity service behind it live in
+    // one repository because they version together, the home page rendering identities the auth
+    // service issues.
+    // Named for the site rather than the repo: this card IS the page you are on, which is what the
+    // "you are here" marker below plays on. The repo is still project-platform; the members link to it.
+    name: 'andres.project-platform.me',
     date: '2026-07-13',
     featured: true,
-    // Compose is gone: the platform was cut over to Kubernetes, and the public site is now served
-    // from the cluster through a Cloudflare tunnel. The old string said "Docker Compose" for a day
-    // after that stopped being true.
-    tech: 'Kubernetes · nginx · Cloudflare Tunnel',
-    // If this page answered at all, nginx routed to `home` — so the stack it orchestrates is up.
-    // Reaching the home page IS the liveliness signal for the thing that serves the home page.
-    live: { type: 'health', url: '/api/health' },
-    // The one entry whose version is not an image's. This repo ships none — it describes the platform
-    // rather than running on it — so the deploy writes its version onto the shared volume and the
-    // home server reads it back. It is the version of the platform as a whole.
-    component: 'platform',
-    blurb:
-      'A minikube cluster where nginx fronts every app on one port, published through an outbound Cloudflare tunnel with no open ports, its secrets vaulted.',
-    diagram: 'k8s',
-    // The CI/CD that builds and ships everything above, featured in the same tile — the platform is
-    // the thing being run, this is the thing that runs it. Its own list entry lives below too.
-    companion: {
-      name: 'platform-cicd',
-      blurb:
-        'The self-hosted pipeline that ships it: a merge cuts a version, an ephemeral GitHub runner builds each image and Helm-rolls the cluster — on a ServiceAccount scoped so a CI job can’t read the platform’s secrets.',
-      href: `${GITHUB_ORG}/platform-cicd`,
-    },
-    links: [
-      // The wiki is the real documentation — architecture, networking, secrets, backup/restore — so
-      // it leads. The repository is the artifact; the wiki is the explanation.
-      { label: 'Wiki', href: `${GITHUB_ORG}/platform-orchestration/wiki`, external: true },
-      { label: 'Repository', href: `${GITHUB_ORG}/platform-orchestration`, external: true },
+    hereMarker: true,
+    blurb: 'The home page and the identity service behind it.',
+    members: [
+      {
+        name: 'portfolio-home',
+        date: '2026-07-13',
+        tech: 'Vanilla TS · Vite · Express',
+        // Reaching this page at all means the server answered, so its own health probe is honest.
+        live: { type: 'health', url: '/api/health' },
+        component: 'home',
+        blurb: 'This site.',
+        links: [
+          {
+            label: 'Repository →',
+            href: `${GITHUB_ORG}/project-platform/tree/main/portfolio-home`,
+            primary: true,
+            external: true,
+          },
+        ],
+      },
+      {
+        name: 'platform-auth',
+        date: '2026-07-13',
+        tech: 'TS · Express · Postgres · jose',
+        // Its public keys ARE its liveness: if JWKS answers, the service is up and signing. Every
+        // other front end already verifies tokens against this exact endpoint, so probing it here is
+        // the same signal they rely on.
+        live: { type: 'health', url: '/.well-known/jwks.json' },
+        component: 'platform-auth',
+        blurb: 'The identity service: a username, a chosen password, and an RS256-signed token.',
+        links: [
+          {
+            label: 'Repository →',
+            href: `${GITHUB_ORG}/project-platform/tree/main/platform-auth`,
+            primary: true,
+            external: true,
+          },
+        ],
+      },
     ],
   },
   {
