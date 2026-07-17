@@ -2373,11 +2373,18 @@ section {
   border-color: color-mix(in srgb, var(--accent2) 40%, var(--line));
 }
 /* The scan legend below the matrix — left-aligned, larger, and set off by a bold divider. */
-.sec-what {
-  max-width: 560px;
-  margin: 20px 0 0;
+/* Scans (left) and runtime defenses (right) sit side by side under one rule to save the vertical run
+   they took stacked. Collapses to one column on a phone, where two would each be too narrow. */
+.sec-tables {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 28px;
+  margin-top: 20px;
   border-top: 2px solid var(--ink);
   padding-top: 14px;
+}
+.sec-what {
+  margin: 0;
 }
 .sec-what th,
 .sec-what td {
@@ -2387,15 +2394,12 @@ section {
 /* Runtime defenses — the second half of the security story: the scans above are CI-time, these are
    what a live probe meets. A labelled list matching the legend's table, under its own eyebrow. */
 .sec-rt-h {
-  margin: 18px 0 6px;
+  margin: 0 0 6px;
   font-size: 11px;
   font-weight: 800;
   letter-spacing: 0.5px;
   text-transform: uppercase;
   color: var(--muted);
-}
-.sec-rt {
-  max-width: 620px;
 }
 .sec-rt th,
 .sec-rt td {
@@ -2407,6 +2411,13 @@ section {
   white-space: nowrap;
   color: var(--ink);
   font-weight: 750;
+}
+/* On a phone two columns are each too narrow — stack them. */
+@media (max-width: 640px) {
+  .sec-tables {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
 }
 .sec-chip-y {
   color: var(--exp);
