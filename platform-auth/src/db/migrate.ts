@@ -2,12 +2,9 @@ import { sql } from 'drizzle-orm';
 import { db, pool } from './client.js';
 
 /**
- * Migrations, stated as SQL rather than generated.
- *
- * The schema is two tables and will not churn. A drizzle-kit migration folder buys versioning we do
- * not need yet and adds a build artifact that has to travel into the image; `IF NOT EXISTS` is
- * idempotent, which is the only property the entrypoint actually requires — it runs this on every
- * boot.
+ * Migrations, stated as SQL rather than generated. The schema is two tables and won't churn; a
+ * drizzle-kit migration folder buys versioning we don't need and a build artifact to ship. `IF NOT
+ * EXISTS` is idempotent, the only property the entrypoint needs — it runs this on every boot.
  */
 await db.execute(sql`
   CREATE EXTENSION IF NOT EXISTS "pgcrypto";

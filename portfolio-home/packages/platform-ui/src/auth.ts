@@ -1,11 +1,6 @@
-// Platform identity, for every front end.
-//
-// It lives HERE, in the shared package, and not in each app. The alternative is the home page and the
-// quiz each growing their own copy of a token store, a gate and a sign-out button — and then drifting,
-// which is the precise failure this package exists to prevent. It already happened once with the
-// content column. Identity is a far worse thing to have two opinions about.
-//
-// Three states, and the third is not a degraded version of the others:
+// Platform identity, for every front end. It lives HERE, in the shared package, not in each app — the
+// alternative is the home page and quiz each growing their own token store, gate and sign-out, then
+// drifting, the failure this package exists to prevent. Three states, the third not a degraded one:
 //
 //   unchosen  — first visit. The gate asks.
 //   guest     — no identity, no server, no row. Everything stays in the browser, and we SAY SO.
@@ -18,18 +13,12 @@ export interface Identity {
   mode: 'guest' | 'user';
   username?: string;
   /**
-   * The password lives in localStorage, and it is worth being straight about why.
-   *
-   * The token expires in 24 hours. Without the password stored, the user re-types it every single
-   * day — a tax steep enough that people simply stop signing in. With it stored, re-minting is silent.
-   *
-   * The honest accounting: anything that can read localStorage can already read the TOKEN and act as
-   * the user until it expires. Storing the password extends that from a day to indefinitely, and —
-   * unlike the token — a password may be reused elsewhere, so this is a worse thing to leave lying
-   * around than the old random code was. On a platform whose worst case is a lost flashcard garden it
-   * is still the right trade, and it is the reason the sign-up copy tells people not to reuse a
-   * password here. Nothing sensitive is ever stored behind this identity, which is what makes the
-   * trade acceptable at all.
+   * The password lives in localStorage. The token expires in 24h; without the password stored the user
+   * re-types it daily, a tax steep enough that people stop signing in. With it, re-minting is silent.
+   * The honest cost: anything that can read localStorage already reads the TOKEN, but storing the
+   * password extends that from a day to indefinitely and — unlike the token — a password may be reused
+   * elsewhere. On a platform whose worst case is a lost flashcard garden it's still the right trade,
+   * and the reason the sign-up copy says not to reuse a password here.
    */
   password?: string;
   token?: string;
@@ -72,13 +61,10 @@ export const isGuest = (): boolean => identity?.mode === 'guest';
 export const isSignedIn = (): boolean => identity?.mode === 'user' && Boolean(identity.token);
 
 /**
- * Is this an admin?
- *
- * Read from the token that the AUTH SERVICE signed, from a list only that service can see. A client
- * cannot ask to be an admin and cannot edit the claim — and this function being client-side does not
- * weaken that, because it is used only to decide what to SHOW. Every privileged action is checked
- * again, server-side, against the same signed claim. Hiding a button is a courtesy; the lock is on
- * the door, not on the sign.
+ * Is this an admin? Read from the token the AUTH SERVICE signed, from a list only it can see. A client
+ * can't ask to be admin or edit the claim, and this being client-side doesn't weaken that — it only
+ * decides what to SHOW; every privileged action is re-checked server-side. The lock is on the door,
+ * not the sign.
  */
 export const isAdmin = (): boolean => identity?.mode === 'user' && identity.admin === true;
 
@@ -145,12 +131,9 @@ export function continueAsGuest(): void {
 }
 
 /**
- * Sign out.
- *
- * Deliberately does NOT wipe the local document. Signing out means "stop syncing", not "destroy my
- * garden" — and a control that silently deleted a year of play would be a cruel thing to sit next to
- * one that does not. The gate reappears on the next load, which is the point: it is how you sign up
- * again, or hand the browser to somebody else.
+ * Sign out. Deliberately does NOT wipe the local document: signing out means "stop syncing", not
+ * "destroy my garden". The gate reappears on the next load — how you sign up again or hand the browser
+ * to someone else.
  */
 export function signOut(): void {
   setIdentity(null);

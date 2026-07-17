@@ -1,20 +1,14 @@
-// Versions: ask the server what every component of the platform is actually running, and write the
-// answers into the badges. The one part of the page that talks to the network EXACTLY ONCE.
-//
-// Deliberately not polled, unlike liveness. Liveness is a fact about the world that changes on its
-// own — a pod can fall over while you are reading — so it is worth re-asking. A version cannot: it is
-// baked into an image, and a new image means new pods, which means the page a visitor is looking at
-// is already stale in every other respect too. Refreshing the page refreshes the versions, and that
-// is the whole contract; a timer here would burn requests to re-learn a constant.
-//
-// One fetch, not five: the server does the fan-out (see server/versions.ts — the other components
-// have no public /version route, and in production they are on a different origin).
+// Versions: ask the server what every component is running and write the answers into the badges. The
+// one part of the page that talks to the network EXACTLY ONCE — deliberately not polled, unlike
+// liveness: a version is baked into an image, so a new one means new pods and a page already stale in
+// every other respect. A timer would burn requests to re-learn a constant. One fetch, not five: the
+// server does the fan-out (see server/versions.ts — the others have no public /version route, and in
+// production are a different origin).
 
 /**
  * The shape /api/versions answers with. `platform` is a sibling of `components`, not one of them: the
- * orchestration repo has no image, no Pod and no Service — it is the description of what the
- * components are — so the server keeps the two apart rather than leaving a consumer to guess which
- * keys are services. See server/versions.ts.
+ * orchestration repo has no image, Pod or Service, so the server keeps the two apart. See
+ * server/versions.ts.
  */
 interface Payload {
   platform: string | null;
@@ -34,9 +28,8 @@ export async function paintVersions(): Promise<void> {
     return;
   }
 
-  // Flattened for lookup, so the markup does not have to care which of the two a name came from: a
-  // badge is a badge. `platform` is reserved for the orchestration version and cannot collide — it is
-  // not, and cannot become, the name of a component (there is no `platform` image).
+  // Flattened for lookup, so the markup needn't care which of the two a name came from. `platform`
+  // can't collide — there is no `platform` image, so it's never a component name.
   const versions: Record<string, string | null> = {
     platform: payload.platform ?? null,
     ...(payload.components ?? {}),

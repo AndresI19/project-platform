@@ -1,6 +1,5 @@
-// The page's string plumbing. Pure, and therefore the only part of the front end that can be tested
-// without a DOM at all — which is exactly why it lives in its own module rather than at the top of
-// the render file.
+// The page's string plumbing. Pure, so it's the only part of the front end testable without a DOM —
+// which is why it lives in its own module rather than atop the render file.
 
 // Hoisted, not rebuilt per match. Inline in the replacer, this four-key object was reallocated once
 // per escaped CHARACTER — a few hundred throwaway objects on every render.
@@ -10,11 +9,9 @@ const ESC_MAP: Record<string, string> = { '&': '&amp;', '<': '&lt;', '>': '&gt;'
 export const esc = (s: string): string => s.replace(/[&<>"]/g, (c) => ESC_MAP[c]);
 
 /**
- * A DOM-safe key for a project name: "open-vMCP" → "open-vmcp".
- *
- * Split-and-join rather than replace-then-trim. The old version did the substitution and then needed
- * a SECOND regex to undo the leading/trailing dashes the first one had just introduced; splitting on
- * the separator never creates them, so there is nothing to undo.
+ * A DOM-safe key for a project name: "open-vMCP" → "open-vmcp". Split-and-join, not replace-then-trim:
+ * the old version needed a SECOND regex to undo the leading/trailing dashes the first introduced;
+ * splitting on the separator never creates them.
  */
 export const slug = (s: string): string =>
   s

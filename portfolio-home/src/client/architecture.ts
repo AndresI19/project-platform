@@ -1,31 +1,20 @@
-// The platform architecture, revealed by a pull-down in the masthead banner. FOUR diagrams now, paged
-// by a slider:
+// The platform architecture, revealed by a pull-down in the masthead banner. FOUR diagrams, paged by a
+// slider. On a phone the first three are DIFFERENT pictures, not these reflowed (see mobile-diagrams.ts):
+// a wide grid scaled to a phone is a shape you zoom into, not one you read, so a phone gets transit maps.
+// The cost is two hand-maintained pictures of one platform.
 //
-// ON A PHONE, THE FIRST THREE ARE DIFFERENT PICTURES — not this one reflowed. See mobile-diagrams.ts.
-// A wide grid scaled to a phone is a shape you zoom into rather than a picture you read, so a phone
-// gets transit maps drawn for it. The diagrams below are UNCHANGED and remain the desktop form.
-// The cost is two hand-maintained pictures of one platform, which is the same debt that rotted the
-// old 900px reflow block; mobile-diagrams.ts states it in full and names the drift already present.
+//   1. Platform topology — who talks to whom, browser down to the outbound APIs; the evidence for the
+//      bio's closing claim.
+//   2. CICD — how a merge reaches the cluster, commit through blocking gates to a rollout. A sequence.
+//   3. Auth & the browser — how the identity service issues a token, how the front ends carry it, and
+//      how each verifies it. A sequence, split out so it doesn't crowd the map.
+//   4. Security — a service × scan matrix: every workload and the blocking CI gates it passes per PR.
 //
-//   1. Platform topology — who talks to whom, from the browser down to the outbound APIs. This is the
-//      evidence for the bio's closing claim: everything below is built, hosted and running right here.
-//   2. CICD — how a merge reaches the cluster: the pipeline from a pushed commit through the blocking
-//      gates to a rolled-out deployment. A sequence, not a topology, so it earns its own slide.
-//   3. Auth & the browser — the narrower story of how the identity service issues a token, how the
-//      front ends carry it, and how each verifies it on its own. Split out because it is a different
-//      question (a sequence, not a topology) and crowding it into the map made both harder to read.
-//   4. Security — a service × scan matrix: every workload and the blocking CI gates (image, deps,
-//      SAST, secrets, config, manifests) it passes on every PR. A table, not a topology, for the same
-//      reason as diagram 3 — a different question deserves its own shape.
-//
-// WHY HTML AND NOT SVG (or the wiki's ASCII art): both scale only UNIFORMLY — on a phone the whole
-// picture shrinks past legibility. Built as boxes in a grid, the diagram REFLOWS: columns collapse,
-// boxes go full width, and every label stays readable.
-//
-// THE GRID IS THE DIAGRAM (topology). The sealed-secrets rail is column 1; the twelve content columns carry four
-// services at three columns each (home, quiz, vmcp, platform-auth), so the row fills the width and
-// every connector is a column SPAN rather than a measured pixel offset — which is what keeps it exact
-// across reflow. It mirrors the "whole picture" section of the orchestration wiki, the source of truth.
+// WHY HTML AND NOT SVG (or ASCII): both scale only UNIFORMLY — on a phone the whole picture shrinks past
+// legibility. Boxes in a grid REFLOW: columns collapse, boxes go full width, labels stay readable. THE
+// GRID IS THE DIAGRAM: the sealed-secrets rail is column 1, twelve content columns carry four services
+// at three each, so every connector is a column SPAN not a pixel offset — exact across reflow. Mirrors
+// the "whole picture" section of the orchestration wiki, the source of truth.
 
 import { CICD_DIAGRAM } from './diagrams.js';
 import { mobileAuth, mobileCicd, mobileTopology } from './mobile-diagrams.js';
@@ -73,13 +62,10 @@ function topologyDiagram(): string {
   //   2 arrows    4 pierce↓      8 arrow↓        10 fan-out 12 connectors            16 arrow↓ 17 APIs
   //
   // Four services, THREE content columns each: home 2-4, quiz 5-7, vmcp 8-10, platform-auth 11-13
-  // (grid lines s1 2/5 · s2 5/8 · s3 8/11 · s4 11/14). vmcp keeps its stack — the database in its
-  // middle column, the MCP-over-SSE line down the right lane to rs-mcp, the agent's road on the same
-  // columns. platform-auth is the fourth peer, with its own database under it. fvt-traffic USED to rise
-  // up the left lane into the gateway; it now lives outside the cluster and drives the public API like
-  // any other MCP consumer, so it is named in the caller box, not drawn as a box. That freed its row —
-  // rs-mcp sits directly under the volumes, one band shorter. It is drawn as one more thing nginx
-  // routes to — the story of the TOKEN platform-auth hands out lives in diagram 2, so this map stays a map.
+  // (grid lines s1 2/5 · s2 5/8 · s3 8/11 · s4 11/14). vmcp keeps its stack (database in the middle
+  // column, MCP-over-SSE down the right lane to rs-mcp). fvt-traffic left the cluster — it drives the
+  // public API like any MCP consumer, so it's named in the caller box, not drawn; that freed its row,
+  // and rs-mcp sits directly under the volumes. The TOKEN story lives in diagram 2, so this stays a map.
   return `
     <div class="arch-diagram">
       <div class="arch-grid">
@@ -96,12 +82,10 @@ function topologyDiagram(): string {
         <span class="arch-tag arch-tag-hw r5">one Fedora workstation · Colima QEMU VM</span>
         <span class="arch-tag arch-tag-k8s r6">minikube cluster · namespace: platform</span>
 
-        <!-- Not "the vault", which is what this said and what it is not. A vault is a service you
-             FETCH from at runtime (Vault, an agent, a CSI driver); nothing here fetches anything.
-             The credential is encrypted with the controller's public key, committed to a public
-             repo as ciphertext, and unsealed ONCE at apply time into an ordinary k8s Secret — which
-             is what the pods actually read. Naming the mechanism is the point: the interesting
-             claim is not "the secrets are safe", it is that they are safe IN THE OPEN. -->
+        <!-- Not "the vault": a vault is a service you FETCH from at runtime; nothing here does. The
+             credential is encrypted with the controller's public key, committed to a public repo as
+             ciphertext, and unsealed ONCE at apply time into an ordinary k8s Secret, which the pods
+             read. The claim isn't "the secrets are safe", it's that they're safe IN THE OPEN. -->
         <div class="arch-box vault">
           <span class="vault-t">sealed-secrets</span>
           <span class="vault-m">asymmetric-key sealed</span>
@@ -140,8 +124,7 @@ function topologyDiagram(): string {
         ${box('b-vol b-db s4 r13 authdb', 'platform-db', 'Postgres')}
 
         <!-- Down the right edge of the gateway's column, PAST the database. rs-mcp-server sits directly
-             below the databases now — fvt-traffic used to occupy this band from the left lane, but it
-             left the cluster (it drives the PUBLIC API as one more MCP consumer, see the caller box). -->
+             below the databases now — fvt-traffic used to occupy this band but left the cluster. -->
         <div class="vm-rail" aria-hidden="true"><span class="vm-rail-l">MCP over SSE</span></div>
 
         ${box('b-infra s3 r14', 'rs-mcp-server', '17 RuneScape tools')}
@@ -165,17 +148,15 @@ function topologyDiagram(): string {
 }
 
 /* ── Diagram 2 — CICD ──────────────────────────────────────────────────────────────────────────── */
-// Desktop uses the restored inline SVG (CICD_DIAGRAM, imported above); the phone gets mobileCicd().
-// The SVG was briefly rebuilt as HTML so ONE picture could serve both widths, but a separate mobile
-// diagram already exists, so the desktop slide is back to the SVG that reads best at full width.
+// Desktop uses the inline SVG (CICD_DIAGRAM); the phone gets mobileCicd(). Briefly rebuilt as one HTML
+// picture for both widths, but a separate mobile diagram already exists, so the SVG is back.
 
 /* ── Diagram 3 — auth & the browser ────────────────────────────────────────────────────────────── */
-// TWO stacked pictures, because a front end touches platform-auth for two different reasons and the
-// old single grid blurred them. TOP is the MISS path: the browser's gate, finding no local identity,
-// asks platform-auth for a token — this is client-side, and it is the only thing that ever calls
-// /auth. BOTTOM is the VALIDATION path: a front-end POD's middleware checks a token it was handed,
-// against the public keys — server-side, once per request, no database. Consuming services sit on the
-// LEFT of both, the identity service on the RIGHT: who GETS a token above, who CHECKS one below.
+// TWO stacked pictures, because a front end touches platform-auth for two different reasons. TOP is the
+// MISS path: the browser's gate, finding no local identity, asks platform-auth for a token — client-side,
+// the only thing that calls /auth. BOTTOM is the VALIDATION path: a front-end pod's middleware checks a
+// handed token against the public keys — server-side, per request, no database. Consuming services on the
+// LEFT of both, the identity service on the RIGHT.
 function authDiagram(): string {
   return `
     <div class="arch-diagram arch-auth">
@@ -245,10 +226,9 @@ function authDiagram(): string {
 }
 
 /* ── Diagram 3 — the security posture ──────────────────────────────────────────────────────────── */
-// Every service on the platform, against the automated scans that gate its CI. Rows are services (one
-// per repo, except the two that share the platform monorepo); columns are scan classes. A tick is a
-// BLOCKING check on every pull request — a regression fails the PR before it can reach the cluster. It
-// mirrors the security section of the orchestration wiki, the source of truth.
+// Every service against the automated scans that gate its CI. Rows are repos (the two in the platform
+// monorepo share one); columns are scan classes. A tick is a BLOCKING check on every PR — a regression
+// fails before it reaches the cluster. Mirrors the orchestration wiki's security section.
 const SEC_COLS = ['Image', 'Deps', 'SAST', 'Secrets', 'Config', 'Manifests'] as const;
 type SecCol = (typeof SEC_COLS)[number];
 
@@ -256,8 +236,8 @@ interface SecRow {
   repo: string;
   has: SecCol[];
 }
-// One row per repo — the granularity that matters, since a repo is what a CI pipeline gates. The two
-// services in the platform monorepo (home + platform-auth) share its pipeline, so they share a row.
+// One row per repo — a repo is what a CI pipeline gates. The two services in the platform monorepo
+// (home + platform-auth) share its pipeline, so they share a row.
 const SEC_ROWS: SecRow[] = [
   { repo: 'project-platform', has: ['Image', 'Deps', 'SAST', 'Secrets'] },
   { repo: 'data-driven-quiz-server', has: ['Image', 'Deps', 'SAST', 'Secrets'] },
@@ -331,12 +311,10 @@ export function architecturePanel(): string {
       <div class="arch-panel-in">
         <div class="arch-slider">
           <div class="arch-tabs" role="tablist" aria-label="Architecture diagrams">
-            <!-- TWO LABELS PER TAB, and only ever one of them rendered. Four full labels do not fit
-                 390px — "Platform Topology" and "Authentication" are ~130px each — so the bar
-                 became a scroller and the 4th tab lived off-screen, which is a tab bar that hides a
-                 tab. A phone gets the short name. display:none (not visibility) is what keeps the
-                 hidden one out of the accessibility tree, so a screen reader hears one name; the
-                 aria-label carries the full one at every width. -->
+            <!-- TWO LABELS PER TAB, only one rendered. Four full labels don't fit 390px, so the bar
+                 became a scroller with the 4th tab off-screen; a phone gets the short name. display:none
+                 (not visibility) keeps the hidden one out of the a11y tree, so a screen reader hears one
+                 name; the aria-label carries the full one at every width. -->
             <button class="arch-tab is-active" type="button" role="tab" aria-selected="true" data-slide="0" aria-label="Platform Topology"><span class="tab-full">Platform Topology</span><span class="tab-brief">Topology</span></button>
             <button class="arch-tab" type="button" role="tab" aria-selected="false" data-slide="1" aria-label="CICD"><span class="tab-full">CICD</span><span class="tab-brief">CICD</span></button>
             <button class="arch-tab" type="button" role="tab" aria-selected="false" data-slide="2" aria-label="Authentication"><span class="tab-full">Authentication</span><span class="tab-brief">Auth</span></button>

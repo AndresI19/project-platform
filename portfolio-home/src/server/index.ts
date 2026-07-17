@@ -22,9 +22,9 @@ const app = express();
 app.use(express.json({ limit: '2kb' }));
 app.set('trust proxy', true); // sits behind the nginx reverse proxy, so req.ip needs the header
 
-// A coarse global cap as defence-in-depth, layered over the finer per-endpoint limiter on /api/hello
-// below. Generous because this process also serves the SPA's static assets; real abuse trips it long
-// before a human browsing does. Per-process (single replica) — resets on restart.
+// A coarse global cap, defence-in-depth over the per-endpoint /api/hello limiter. Generous because
+// this process also serves the SPA's static assets; real abuse trips it long before a browsing human.
+// Per-process (single replica) — resets on restart.
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   limit: 1000,
@@ -37,22 +37,16 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 
-// Runtime config for the client. `vmcpApiBase` is where the liveness probes read the gateway
-// registry from: empty means same-origin (/vmcp/api, the local deployment), and in production it is
-// the API host. Served rather than baked in, so one image runs in both places.
+// Runtime config for the client. `vmcpApiBase` is where the liveness probes read the gateway registry:
+// empty = same-origin (/vmcp/api, local), the API host in production. Served, not baked, so one image
+// runs both places.
 app.get('/api/config', (_req, res) => res.json({ vmcpApiBase: env.vmcpApiBase }));
 
-// ---------------------------------------------------------------------------
-// Versions. This server's own, and — because it is the one component that can reach all the others
-// from inside the cluster — everybody else's, aggregated (see versions.ts for why that fan-out is
-// here and not in the browser).
-//
-// The version is READ FROM A FILE, not from package.json and not from a build-time define. The page
-// used to show `__APP_VERSION__`, which Vite bakes in from package.json at BUILD time — a number
-// that only ever changed when someone remembered to bump it by hand, and which said nothing about
-// what was actually deployed. This one is stamped into the image by k8s/deploy.sh from the real git
-// tag, so the page cannot claim a version it is not running.
-// ---------------------------------------------------------------------------
+// Versions: this server's own, plus everybody else's aggregated — it is the one component that can
+// reach all the others from inside the cluster (see versions.ts for why the fan-out is here, not in
+// the browser). The version is READ FROM A FILE, not a build-time define: the old `__APP_VERSION__`
+// was baked from package.json at BUILD time and only changed on a manual bump, saying nothing about
+// what was deployed. k8s/deploy.sh stamps this into the image from the real git tag.
 const VERSION = ((): string => {
   try {
     return readFileSync(resolve(ROOT, 'VERSION'), 'utf8').trim() || 'snapshot';
@@ -62,23 +56,19 @@ const VERSION = ((): string => {
   }
 })();
 
-// `version` is this image's own — baked in, fixed for the life of the container. `platform` is the
-// orchestration repo's, read from the version spec on the shared volume: the platform has no image
-// to carry a version in, so its version is written next to the résumé and the card decks. Two
-// different things, two fields, rather than one field that means whichever the caller assumed.
+// `version` is this image's own — baked in, fixed for the container's life. `platform` is the
+// orchestration repo's, read from the version spec on the shared volume: the platform ships no image
+// to carry a version, so it rides next to the résumé. Two things, two fields.
 app.get('/version', (_req, res) => res.json({ version: VERSION, platform: platformVersion() }));
 app.get('/api/versions', async (_req, res) => res.json(await collectVersions(VERSION)));
 
-// ---------------------------------------------------------------------------
-// "Who are you?" — the optional greeting the home page collects on a first visit, relayed to me
-// as a Discord push. Unset webhook is a supported mode, not a failure: the greeting is logged to
-// stdout instead, so the feature works in local dev and in CI with no secret present.
-// ---------------------------------------------------------------------------
+// "Who are you?" — the optional first-visit greeting, relayed to me as a Discord push. Unset webhook
+// is a supported mode: the greeting is logged to stdout instead, so it works in dev and CI with no
+// secret present.
 const DISCORD_WEBHOOK_URL = env.discordWebhookUrl;
 
-/** Crude fixed-window cap. The endpoint is unauthenticated and fans out to a webhook, so it must
-    not be usable as a free megaphone; a handful of greetings an hour is far more than it needs. The
-    defaults (5 per hour) are validated in env.ts and overridable via HELLO_RATE_MAX/HELLO_RATE_WINDOW. */
+/** Crude fixed-window cap. The endpoint is unauthenticated and fans out to a webhook, so it must not
+    be a free megaphone. Defaults (5/hour) validated in env.ts, overridable via HELLO_RATE_MAX/WINDOW. */
 const RATE_LIMIT = { max: env.helloRateMax, windowMs: env.helloRateWindowSeconds * 1000 };
 const hits = new Map<string, number[]>();
 function overLimit(ip: string): boolean {
@@ -137,34 +127,25 @@ app.post('/api/hello', (req, res) => {
   void notifyDiscord(lines.join('\n'));
 });
 
-// ---------------------------------------------------------------------------
 // The résumé, and the admin route that replaces it.
 //
-// /resume.pdf is READ PER REQUEST from the content volume's DIRECTORY mount — the same move, for the
-// same reason, as platformVersion() above. It used to arrive as a subPath single-file mount, which is
-// a bind mount pinned to the source file's INODE at container start: a replacement file has a new
-// inode and the mount goes on serving the old one, which is why swapping the résumé needed a rollout.
-// Reading the directory mount per request is what removes the rollout.
-//
-// This MUST be registered above serveClient(), and not merely because serveClient ends in a catch-all.
-// Dropping the subPath mount does NOT make dist/client/resume.pdf disappear — vite.config.ts still
-// copies public/resume.pdf into the build — so without this route serveClient's express.static serves
-// the IMAGE's stale copy, silently and forever: a 200 indistinguishable from the bug being fixed here.
-// That same copy is the seed fallback below, which is why the fallback costs nothing.
-// ---------------------------------------------------------------------------
-// #37 removed the rollout-to-swap by reading per request; this removes the OTHER staleness, the one
-// #37 could not reach: Cloudflare edge-caches /resume.pdf under a Browser-Cache-TTL it stamps itself
-// (measured max-age=14400), overriding the origin's no-cache, so a replaced PDF still shows old in a
-// browser for hours. The URL is made to change instead. The page links the EXTENSIONLESS /resume,
-// which Cloudflare does not edge-cache (it caches by extension), so it always resolves fresh to the
-// current /resume-<uid>.pdf — and THAT url, one exact version, is cached hard. See content.ts.
+// /resume.pdf is READ PER REQUEST from the content volume's DIRECTORY mount, like platformVersion()
+// above. It used to arrive as a subPath single-file mount — a bind mount pinned to the file's INODE at
+// container start, so a replacement (new inode) was never seen and swapping needed a rollout. It MUST
+// register above serveClient(), and not only for the catch-all: vite.config.ts still copies
+// public/resume.pdf into the build, so without this route express.static serves the IMAGE's stale copy
+// — a 200 indistinguishable from the bug. That same copy is the seed fallback below, so it costs
+// nothing. Reading per request removed the rollout; the versioned URL below removes the OTHER
+// staleness: Cloudflare edge-caches /resume.pdf under its own Browser-Cache-TTL (max-age=14400),
+// overriding no-cache, so a replaced PDF shows old for hours. The page links EXTENSIONLESS /resume,
+// which Cloudflare doesn't edge-cache (by extension), so it resolves fresh to the current
+// /resume-<uid>.pdf — and THAT url, one exact version, is cached hard. See content.ts.
 const RESUME_SEED = resolve(CLIENT_DIR, 'resume.pdf');
 const serveCurrent = serveResume(env.contentDir, RESUME_SEED); // no-cache — the fallback when no UID
 const serveVersioned = serveResume(env.contentDir, RESUME_SEED, 'public, max-age=31536000, immutable');
 
-// The redirect target moves every deploy, so it must never be cached — no-store keeps both the browser
-// and Cloudflare re-resolving it. With no UID (dev, or before the first write) serve the file directly,
-// exactly as #37 did, so nothing regresses in a checkout without a volume.
+// The redirect target moves every deploy, so no-store keeps browser and Cloudflare re-resolving it.
+// With no UID (dev, or pre-first-write) serve the file directly, so a checkout without a volume works.
 function toCurrentResume(req: Request, res: Response): void {
   const uid = resumeUid(env.contentDir);
   if (uid) {
@@ -176,8 +157,7 @@ function toCurrentResume(req: Request, res: Response): void {
 }
 
 app.get('/resume', toCurrentResume);
-// Bare /resume.pdf is what old links and bookmarks point at — redirect them forward to the current
-// version rather than 404, so a saved link always lands on the latest résumé.
+// Bare /resume.pdf is what old links point at — redirect forward to the current version, not 404.
 app.get('/resume.pdf', toCurrentResume);
 app.get('/resume-:uid.pdf', (req, res) => {
   if (req.params.uid === resumeUid(env.contentDir)) {
@@ -202,9 +182,8 @@ app.listen(env.port, () => {
   console.log(
     `  greetings  : ${env.discordWebhookUrl ? 'relayed to Discord' : 'logged to stdout (DISCORD_WEBHOOK_URL unset)'}`,
   );
-  // The upload route 404s when unconfigured — deliberately, but that makes a misconfigured deploy
-  // silent. This line is the only thing that says so out loud, so it reports what was actually
-  // decided rather than what was intended.
+  // The upload route 404s when unconfigured — deliberate, but that makes a misconfigured deploy
+  // silent, so this line reports what was actually decided.
   console.log(
     `  uploads    : ${
       env.authJwksUri
@@ -212,9 +191,8 @@ app.listen(env.port, () => {
         : 'disabled — route not registered (AUTH_JWKS_URI unset)'
     }`,
   );
-  // Which résumé path is live: a versioned /resume-<uid>.pdf once a UID is on the volume, or the bare
-  // file as a fallback before the first write. Reports what is actually served, in the same spirit as
-  // the uploads line — a deploy that never minted a UID is otherwise silent.
+  // Which résumé path is live: versioned /resume-<uid>.pdf once a UID is on the volume, else the bare
+  // file. Reports what's served — a deploy that never minted a UID is otherwise silent.
   {
     const uid = resumeUid(env.contentDir);
     console.log(

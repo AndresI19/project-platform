@@ -2,15 +2,10 @@ import { type JWK, type KeyLike, SignJWT, calculateJwkThumbprint, exportJWK, imp
 import { env } from './env.js';
 
 /**
- * RS256, with a public JWKS endpoint — not a shared HS256 secret.
- *
- * The distinction is the whole point. With a symmetric secret, every service that can VERIFY a token
- * can also FORGE one, so the gateway, the quiz API and anything else added later would each hold a
- * key that mints identities. Compromise any one of them and you have compromised every user on the
- * platform.
- *
- * With RS256 this service alone holds the private key. Everyone else fetches the public half and can
- * do exactly one thing with it: check that a token is genuine.
+ * RS256, with a public JWKS endpoint — not a shared HS256 secret. With a symmetric secret, every
+ * service that can VERIFY a token can also FORGE one, so every verifier would hold a key that mints
+ * identities and compromising any one compromises every user. With RS256 this service alone holds the
+ * private key; everyone else fetches the public half and can only check a token is genuine.
  */
 
 let cached: { key: KeyLike; kid: string; jwk: JWK } | null = null;
@@ -20,9 +15,8 @@ async function signingKey(): Promise<{ key: KeyLike; kid: string; jwk: JWK }> {
 
   const key = await importPKCS8(env.signingKeyPem, 'RS256');
 
-  // The `kid` is the key's own thumbprint rather than a name we chose. That means it is derived from
-  // the key material itself, so two keys can never collide on an id and a rotated key is
-  // self-identifying — a verifier holding both can always tell which one signed a given token.
+  // The `kid` is the key's own thumbprint, not a chosen name: derived from the key material, so two
+  // keys can't collide on an id and a rotated key is self-identifying to a verifier holding both.
   const pub = await exportJWK(key);
   const kid = await calculateJwkThumbprint(pub, 'sha256');
 
@@ -50,27 +44,19 @@ export interface Claims {
 }
 
 /**
- * Mint an access token.
- *
- * It carries `sub` (the opaque identity) and `username` (safe to display). It NEVER carries the code —
- * a JWT is base64, not encryption, so every claim in it is readable by anyone who holds the token.
- * Putting the credential inside the thing the credential buys you would defeat the entire scheme.
+ * Mint an access token. It carries `sub` (opaque identity) and `username` (safe to display), NEVER the
+ * credential — a JWT is base64, not encryption, so every claim is readable by anyone holding the token.
  */
 export async function mint({ sub, username }: Claims): Promise<{ token: string; expiresIn: number }> {
   const { key, kid } = await signingKey();
   const ttl = env.tokenTtlSeconds;
 
   /**
-   * THE ROLE COMES FROM THE ISSUER, NOT FROM THE CALLER.
-   *
-   * It is computed here, at minting time, from a list only this service can read — and then it is
-   * SIGNED. A client cannot ask to be an admin, cannot edit the claim, and cannot forge a token that
-   * says it is one, because it does not hold the key.
-   *
-   * The alternative — a service checking "is this username in the admin list?" for itself — would
-   * mean every verifier needed the list, which is to say the list would be everywhere, which is to
-   * say it would not be a secret. Putting it in the token means the gateway can enforce a policy it
-   * is not allowed to read.
+   * THE ROLE COMES FROM THE ISSUER, NOT THE CALLER. Computed here at minting time from a list only this
+   * service can read, then SIGNED — a client can't ask to be admin, edit the claim, or forge one,
+   * having no key. The alternative (each verifier checking the admin list itself) would put the list
+   * everywhere, so it wouldn't be secret; putting it in the token lets the gateway enforce a policy it
+   * isn't allowed to read.
    */
   const admin = env.isAdmin(username);
 

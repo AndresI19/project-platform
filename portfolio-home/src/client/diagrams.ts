@@ -3,13 +3,11 @@ import type { Project } from './data.js';
 // diagram is an edit to a data file rather than to the code that lays the page out.
 import { esc } from './util.js';
 
-// What open-vMCP is, drawn rather than described: one client reaching several MCP servers through
-// a single gateway, stacked top-to-bottom. The edges are labelled with the transport, because
-// "streams over HTTP/SSE" is the part of MCP a box-and-line drawing otherwise leaves out.
-// Inline SVG, so it needs no network request and recolours with the theme.
-// Drawn as a transit line rather than a flat box-and-arrow: one line runs from the Agent station down
-// to the vMCP interchange, which is where every MCP server the gateway fronts branches off. Taller
-// than the old wide-and-short drawing so it fills the card instead of floating at its foot.
+// What open-vMCP is, drawn rather than described: one client reaching several MCP servers through a
+// single gateway. Edges are labelled with the transport, since "streams over HTTP/SSE" is what a
+// box-and-line drawing leaves out. Inline SVG — no network request, recolours with the theme. Drawn as
+// a transit line: one line from the Agent station down to the vMCP interchange, where every fronted
+// MCP server branches off. Taller than the old drawing so it fills the card.
 export const VMCP_DIAGRAM = `<svg class="dgm" viewBox="0 0 300 226" role="img" aria-label="A transit map: an Agent line runs over MCP (HTTP/SSE) down to the vMCP reverse proxy, one interchange that branches over SSE to several MCP servers including rs-mcp.">
   <g class="dgm-trunk">
     <path d="M150 40 V 92"/>
@@ -44,17 +42,15 @@ export const VMCP_DIAGRAM = `<svg class="dgm" viewBox="0 0 300 226" role="img" a
   </g>
 </svg>`;
 
-// The orchestration repo has no screenshot to show, so it shows its own output: the running stack
-// as the cluster reports it. There is no docker-compose any more — the platform runs on minikube —
-// so this is `kubectl -n platform get pods`, the interface you actually drive it through.
+// The orchestration repo has no screenshot, so it shows its own output — the running stack as the
+// cluster reports it via `kubectl -n platform get pods` (minikube now, no docker-compose).
 //
-// This is a CURATED CORE SUBSET, not the full pod list, and deliberately so: this card equalises to
-// the height of the tallest featured tile, and the full eight-pod listing made it the tallest, which
-// stretched every other card to match. Four load-bearing pods — the router, the two front doors, and
-// the identity service — say "a cluster is running here" without the height. Do not restore the
-// dropped pods (quiz, vmcp-db, rs-mcp-server, fvt-traffic) to "match the deployments"; the omission
-// is the feature. The `-l 'app in (…)'` selector names exactly these four — the pods carry only an
-// `app` label, no `tier` — which is what keeps the short list honest (a real command, a real subset).
+// A CURATED CORE SUBSET, not the full pod list, deliberately: this card equalises to the tallest
+// featured tile, and the full eight-pod listing made it the tallest, stretching every other card.
+// Four load-bearing pods (router, two front doors, identity) say "a cluster is running here" without
+// the height. Don't restore the dropped pods (quiz, vmcp-db, rs-mcp-server, fvt-traffic) — the
+// omission is the feature. The `-l 'app in (…)'` selector names exactly these four (pods carry only an
+// `app` label, no `tier`), keeping the short list a real command over a real subset.
 export const POD_ROWS: { name: string; ready: string }[] = [
   { name: 'nginx', ready: '1/1' },
   { name: 'home', ready: '1/1' },
@@ -91,9 +87,8 @@ export const DIAGRAMS: Record<NonNullable<Project['diagram']>, string> = {
   k8s: K8S_DIAGRAM,
 };
 
-/* Diagram 2 — CICD, DESKTOP ONLY. The 1280x560 inline SVG restored to the web slide by request:
-   it reads best at desktop width. The phone gets mobileCicd() (mobile-diagrams.ts) instead, so this
-   SVG never has to scale down past legibility — the reason it was briefly replaced by an HTML build. */
+/* Diagram 2 — CICD, DESKTOP ONLY. The 1280x560 inline SVG reads best at desktop width; the phone gets
+   mobileCicd() instead, so this SVG never has to scale down past legibility. */
 export const CICD_DIAGRAM = `
     <div class="arch-diagram arch-cicd">
       <svg viewBox="0 0 1280 560" width="100%" role="img" aria-label="A pull request makes a CI job; a merge starts version-tag and release on the same event — version-tag cuts the git tag, release reads it and posts a repository_dispatch. Every job lands in one queue, dispatched by label: ubuntu-latest jobs run on a fresh GitHub-hosted VM, self-hosted jobs are taken by our runner, which polls the queue, builds and pushes to the local registry, checks out the Helm chart and runs helm upgrade on that one service's own release. The upgrade is applied, not awaited, so the runner is free in about half a second and the next release starts; the kubelet pulls the new image, and a Job inside the cluster watches the rollout in the runner's place. If the rollout stalls, that Job rolls the release back and alerts Discord, outbound — a rolling update means the old pods never stopped serving. The runner posts the release summary to Discord separately.">

@@ -54,11 +54,9 @@ function chooseView(): string {
     </div>`;
 }
 
-// Username is public; the pin is the secret. They are asked for together because, unlike the old
-// server-generated code, the pin is something the user brings — there is no second page handing
-// anything back. The note on the pin is not decoration: this credential is stored in localStorage to
-// keep sign-in silent (auth.ts), so reusing a real password as the pin here is a genuinely bad idea
-// and the copy says so plainly rather than hoping.
+// Username is public; the pin is the secret. Asked for together because the pin is something the user
+// brings (no second page handing anything back). The pin is stored in localStorage to keep sign-in
+// silent (auth.ts), so reusing a real password here is a bad idea — the copy says so.
 const newView = (): string => `
   <h2>Create an account</h2>
   <p class="pg-sub">The username is public — it appears on the dashboard and the leaderboard. The
@@ -90,12 +88,9 @@ const signInView = (): string => `
   </div>`;
 
 /**
- * The greeting — now an OPTIONAL second page of the gate rather than a dialog that ambushed you on
- * arrival. It asks who you are; it is entirely skippable; and it says exactly where the answer goes.
- *
- * What it collects is NOT persisted in the platform's database. It is relayed to a private Discord
- * channel and nothing else. That is stated on the page, in plain words, because a form that asks for
- * a LinkedIn URL and says nothing about what happens to it has not earned the answer.
+ * The greeting — an OPTIONAL second page of the gate, entirely skippable, that says where the answer
+ * goes. What it collects is NOT persisted: it's relayed to a private Discord channel and nothing else,
+ * stated on the page because a form asking for a LinkedIn URL silently hasn't earned the answer.
  */
 const greetView = (): string => `
   <h2>Who stopped by?</h2>
@@ -127,9 +122,8 @@ export function mountGate({ onDone, greetUrl }: GateOptions): void {
   host.className = 'pg-host';
   document.body.appendChild(host);
 
-  // Escape — or a keyboard "back" — dismisses the gate and leaves you a guest, the same as clicking
-  // outside the box. The listener is on document (so the key is caught anywhere), which means close()
-  // has to remove it explicitly; the click handler's own listener dies with the host node.
+  // Escape dismisses the gate and leaves you a guest, like clicking outside. The listener is on
+  // document (caught anywhere), so close() must remove it explicitly; the click listener dies with host.
   let onKey: (e: KeyboardEvent) => void = () => {};
   const close = (): void => {
     document.removeEventListener('keydown', onKey);
@@ -143,12 +137,10 @@ export function mountGate({ onDone, greetUrl }: GateOptions): void {
       return;
     }
     if (e.key === 'Enter') {
-      // The gate owns the screen while it is open, so Enter must resolve HERE and never bubble to the
-      // host app's own window-level keydown. The quiz reads a bare Enter as "start", so pressing it
-      // after typing a password launched a quiz out from under this dialog. Trigger the current view's
-      // primary action — Create / Sign in / Send — which is what someone who just filled the form
-      // expects Enter to do; reuse the click handler rather than re-implement each submit. The chooser
-      // has no single default, so there Enter does nothing, but is still swallowed so it cannot leak.
+      // The gate owns the screen, so Enter resolves HERE and never bubbles to the host app's window
+      // keydown (the quiz reads bare Enter as "start", launching a quiz out from under this dialog).
+      // Trigger the view's primary action (Create / Sign in / Send) via the click handler. The chooser
+      // has no default, so Enter does nothing there, but is still swallowed so it can't leak.
       e.stopPropagation();
       const primary = host.querySelector<HTMLElement>('.pg-btn.primary[data-act]');
       if (primary) {
@@ -241,8 +233,8 @@ export function mountGate({ onDone, greetUrl }: GateOptions): void {
 
 export interface FabOptions {
   /** If there is no identity yet, silently establish a GUEST one (no blocking gate) and mark the FAB
-   *  with a one-time red nudge inviting the visitor to make a real account. The home page uses this:
-   *  it has no gated routes, so a sign-in wall on arrival would be friction with nothing behind it. */
+   *  with a one-time red nudge to make a real account. The home page uses this — no gated routes, so a
+   *  sign-in wall would be friction with nothing behind it. */
   nudgeGuest?: boolean;
   /** What the guest panel's "Create an account" does. Given → called (the home page opens the full
    *  gate here). Absent → the legacy sign-out-and-reload, which brings the blocking gate back. */
@@ -268,15 +260,10 @@ const markNudgeSeen = (): void => {
 };
 
 /**
- * Top-right. Shows who you are and lets you sign out.
- *
- * It no longer reveals the credential: the old server-generated code was shown here because a user
- * who never saw it could not have written it down, but a pin is something the user already
- * chose and already knows. Printing it would only put a reusable secret on screen during a
- * screen-share for no benefit.
- *
- * With `nudgeGuest`, this also replaces the arrival gate: a first visitor is defaulted to guest and
- * the FAB wears a red alert until they open it (seeing the disclaimer) or sign in.
+ * Top-right. Shows who you are and lets you sign out. It no longer reveals the credential — a pin is
+ * something the user chose and knows, so printing it would only put a reusable secret on screen during
+ * a screen-share. With `nudgeGuest`, this also replaces the arrival gate: a first visitor defaults to
+ * guest and the FAB wears a red alert until they open it (seeing the disclaimer) or sign in.
  */
 export function mountAccountFab(opts: FabOptions = {}): void {
   // No blocking gate on arrival: a first visitor becomes a guest right here, so the page is usable
@@ -320,18 +307,16 @@ export function mountAccountFab(opts: FabOptions = {}): void {
   };
 
   host.addEventListener('click', (e) => {
-    // Stop the click reaching the document-level close handler below. Without this, opening the
-    // panel and closing it are the SAME click: the toggle handler rebuilds host.innerHTML, which
-    // detaches the very button that was clicked, so by the time the document handler runs
-    // `host.contains(e.target)` is false — the click reads as "outside" and shuts the panel it just
-    // opened. The result is a FAB you can never open, and therefore a sign-out you can never reach.
+    // Stop the click reaching the document-level close handler. Without this, open and close are the
+    // SAME click: the toggle rebuilds host.innerHTML, detaching the clicked button, so the document
+    // handler sees `host.contains(e.target)` false, reads "outside", and shuts the panel it just
+    // opened — a FAB you can never open, and a sign-out you can never reach.
     e.stopPropagation();
     const act = (e.target as HTMLElement).closest<HTMLElement>('[data-act]')?.dataset.act;
     if (act === 'toggle') {
       markNudgeSeen(); // clicking the FAB IS acknowledging the disclaimer — clear the red alert
-      // A guest's FAB opens the account dialog DIRECTLY — the three-option chooser, no intermediate
-      // "Create an account" bubble in between. A signed-in user gets the account panel (username /
-      // code / sign out) as a dropdown instead.
+      // A guest's FAB opens the account dialog DIRECTLY (the three-option chooser). A signed-in user
+      // gets the account panel (username / sign out) as a dropdown instead.
       if (current()?.mode === 'guest' && opts.onUpgrade) {
         opts.onUpgrade();
         return render();

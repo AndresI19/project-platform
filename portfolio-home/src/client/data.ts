@@ -97,19 +97,12 @@ export interface Project {
   /** When set, the card shows a live/offline indicator polled every minute. */
   live?: Live;
   /**
-   * The name this project is reported under by /api/versions. Set it and the card shows the version
-   * that thing is ACTUALLY running (see client/versions.ts).
-   *
-   * Five of these are deployed services: the key is the name of the image and of the Service, and the
-   * version comes from a VERSION file baked into that image.
-   *
-   * `platform` is the odd one and is deliberately not a service. It is the orchestration repo — the
-   * manifests, the routing, the boot — which ships no image, so it has no image to carry a version
-   * in. Its version is written onto the shared volume by the deploy and read back from there. It is
-   * the version of the platform as a whole, which is why the footer tag shows it.
-   *
-   * A repo on this page that is neither (the planning repos, the tooling) has no version to show,
-   * which is why this is optional rather than derived from the name.
+   * The name /api/versions reports this project under. Set it and the card shows what's ACTUALLY
+   * running (see client/versions.ts). Five are deployed services: the key names the image and Service,
+   * the version comes from a VERSION file baked in. `platform` is the odd one, deliberately not a
+   * service — the orchestration repo ships no image, so the deploy writes its version onto the shared
+   * volume (the whole platform's version, shown in the footer). A repo that is neither (planning,
+   * tooling) has no version, which is why this is optional.
    */
   component?: 'home' | 'quiz' | 'vmcp' | 'rs-mcp-server' | 'platform-auth' | 'platform';
   /** Artwork filling the featured card's empty space; a path under public/. */
@@ -162,12 +155,10 @@ export const ENTRIES: Entry[] = [
     live: { type: 'health', url: '/cloud-developer-quiz/api/health' },
     component: 'quiz',
     blurb: 'Data-driven cloud & system-design flashcards — grow an isometric garden as you answer.',
-    // The question first, the garden second. Led by the garden alone, the card reads as a game and
-    // the word "quiz" gets lost — so an actual fill-in-the-blank card carries the top slot.
-    // The garden art carries a version in its NAME on purpose. public/ is served verbatim — no build
-    // fingerprint — under `cache-control: max-age=14400` behind Cloudflare, so replacing this file in
-    // place left every browser and CDN edge showing the previous garden for four hours. Bump the
-    // suffix when the art changes and the new URL is fetched at once, by everyone.
+    // The question first, the garden second: led by the garden alone the card reads as a game and
+    // "quiz" gets lost. The garden art carries a version in its NAME on purpose — public/ is served
+    // verbatim under max-age=14400 behind Cloudflare, so replacing it in place showed the old garden
+    // for four hours; bump the suffix and the new URL is fetched at once.
     images: ['/quiz-sharding.png', '/home-page-garden-v3.gif'],
     links: [
       { label: 'Check out! →', href: '/cloud-developer-quiz/', primary: true },
@@ -195,30 +186,26 @@ export const ENTRIES: Entry[] = [
     name: 'platform-orchestration',
     date: '2026-07-13',
     featured: true,
-    // Compose is gone: the platform was cut over to Kubernetes, and the public site is now served
-    // from the cluster through a Cloudflare tunnel. The old string said "Docker Compose" for a day
-    // after that stopped being true.
+    // Compose is gone: cut over to Kubernetes, served from the cluster through a Cloudflare tunnel.
     tech: 'Kubernetes · nginx · Cloudflare Tunnel',
-    // If this page answered at all, nginx routed to `home` — so the stack it orchestrates is up.
-    // Reaching the home page IS the liveliness signal for the thing that serves the home page.
+    // Reaching this page at all means nginx routed to `home`, so the stack it orchestrates is up.
     live: { type: 'health', url: '/api/health' },
-    // The one entry whose version is not an image's. This repo ships none — it describes the platform
-    // rather than running on it — so the deploy writes its version onto the shared volume and the
-    // home server reads it back. It is the version of the platform as a whole.
+    // The one entry whose version isn't an image's: this repo ships none, so the deploy writes its
+    // version onto the shared volume and the home server reads it back — the whole platform's version.
     component: 'platform',
     blurb:
       'A minikube cluster: nginx fronts every app on one port, behind an outbound Cloudflare tunnel. Merges deploy themselves, with rollback on failure.',
     diagram: 'k8s',
-    // The CI/CD that builds and ships everything above, featured in the same tile — the platform is
-    // the thing being run, this is the thing that runs it. Its own list entry lives below too.
+    // The CI/CD that builds and ships everything above, featured in the same tile. Its own list entry
+    // lives below too.
     companion: {
       name: 'platform-cicd',
       blurb: 'The self-hosted pipeline that builds and ships every image here.',
       href: `${GITHUB_ORG}/platform-cicd`,
     },
     links: [
-      // The wiki is the real documentation — architecture, networking, secrets, backup/restore — so
-      // it leads. The repository is the artifact; the wiki is the explanation.
+      // The wiki is the real documentation (architecture, networking, secrets, backup/restore), so it
+      // leads; the repository is the artifact.
       { label: 'Wiki', href: `${GITHUB_ORG}/platform-orchestration/wiki`, external: true },
       { label: 'Repository', href: `${GITHUB_ORG}/platform-orchestration`, external: true },
     ],
@@ -269,13 +256,10 @@ export const ENTRIES: Entry[] = [
     ],
   },
   {
-    // Third in the banner now, by choice: the quiz leads, and this — the page you are on, and the
-    // source of truth for @platform/ui, the design system every other front end here builds from —
-    // follows it. A monorepo, so a group: the home page and the identity service behind it live in
-    // one repository because they version together, the home page rendering identities the auth
-    // service issues.
-    // Named for the site rather than the repo: this card IS the page you are on, which is what the
-    // "you are here" marker below plays on. The repo is still project-platform; the members link to it.
+    // A monorepo, so a group: the home page and the identity service behind it live in one repository
+    // because they version together (the home page renders identities the auth service issues). Named
+    // for the site, not the repo — this card IS the page you are on, which the "you are here" marker
+    // below plays on; the repo is still project-platform, and the members link to it.
     name: 'andres.project-platform.me',
     date: '2026-07-13',
     featured: true,
@@ -303,9 +287,8 @@ export const ENTRIES: Entry[] = [
         name: 'platform-auth',
         date: '2026-07-13',
         tech: 'TS · Express · Postgres · jose',
-        // Its public keys ARE its liveness: if JWKS answers, the service is up and signing. Every
-        // other front end already verifies tokens against this exact endpoint, so probing it here is
-        // the same signal they rely on.
+        // Its public keys ARE its liveness: if JWKS answers, the service is up and signing — the same
+        // endpoint every other front end verifies tokens against.
         live: { type: 'health', url: '/.well-known/jwks.json' },
         component: 'platform-auth',
         blurb: 'The identity service: a username, a password, and an RS256-signed token.',

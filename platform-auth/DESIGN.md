@@ -3,9 +3,8 @@
 A username, a chosen password, a signed token, and an honest name for what that is.
 
 > **History.** This service originally issued a **server-generated 7-character code** as the entire
-> credential — no password at all. It now takes a **user-chosen password**. Sections below are
-> written in the present tense of the password model; where the reasoning changed, the old rationale
-> is kept inline because it explains why the current defences are shaped the way they are.
+> credential; it now takes a **user-chosen password**. Sections are written in the present tense of the
+> password model, keeping the old rationale inline where it explains the current defences.
 
 ---
 
@@ -25,20 +24,16 @@ tool calls. It is a *terrible* trade for anything else, so the rule is absolute:
 
 The credential used to be a server-generated 7-character Crockford-base32 code — **32⁷ ≈ 34 billion**
 uniform combinations, an entropy floor the server guaranteed. A user-chosen password moves that floor
-onto the user, who picks worse than a CSPRNG. Two things follow directly, and the rest of the design
-is mostly their consequences: a **minimum length** is the only entropy we can insist on, and the hash
-must be **slow and salted** (§2) because it can no longer assume a high-entropy input.
+onto the user, who picks worse than a CSPRNG. Two things follow: a **minimum length** is the only
+entropy we can insist on, and the hash must be **slow and salted** (§2), no longer assuming a high-entropy input.
 
 ---
 
 ## 2. The code is NOT the user id
 
-This is the one structural decision that everything else follows from, and the naïve design gets it
-wrong.
-
-If the code doubles as the user id, then it appears wherever a user id appears — and vMCP's dashboard
-has a **User column on a publicly readable API**. Every visitor to `/vmcp/calls` would be shown other
-people's credentials. Rate limiting would be beside the point: nobody would need to guess.
+The one structural decision everything else follows from. If the credential doubles as the user id it
+appears wherever a user id does — and vMCP's dashboard has a **User column on a publicly readable API**,
+so every visitor would be shown other people's credentials. Rate limiting would be beside the point.
 
 So three distinct things:
 
@@ -55,26 +50,24 @@ exists — the credential must never be the thing printed on a public dashboard 
 
 ### The password is not stored, and the lookup key changed with it
 
-The old code was stored as `HMAC-SHA256(pepper, code)`, **unique-indexed**, and login was a single
-read *by that hash*. That worked only because the code was high-entropy: a fast keyed hash was safe
-because 34 billion uniform inputs cannot be dictionary-attacked, and being deterministic it could be
-the index.
+The old code was stored as `HMAC-SHA256(pepper, code)`, **unique-indexed**, and login was a single read
+*by that hash* — safe only because the code was high-entropy (34 billion uniform inputs can't be
+dictionary-attacked) and, being deterministic, could be the index.
 
-A chosen password breaks both halves of that. It is low-entropy, so a fast hash would be
-dictionary-crackable from a dump; and it must be **salted per row**, so it is no longer deterministic
-and cannot be the lookup key. So the access path changes:
+A chosen password breaks both halves: it is low-entropy (a fast hash would be dictionary-crackable from
+a dump) and must be **salted per row** (so it is no longer deterministic and can't be the lookup key).
+So the access path changes:
 
 - **login finds the row by `username`** — unique and indexed — and *then* verifies the password;
 - the stored value is `scrypt(pepper + password, per-row salt)`, self-describing (`scrypt$N$r$p$salt$hash`).
 
 Three defences layer here, each covering what the next cannot:
 
-- the **salt** (stored beside the hash) means one cracked password does not crack the rest, and equal
-  passwords do not collide to equal hashes;
-- **scrypt's slowness** makes offline guessing cost real time per candidate, the thing a fast HMAC
-  could not do once the input stopped being high-entropy;
-- the **pepper** (a sealed secret, never in the database, kept from the old design) means a stolen
-  dump — salts and all — still cannot begin without a secret it does not contain.
+- the **salt** (beside the hash) means one cracked password doesn't crack the rest, and equal passwords
+  don't collide to equal hashes;
+- **scrypt's slowness** makes offline guessing cost real time per candidate;
+- the **pepper** (a sealed secret, never in the database) means a stolen dump — salts and all — can't
+  begin without a secret it doesn't contain.
 
 scrypt is Node's stdlib; argon2/bcrypt were declined only to avoid a native build dependency in the
 image, not on the merits — the self-describing format lets the parameters or the algorithm change
@@ -104,10 +97,9 @@ design anticipated this.)
 }
 ```
 
-**24-hour access tokens, no refresh tokens.** The browser already holds the password (it must, or the
-user would re-type it every visit), so re-minting is a single call to `POST /auth/token`. A refresh
-token would be a second long-lived credential guarding one we already store — complexity with nothing
-to show for it.
+**24-hour access tokens, no refresh tokens.** The browser already holds the password (or the user would
+re-type it every visit), so re-minting is one `POST /auth/token`. A refresh token would be a second
+long-lived credential guarding one we already store — complexity for nothing.
 
 ---
 
@@ -129,12 +121,11 @@ plus an `auth_attempts` audit table. On a **missing** username the endpoint stil
 verification against a dummy hash before denying — otherwise a miss would return faster than a wrong
 password and leak which usernames exist.
 
-Note what rate limiting *cannot* do: it protects the **service**, not any individual user, and it
-does nothing about *offline* guessing of a weak password from a stolen dump — that is what scrypt and
-the pepper (§2) are for. A distributed attacker guessing common passwords online will eventually hit
-*somebody's*, and the weaker floor of a chosen password (versus the old 34-billion code) makes that
-nearer than it was. The prize is still a stranger's flashcard garden. This is stated so nobody later
-mistakes rate limiting for safety.
+What rate limiting *cannot* do: it protects the **service**, not any user, and does nothing about
+*offline* guessing from a stolen dump — that's what scrypt and the pepper (§2) are for. A distributed
+attacker guessing common passwords online will eventually hit *somebody's*, nearer now than under the
+old 34-billion code. The prize is still a stranger's flashcard garden. Stated so nobody mistakes rate
+limiting for safety.
 
 ---
 
@@ -153,14 +144,11 @@ mistakes rate limiting for safety.
 └────────────────────────────────────────────────┘   └────────────────────────────┘
 ```
 
-Sharing a **server** is resource consolidation: one pod, one backup, one thing to operate.
-Sharing a **schema** is coupling, and is not done here. Each service has its own database and its own
-role; none can read or migrate another's tables. They exchange `sub`, and that is the entire
-contract.
-
-That distinction is the whole point. Two services reading one schema is the distributed-monolith
-trap: a migration in one silently breaks the other, and neither can be deployed independently — and
-you would have coupled them at the worst possible layer while believing you had saved a pod.
+Sharing a **server** is resource consolidation: one pod, one backup, one thing to operate. Sharing a
+**schema** is coupling, and is not done here — each service has its own database and role; none can
+read or migrate another's tables. They exchange `sub`, and that is the entire contract. Two services
+reading one schema is the distributed-monolith trap: a migration in one silently breaks the other and
+neither deploys independently — coupled at the worst layer while believing you saved a pod.
 
 `vmcp-db` stays where it is. Folding its live data into `platform-db` is a migration, not a freebie,
 and it buys nothing today.
@@ -174,9 +162,9 @@ a garden of cells, a list of sessions each carrying its own notes map, a mid-qui
 entire question queue, and per-card statistics. It was designed as a localStorage blob and it reads
 like one.
 
-The temptation is to "do it properly": tables for sessions, cards, garden cells, foreign keys, joins.
-That is a great deal of modelling to reproduce, exactly, a document that already exists — followed by
-a great deal of assembly to hand it back to a client that wants it as one object again.
+The temptation is to "do it properly": tables for sessions, cards, garden cells, foreign keys, joins —
+a great deal of modelling to reproduce a document that already exists, then a great deal of assembly to
+hand it back to a client that wants it as one object again.
 
 ```sql
 CREATE TABLE progress (
@@ -194,25 +182,18 @@ CREATE INDEX progress_coins_idx ON progress (coins DESC);
 
 ### The promoted columns are derived, never supplied
 
-`coins`, `correct` and `answered` exist so a leaderboard is possible without reading every blob. They
-are a **projection of `data`**, extracted server-side on write — the client sends only the document.
-
-If the client could send them independently, it could send a document with 10 coins and a `coins`
-column claiming 10,000, and the leaderboard would be forgeable by anyone holding a bearer token.
-Deriving them makes that impossible, and makes the two disagreeing structurally unrepresentable
-rather than merely unlikely.
+`coins`, `correct` and `answered` exist so a leaderboard is possible without reading every blob — a
+**projection of `data`**, extracted server-side on write; the client sends only the document. If the
+client could send them independently it could claim a `coins` column of 10,000 over a 10-coin document,
+forging the leaderboard. Deriving them makes the two disagreeing structurally unrepresentable.
 
 ### `version` exists because last-write-wins destroys gardens
 
-One identity, two browsers. Someone plays on their phone, opens their laptop, and the laptop's stale
-document overwrites an evening's progress — silently, with no error and nothing to roll back to.
-
-So the client sends the `version` it read, and a mismatch is a **409**, not a clobber. What the client
-does with the 409 (merge, prompt, refetch) is a UI decision; what the *server* must not do is throw
-data away without saying so.
-
-This is settled now, deliberately, because the alternative is settling it after someone loses a
-garden.
+One identity, two browsers: play on your phone, open your laptop, and the laptop's stale document
+overwrites an evening's progress — silently, nothing to roll back to. So the client sends the `version`
+it read, and a mismatch is a **409**, not a clobber. What the client does with it (merge, prompt,
+refetch) is a UI decision; what the *server* must not do is throw data away without saying so. Settled
+now, because the alternative is settling it after someone loses a garden.
 
 ---
 

@@ -1,29 +1,22 @@
-/* Surfaces, text, lines, the navy accent and the page wash all come from @platform/ui — imported in
-   main.ts, ahead of this file. What is left here is what only the home page has an opinion about.
-   (--good used to be declared here too; it was inherited by the original copy-paste and never used by
-   a single rule, so it is gone. --gold is back, and now earns its place: the quiz's featured card is
-   themed with it — see .feat[data-component="quiz"].) */
+/* Surfaces, text, lines, the navy accent and page wash come from @platform/ui (imported in main.ts,
+   ahead of this file). What's left here is what only the home page has an opinion about. (--gold earns
+   its place: the quiz's featured card is themed with it — see .feat[data-component="quiz"].) */
 :root {
-  /* The content column is NOT declared here any more. It lives in @platform/ui's base.css, which is
-     now the single definition of it — this page and the quiz having different gutters was exactly
-     the bug that moved it there. */
+  /* The content column is NOT declared here — it lives in @platform/ui's base.css, the single
+     definition (this page and the quiz having different gutters was the bug that moved it there). */
 
   --live: #e11d48;
   /* The agent's path through the stack. A dark red, deliberately unlike the navy of the browser's
      route and unlike --live's pink: the two paths must be told apart at a glance. */
   --agent: #9f1239;
-  /* The old indigo, kept as its own token: the platform is navy now, but the greeting dialog is the
-     one surface that should not look like the rest of the page — it is an interruption, and it reads
-     as one by being a different blue from everything behind it. */
+  /* The old indigo, kept as its own token: the platform is navy now, but the greeting dialog should
+     read as an interruption — a different blue from everything behind it. */
   --indigo: #5a67f2;
   --indigo-2: #7d87ff;
-  /* Per-destination brand colours for the contact chips, plus one hue per section so the page reads
-     as distinct kinds of thing: navy (--accent) for featured work, teal (--exp) for employment
-     history, green (--proj) for the full project list — and gold (--gold) for the one featured card
-     that earns its own accent, the quiz. Each is muted rather than saturated — they sit stacked down
-     one page, so they have to be restful, not loud.
-     --wip is a separate orange: the work-in-progress badge lives *inside* the green project section,
-     so it cannot also be green or it would vanish into its own background. */
+  /* Per-destination brand colours for the contact chips, plus one hue per section: navy (--accent)
+     for featured work, teal (--exp) for employment, green (--proj) for the project list, gold
+     (--gold) for the quiz's own-accent card. Each muted, not saturated — they stack down one page.
+     --wip is a separate orange: the WIP badge lives inside the green section, so green would vanish. */
   --brand-gh: #24292f;
   --brand-li: #0a66c2;
   --brand-em: #0d9488;
@@ -35,8 +28,7 @@
   --gold: #c08a12;
   --gold-2: #8a610a;
   --wip: #e2660c;
-  /* Postgres blue — the two database boxes in the architecture map. None of the section hues meant
-     "database", and drawing a Postgres server as the volume beside it was the confusion this fixes. */
+  /* Postgres blue — the two database boxes in the architecture map. No section hue meant "database". */
   --db: #2c6da3;
   --db-2: #21567f;
   /* The card accent tint — the wash of --accent inside a featured card. Home-only (the quiz has no
@@ -68,9 +60,8 @@
   }
 }
 
-/* Masthead banner that hangs from the top edge — mirrors the quiz's .masthead. It spans the full
-   content column rather than an inset one, so the bio's edges line up with the project cards and
-   experience rows below instead of sitting tucked inside them. */
+/* Masthead banner hanging from the top edge — mirrors the quiz's .masthead. It spans the full content
+   column so the bio's edges line up with the cards and rows below rather than tucking inside them. */
 .masthead {
   position: relative;
   margin: 0 auto 26px;
@@ -99,16 +90,10 @@
   font-size: 15.5px;
   font-weight: 650;
 }
-/* Larger and wider than the body text elsewhere: this is the one paragraph anyone actually reads.
-   The masthead panel runs the full width of the column, but the PROSE does not follow it out there —
-   it holds a measure and centres, which keeps its edges in line with the contact row beneath rather
-   than tucking it inside something wider.
-
-   1080px is not a round number; it is the narrowest width at which the current bio sets in three
-   lines. At 1020 it took four, the fourth holding the single word "comprehended." — the same orphan
-   the coda below is widened to avoid, and a visible enough mistake to be worth a longer measure than
-   the ~95 characters prose normally wants. It sits exactly on the boundary: adding a few words to
-   BIO drops it back to four lines and re-orphans the tail, so re-measure if the copy grows. */
+/* Larger and wider than the body text: the one paragraph anyone reads. The prose holds a measure and
+   centres rather than following the full-width panel, keeping its edges in line with the contact row.
+   1080px is the narrowest width at which the current bio sets in three lines — at 1020 it took four,
+   orphaning "comprehended." on the last. It's on the boundary, so re-measure if BIO grows. */
 .mast-bio {
   color: var(--ink);
   font-size: 16.5px;
@@ -116,11 +101,9 @@
   margin: 14px auto 0;
   max-width: 1080px;
 }
-/* The closer sits on its own line — it is the turn from "who I am" to "and here is the thing
-   itself", so it gets the weight of a separate statement rather than trailing the paragraph. */
-/* Wider than the paragraph above it needs to be, on purpose: at 900px this line broke as
-   "…running right / here." — one word alone on a line, which reads as a mistake. The extra room lets
-   it close on a full line. */
+/* The closer sits on its own line — the turn from "who I am" to "here is the thing itself", so it
+   gets the weight of a separate statement. Wider than it needs on purpose: at 900px it broke
+   "…running right / here." with one word alone, so the extra room lets it close on a full line. */
 .mast-bio.coda {
   margin: 10px auto 16px;
   font-weight: 650;
@@ -163,9 +146,8 @@
   display: block;
 }
 
-/* Each contact carries its own brand colour, so the row reads as four distinct destinations
-   rather than four identical grey pills. The résumé is the one we most want clicked, so it is
-   the only *filled* chip — it outranks the others by weight, not just by hue. */
+/* Each contact carries its own brand colour, so the row reads as four distinct destinations, not four
+   grey pills. The résumé is the one we most want clicked, so it's the only filled chip. */
 .cx.github {
   color: var(--brand-gh);
   border-color: color-mix(in srgb, var(--brand-gh) 30%, var(--line));
@@ -253,18 +235,16 @@ section {
   transition: background-position .7s ease, opacity .2s;
 }
 
-/* The quiz is the one featured card with its own accent: gold — but only its CHROME, not its
-   controls. This used to override --accent on the whole card, which also re-tinted the "Check out!"
-   and "Repository" buttons gold; those must keep their original accent, so gold is applied to the
-   wash, border and left rail explicitly here instead, and the gleam is re-tinted just below. */
+/* The quiz's own accent is gold, but only its CHROME, not its controls: overriding --accent on the
+   whole card also re-tinted the buttons, so gold is applied to the wash, border and rail explicitly
+   here, and the gleam re-tinted below. */
 .feat[data-component="quiz"] {
   background: color-mix(in srgb, var(--gold) 5%, var(--panel));
   border-color: color-mix(in srgb, var(--gold) 22%, var(--line));
   border-left-color: var(--gold);
 }
-/* And its gleam: the lux strike is a white sweep on every other card; on the quiz it is gold, so the
-   hover reads as part of the same theme. Only the gradient is overridden — the sweep's size, resting
-   position and the hover animation are all inherited from .lux::before above. */
+/* Its gleam: the lux strike is white elsewhere, gold on the quiz, so the hover matches the theme.
+   Only the gradient is overridden — size, resting position and animation inherit from .lux::before. */
 .feat[data-component="quiz"].lux::before {
   background-image: linear-gradient(
     105deg,
@@ -288,16 +268,11 @@ section {
   scroll-snap-type: x proximity;
   scrollbar-width: thin;
 
-  /* THE CURTAINS. See feat-rail.ts for why this is a mask and not an overlay — briefly: a pseudo
-     element here would scroll away with the cards, and the page background is two radial gradients
-     over --bg, so a curtain fading to a flat colour would be wrong wherever they tint. A mask fades
-     to transparent and never has to name the background it sits on.
-     Both widths default to 0, so with JS off the strip is exactly what it is today: no curtain, no
-     harm, and the scrollbar still says what it always said. */
-  /* ONE KNOB. This was 56 here and 56 again in feat-rail.ts, which is two places holding one fact —
-     and on a phone a third thing depends on it: a card is sized to stop where the curtain starts.
-     The TS reads this value rather than restating it, so the fade, the mask and the card width cannot
-     disagree about how wide a curtain is. */
+  /* THE CURTAINS. See feat-rail.ts for why this is a mask, not an overlay — briefly: a pseudo-element
+     scrolls away with the cards, and a curtain fading to a flat colour would be wrong wherever the
+     background's radial gradients tint. Both widths default to 0, so with JS off there's no curtain,
+     no harm. ONE KNOB: feat-rail.ts reads --feat-fade rather than restating 56, and on a phone a card
+     is sized to stop where the curtain starts, so fade, mask and card width can't disagree. */
   --feat-fade: 56px;
   --fade-l: 0px;
   --fade-r: 0px;
@@ -317,10 +292,9 @@ section {
   );
   transition: --fade-l .18s ease, --fade-r .18s ease;
 }
-/* A custom property is a string to the cascade unless it is registered, and a string cannot tween —
-   without this the curtains would pop between 0 and 56px. @property gives --fade-* a type, which is
-   what makes the transition above mean anything. Unregistered, it degrades to the snap, not to a
-   broken mask. */
+/* An unregistered custom property is a string and can't tween — without @property the curtains would
+   pop between 0 and 56px. Typing --fade-* is what makes the transition mean anything; unregistered it
+   degrades to the snap, not a broken mask. */
 @property --fade-l {
   syntax: "<length>";
   inherits: false;
@@ -343,10 +317,9 @@ section {
   background: var(--line);
   border-radius: 99px;
 }
-/* Featured cards borrow what makes the experience rows look good: a coloured left rail, a wash of
-   the section's own hue, and a lift on hover. Before, the projects — the things the page exists to
-   show — were flatter than the employment history sitting under them. The rail is navy here and
-   teal there, so the two sections still read as different kinds of thing. */
+/* Featured cards borrow the experience rows' look: a coloured left rail, a wash of the section's hue,
+   a lift on hover — the projects were flatter than the employment history below them. The rail is
+   navy here, teal there, so the sections still read differently. */
 .feat {
   flex: none;
   width: 292px;
@@ -389,11 +362,9 @@ section {
   gap: 10px;
 }
 
-/* Every status badge — live, work-in-progress, archived, featured — sits in the SAME corner of the
-   thing it describes: top-right, in one group. They used to be scattered (live top-right of a card,
-   its tag on a line of its own below it, and all three trailing the name inline in the list rows),
-   which meant the reader had three places to look for one kind of information.
-   margin-left:auto is what pins the group right, whatever sits to its left. */
+/* Every status badge — live, WIP, archived, featured — sits in the SAME corner: top-right, one group
+   (they used to be scattered across three places). margin-left:auto pins the group right, whatever
+   sits to its left. */
 .badges {
   display: inline-flex;
   align-items: center;
@@ -479,10 +450,9 @@ section {
   margin-top: 4px;
 }
 
-/* The squeeze the companion pays for: where a card carries one, its k8s terminal graphic gives up a
-   little vertical room so the card does not run away. Smaller type and tighter rows, not a clip — the
-   pod table stays whole, just more compact. Scoped to has-companion so the standalone platform card
-   (which has none) is untouched. */
+/* The squeeze the companion pays for: a card carrying one shrinks its k8s terminal (smaller type,
+   tighter rows, not a clip — the pod table stays whole). Scoped to has-companion so the standalone
+   platform card is untouched. */
 .feat.has-companion .media {
   margin-bottom: 10px;
 }
@@ -496,9 +466,8 @@ section {
   margin-bottom: 5px;
 }
 
-/* "You are here" — the map pin on the card that IS this site. It sits between the description and the
-   member bubbles as its own centered band: a pin over a ground ring that pulses outward, the way a
-   live location dot does on a map. */
+/* "You are here" — the map pin on the card that IS this site: a centered band between the description
+   and the member bubbles, a pin over a ground ring that pulses outward like a live location dot. */
 .here {
   display: flex;
   flex-direction: column;
@@ -506,9 +475,8 @@ section {
   gap: 7px;
   padding: 6px 0 14px;
 }
-/* On the here-marker card, the blurb must NOT keep its `flex: 1` — grown, it opens a dead gap between
-   the one-line description and the pin. Hand that growth to the pin band instead, centred, so it fills
-   the space between the description and the bubbles rather than leaving a hole above itself. */
+/* On the here-marker card the blurb must NOT keep `flex: 1` — grown, it opens a dead gap above the
+   pin. Hand the growth to the pin band instead so it fills the space rather than leaving a hole. */
 .feat.has-here .feat-blurb {
   flex: none;
 }
@@ -603,12 +571,11 @@ section {
   border-radius: 9px;
 }
 
-/* Grouped entries — several repos that are one project, drawn inside a single card / row. The
-   group card is wider than a plain featured card because it stacks its members vertically. */
-/* Two of the four featured cards are `wide` (the grouped repo card and the kubectl terminal). The
-   banner's usable width is 1412px — the 1440px column minus .wrap's padding — so the budget is
-   2×292 + 2×390 + 3 gaps of 14 + 4px of banner padding = 1410px. That fits, and all four cards are
-   visible without scrolling. Grow either width and the fourth card falls off the right edge. */
+/* Grouped entries — several repos that are one project, in a single card/row. The group card is wider
+   because it stacks members vertically. */
+/* Two of the four featured cards are `wide` (the grouped card and the kubectl terminal). Budget:
+   2×292 + 2×390 + 3×14 gaps + 4px padding = 1410px, inside the banner's 1412px usable width, so all
+   four are visible without scrolling. Grow either width and the fourth falls off the right edge. */
 .feat.wide {
   width: 390px;
 }
@@ -680,10 +647,9 @@ section {
   display: flex;
 }
 
-/* Two graphics, two frames. Sharing one frame made them read as a single image with the garden
-   lying on top of the question — the screenshot carries its own rounded corners and drop shadow, so
-   butting the garden against it looked like an overlap. Each gets its own border and a real gap
-   instead; the wrapper itself is frameless so it does not draw a third box around them. */
+/* Two graphics, two frames. One shared frame made them read as a single image with the garden lying
+   on the question (the screenshot has its own corners and shadow). Each gets its own border and a gap;
+   the wrapper is frameless so it draws no third box. */
 .media.stack {
   display: flex;
   flex-direction: column;
@@ -697,9 +663,8 @@ section {
   border: 1px solid var(--line);
   border-radius: 10px;
 }
-/* The question is *contained*, not covered — a cropped question is an unreadable question, and the
-   point of this image is that a visitor can read "fill in" and see a real card. Auto height lets
-   the image set its own size so nothing is sliced off the edges. */
+/* The question is contained, not covered — a cropped question is unreadable, and the point is a
+   visitor can read it. Auto height lets the image set its own size so nothing is sliced off. */
 .media.stack img:first-child {
   height: auto;
   object-fit: contain;
@@ -712,9 +677,8 @@ section {
   object-fit: cover;
 }
 
-/* The wordmark just rests on the card — no plate, no border, no box. It is a logo, not a
-   screenshot, and framing it made it look like a piece of UI rather than a mark. Contained so it
-   is never cropped; its alpha channel means the card colour shows through in both themes. */
+/* The wordmark rests on the card — no plate, no border. It's a logo, not a screenshot, and framing it
+   made it look like UI. Contained so it's never cropped; its alpha lets the card colour show through. */
 .media.logo {
   background: none;
   border: none;
@@ -799,10 +763,9 @@ section {
   padding: 0;
   border: none;
 }
-/* The terminal is a flex item of .media.diagram, and a flex item's default (flex: 0 1 auto) sizes
-   it to its *content* — so it collapsed to the intrinsic width of the pod table and pooled
-   every spare pixel against the right edge. Growing it to fill the card is what evens the gutters.
-   (The vMCP card never had this problem only because .dgm already sets width: 100%.) */
+/* The terminal is a flex item of .media.diagram, whose default (flex: 0 1 auto) sizes it to content —
+   so it collapsed to the pod table's width and pooled the slack against the right edge. Growing it to
+   fill the card evens the gutters. (.dgm already sets width: 100%, so the vMCP card never had this.) */
 .media.k8s .term {
   flex: 1;
   min-width: 0;
@@ -964,12 +927,10 @@ section {
   margin-top: 0;
 }
 
-/* The version of the running image, fetched once from /api/versions and written in by versions.ts.
-   Monospace because it is an identifier, not prose, and muted because it sits next to the live badge
-   and must not compete with it: the question "is it up" is louder than "which build".
-   `hidden` until filled — a component that does not answer shows no badge at all, rather than an
-   empty pill. A -snapshot build does not match main, so it is accented rather than left to read as
-   a release. */
+/* The running image's version, fetched once from /api/versions by versions.ts. Monospace (an
+   identifier, not prose) and muted so it doesn't compete with the live badge — "is it up" beats
+   "which build". `hidden` until filled, so a silent component shows no badge. A -snapshot build is
+   accented rather than read as a release. */
 .ver {
   display: inline-flex;
   align-items: center;
@@ -1027,9 +988,8 @@ section {
   }
 }
 
-/* Professional experience — deliberately teal, where featured work is navy and the project list is
-   green. Employment history is a different kind of thing from a side project, and the colour says so
-   before the heading is read. The left rail and tinted panel carry the distinction. */
+/* Professional experience — teal, where featured work is navy and the project list green. Employment
+   is a different kind of thing from a side project, and the colour says so before the heading. */
 .exp-lab {
   color: var(--exp);
 }
@@ -1074,9 +1034,8 @@ section {
   margin: 10px 0 12px;
   max-width: 105ch;
 }
-/* The doc links are FAB bubbles: raised, filled, floating off the panel. These point at shipped IBM
-   products — the strongest evidence on the card — and as underlined text they read as a footnote.
-   The lift on hover is what sells them as buttons rather than chips. */
+/* The doc links are FAB bubbles: raised, filled. They point at shipped IBM products — the strongest
+   evidence on the card — which as underlined text would read as a footnote. */
 .exp-links {
   display: flex;
   flex-wrap: wrap;
@@ -1136,10 +1095,9 @@ section {
   }
 }
 
-/* All projects — detailed dated list, now the page's green hue. Featured work is navy, employment is
-   teal, and the full archive is green (the quiz card being the one gold exception in the banner
-   above): distinct colours, so a reader can tell which section they are in without reading the
-   heading. Same rail-plus-wash-plus-lift construction as the other two, so they read as siblings. */
+/* All projects — detailed dated list, green. Featured is navy, employment teal, the archive green (the
+   quiz card the one gold exception above): distinct colours per section. Same rail-plus-wash-plus-lift
+   construction as the other two. */
 .proj-lab {
   color: var(--proj-2);
 }
@@ -1189,17 +1147,15 @@ section {
   color: var(--proj-2);
 }
 .projects .member {
-  /* The default .member plate is the blue-grey --panel-2, which reads as a blue box dropped into an
-     amber card. Warm it so the nesting looks intentional.
-     border-color must precede border-left-color — the shorthand resets all four sides, so setting
-     it afterwards would wipe the rail this rule is trying to keep. */
+  /* The default .member plate is blue-grey --panel-2, a blue box in an amber card; warm it so the
+     nesting looks intentional. border-color must precede border-left-color — the shorthand resets all
+     four sides, so setting it after would wipe the rail. */
   background: color-mix(in srgb, var(--proj) 5%, var(--panel));
   border-color: color-mix(in srgb, var(--proj) 22%, var(--line));
   border-left-color: color-mix(in srgb, var(--proj) 55%, var(--line));
 }
-/* The primary chip in All projects — "Check out!" — is FILLED green, the same solid treatment the
-   featured cards' primary buttons get, rather than the pale tint it used to be. A call to action on a
-   green row should read as green, not as a faint wash of it. */
+/* The primary chip in All projects ("Check out!") is FILLED green, like the featured cards' primary
+   buttons — a call to action on a green row should read as green, not a faint wash. */
 .projects .chip.primary {
   color: #fff;
   border: 1px solid transparent;
@@ -1212,10 +1168,9 @@ section {
     color-mix(in srgb, var(--proj) 70%, #000)
   );
 }
-/* Repository lands here as a ghost chip on most rows but as a PRIMARY one on grouped rows (a group
-   member's single link is its main CTA). Left to the base .chip rules the ghost ones stayed navy
-   while the primary ones went green — the same label, two colours down one list. Pin the ghost to the
-   section's green as well, so every chip in All projects reads as one green family. */
+/* Repository is a ghost chip on most rows, PRIMARY on grouped ones (a member's single link is its
+   CTA). Left to base .chip rules the ghosts stayed navy while primaries went green — same label, two
+   colours. Pin the ghost to the section's green too, so every chip reads as one green family. */
 .projects .chip.ghost {
   color: var(--muted);
   background: color-mix(in srgb, var(--proj) 8%, var(--panel));
@@ -1422,8 +1377,7 @@ section {
   font-family: inherit;
 }
 /* Skip is deliberately the lightest thing in the dialog — no fill, no border — so Send is the only
-   button with weight and pops off the card. Skipping stays one obvious click, it just does not
-   compete for the eye. */
+   button with weight. Skipping stays one obvious click, it just doesn't compete for the eye. */
 .hello-skip {
   background: none;
   border: none;
@@ -1441,9 +1395,7 @@ section {
   background: var(--chip);
 }
 
-/* ─────────────────────────────────────────────────────────────────────────────────────────────
-   The architecture panel. See architecture.ts — the grid IS the diagram.
-   ───────────────────────────────────────────────────────────────────────────────────────────── */
+/* The architecture panel. See architecture.ts — the grid IS the diagram. */
 
 .masthead {
   padding-bottom: 0;
@@ -1513,12 +1465,9 @@ section {
   text-align: left;
 }
 
-/* ── The grid ─────────────────────────────────────────────────────────────────────────────────
-   col 1 = the vault. Columns 2-7 are the content: each service spans TWO of them (home 2-3,
-   quiz 4-5, vmcp 6-7) so the three of them fill the width; platform-content spans 3-4 — the
-   OVERLAP — so it sits under the gap between home and quiz and shares a column with each of them.
-   That shared column is what lets a plain straight line join a volume to the pod it is mounted
-   into: no elbow, because with a fine enough grid there is no offset to bridge.                  */
+/* The grid. col 1 = the vault. The content columns each span multiple per service so they fill the
+   width; platform-content spans the OVERLAP so it sits under the gap between home and quiz, sharing a
+   column with each — which lets a straight line join a volume to the pod it mounts into, no elbow. */
 .arch-grid {
   display: grid;
   /* Col 1 used to be a 40px rail for the vertical sealed-secrets label; that label is now a small chip
@@ -1583,14 +1532,10 @@ section {
   grid-row: 17;
 }
 
-/* FOUR services now, each THREE columns wide (home 2-4, quiz 5-7, vmcp 8-10, platform-auth 11-13).
-   vmcp keeps a lane either side of its database — the MCP-over-SSE line drops down the right one to
-   rs-mcp; the left lane is now unused (fvt-traffic, which rose up it, left the cluster). */
 /* home 2-4, quiz 5-7, platform-auth 8-10, vmcp 11-13. vmcp stays on the RIGHT EDGE, where its whole
-   stack already lives — the agent's road down the right, the database in its middle column, the SSE
-   line down the right lane to rs-mcp — so none of that has to move. platform-auth is the new peer
-   dropped into the freed middle slot. (The agent box must stay far-right too: pulled inward it
-   collides with the full-width "You" box above it.) */
+   stack lives (agent's road down the right, database in the middle column, SSE line to rs-mcp), so
+   none of it moves; platform-auth is the new peer in the freed middle slot. (The agent box must stay
+   far-right too, or pulled inward it collides with the full-width "You" box above.) */
 .s1 {
   grid-column: 2 / 5;
 } /* home */
@@ -1747,10 +1692,9 @@ section {
 .b-vol .arch-name {
   color: var(--exp-2);
 }
-/* The two databases are Postgres servers, not the volume beside them — a solid border and the DB blue,
-   so the map stops drawing a Postgres server as "PersistentVolume". Their data still outlives a pod
-   (via the PVC beneath), but the box is a workload that speaks SQL, and now reads as one. Ordered
-   after .b-vol so it overrides the shared dashed-volume styling the boxes keep for their positioning. */
+/* The two databases are Postgres servers, not the volume beside them — solid border and DB blue, so the
+   map stops drawing a Postgres server as "PersistentVolume". Ordered after .b-vol so it overrides the
+   shared dashed-volume styling the boxes keep for positioning. */
 .b-db {
   border-style: solid;
   border-color: var(--db);
@@ -1776,10 +1720,9 @@ section {
   color: var(--muted);
 }
 
-/* vmcp-db is the MIDDLE column of the gateway's three (col 9). The two it leaves over, 8 and 10, are
-   the lanes the connectors run in — the SSE line down the right (the left is now spare since fvt-traffic
-   left). Narrower by construction, not by a margin, so nothing needs re-tuning when the viewport changes.
-   platform-db sits under platform-auth (s4) with no lanes to reserve, so it takes the full width. */
+/* vmcp-db is the MIDDLE column of the gateway's three; the lanes either side carry the connectors (the
+   SSE line down the right, the left now spare since fvt-traffic left). Narrower by construction, not a
+   margin, so nothing re-tunes on resize. platform-db under platform-auth has no lanes, so full width. */
 .db {
   grid-column: 12 / 13;
 }
@@ -1794,10 +1737,9 @@ section {
   margin-top: 18px;
 }
 
-/* A sealed Secret is a cluster object, not a running service, so it sits low in the k8s frame's
-   bottom-left corner and dresses down: a dotted outline and a near-background fill, so it reads as a
-   quiet piece of the cluster rather than another box in the traffic path. Horizontal now that it is a
-   short wide chip rather than a tall left rail. */
+/* A sealed Secret is a cluster object, not a service, so it sits low in the k8s frame's bottom-left and
+   dresses down (dotted outline, near-background fill) — a quiet piece of the cluster, not a box in the
+   traffic path. Horizontal now that it's a short wide chip rather than a tall left rail. */
 .vault {
   grid-column: 2 / 6;
   grid-row: 14;
@@ -1827,10 +1769,9 @@ section {
   color: color-mix(in srgb, var(--muted) 75%, transparent);
 }
 
-/* A MOUNT IS NOT TRAFFIC. A volume is attached to a pod; nothing flows along it. So it gets a plain
-   line and no arrowhead — an arrow would assert a direction that does not exist. (The gateway's link
-   to its database is different: queries go down and rows come back, so that one is an arrow.)
-   Each line sits in the column its two boxes SHARE, so it is straight rather than an elbow. */
+/* A MOUNT IS NOT TRAFFIC. A volume is attached to a pod; nothing flows along it, so it gets a plain
+   line, no arrowhead (the gateway's DB link is different — queries down, rows back — so that's an
+   arrow). Each line sits in the column its two boxes SHARE, so it's straight, not an elbow. */
 .mount {
   grid-row: 12;
   align-self: stretch;
@@ -1932,12 +1873,10 @@ section {
   }
 }
 
-/* ── CICD diagram (desktop SVG) ─────────────────────────────────────────────────────────────────
-   The restored inline SVG for the desktop CICD slide. Scoped to .arch-cicd; the phone uses
-   mobileCicd() and never sees this. See diagrams.ts CICD_DIAGRAM and architecture.ts. */
-/* Marching dashes — the flow the .ln arrows animate. Distinct from arch-flow (which shifts a CSS
-   background for the HTML diagrams); an SVG stroke marches via stroke-dashoffset. Restored alongside
-   the SVG, since the .ln rule below references it. */
+/* CICD diagram (desktop SVG). Scoped to .arch-cicd; the phone uses mobileCicd() and never sees this.
+   See diagrams.ts CICD_DIAGRAM. */
+/* Marching dashes — the flow the .ln arrows animate. Distinct from arch-flow (a CSS background shift
+   for the HTML diagrams); an SVG stroke marches via stroke-dashoffset. */
 @keyframes cicd-flow {
   to {
     stroke-dashoffset: -14;
@@ -2185,23 +2124,19 @@ section {
   color: var(--live);
 }
 
-/* ── The slider — two diagrams, paged ────────────────────────────────────────────────────────────
-   A transform track rather than a scroll container, because the two diagrams are different heights:
-   the VIEWPORT owns the height and animates to the live slide, so switching to the shorter one does
-   not leave a lake of empty space under it. The height is set in JS (it cannot be known in CSS). */
+/* The slider — diagrams paged. A transform track, not a scroll container, because the diagrams are
+   different heights: the VIEWPORT owns the height and animates to the live slide, so a shorter one
+   leaves no empty space. Height is set in JS (it can't be known in CSS). */
 .arch-slider {
   margin-top: 22px;
 }
 .arch-tabs {
   display: flex;
   gap: 6px;
-  /* `safe` center, and the keyword is the whole point.
-     Four tabs do not fit 390px. Plain `center` splits the OVERFLOW evenly across both sides — so the
-     first tab's label was cut off at the left and the last at the right, with no way to reach either:
-     a scroll container's origin is its left padding edge and scrollLeft cannot go negative. `safe`
-     falls back to flex-start exactly when the content overflows, which restores the full scroll range
-     and costs nothing at widths where they do fit. (The garden board in the quiz has this same bug,
-     from the same one word.) */
+  /* `safe` center — the keyword is the point. Four tabs don't fit 390px, and plain `center` splits the
+     OVERFLOW across both sides, cutting off the first and last tabs unreachably (scrollLeft can't go
+     negative). `safe` falls back to flex-start exactly when content overflows, restoring the full
+     scroll range and costing nothing where they fit. */
   justify-content: safe center;
   overflow-x: auto;
   /* A swipe along the tabs is a swipe along the tabs, not a browser back-navigation. */
@@ -2263,10 +2198,8 @@ section {
   margin-top: 0;
 }
 
-/* ── Diagram 3 — the security matrix ─────────────────────────────────────────────────────────────
-   A plain service × scan table, not a topology: the question ("what is scanned where") is a grid of
-   yes/no, and a grid is the honest shape for it. The service names reuse the topology's colour chips
-   so a row reads as the same thing in both diagrams. */
+/* Diagram 3 — the security matrix. A service × scan table, not a topology: "what is scanned where" is
+   a grid of yes/no. The service names reuse the topology's colour chips so a row reads the same in both. */
 .sec-intro {
   margin: 0 auto 18px;
   max-width: 64ch;
@@ -2356,9 +2289,8 @@ section {
   color: color-mix(in srgb, var(--accent2) 72%, var(--ink));
   border-color: color-mix(in srgb, var(--accent2) 40%, var(--line));
 }
-/* The scan legend below the matrix — left-aligned, larger, and set off by a bold divider. */
-/* Scans (left) and runtime defenses (right) sit side by side under one rule to save the vertical run
-   they took stacked. Collapses to one column on a phone, where two would each be too narrow. */
+/* The scan legend below the matrix. Scans (left) and runtime defenses (right) sit side by side to save
+   the vertical run they took stacked; collapses to one column on a phone, where two are too narrow. */
 .sec-tables {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -2417,10 +2349,9 @@ section {
   }
 }
 
-/* ── Diagram 2 — auth & the browser: two stacked pictures ────────────────────────────────────────
-   TOP is the miss path (the browser's gate gets a token); BOTTOM is validation (a pod checks one).
-   Consuming services on the left, the identity service on the right, arrows between. Each picture is a
-   three-part row — consumer | connectors | provider — with an explanation beneath it. */
+/* Diagram 2 — auth & the browser: two stacked pictures. TOP is the miss path (the browser's gate gets
+   a token), BOTTOM is validation (a pod checks one). Consuming services left, identity service right,
+   arrows between; each is a three-part row — consumer | connectors | provider — with an explanation. */
 .arch-auth {
   max-width: 860px;
   margin: 0 auto;
@@ -2658,11 +2589,9 @@ section {
   color: var(--accent2);
 }
 
-/* ── One column on a phone ───────────────────────────────────────────────────────────────────────
-   Several boxes SHARE a row on desktop because they are columns of it. Collapsed to one column,
-   "row 11" would mean three different things: they would land in the same cell, stack, and two of
-   them would vanish. So the mobile map addresses each box by WHAT IT IS, not by where it sat.
-   It also cannot fall back to flex — the frames span rows, and only grid can draw them. */
+/* One column on a phone. Boxes that SHARE a row on desktop would land in the same cell collapsed to
+   one column and two would vanish, so each is addressed by WHAT IT IS, not where it sat. It can't fall
+   back to flex either — the frames span rows, and only grid can draw them. */
 @media (max-width: 900px) {
   .arch-grid {
     grid-template-columns: 1fr;
@@ -2672,12 +2601,10 @@ section {
     grid-column: 1 !important;
   }
 
-  /* SCOPED UNDER .arch-grid ON PURPOSE — these four are not stylistic.
-     Each ties at (0,1,0) with a desktop rule the same element also matches (.b-you vs .r1,
-     .arch-tag-hw vs .r5, .vault vs .vault, .pad vs .r15), and a media query adds no specificity. They
-     were winning solely because they appear later in the file, so re-ordering the stylesheet — a
-     formatter, a merge, a tidy-up — would silently reshuffle the mobile map with nothing to catch it.
-     `.arch-grid` raises them to (0,2,0), so they win on their merits instead of their position. */
+  /* SCOPED UNDER .arch-grid ON PURPOSE. Each ties at (0,1,0) with a desktop rule the same element also
+     matches (.b-you vs .r1, .arch-tag-hw vs .r5, .vault vs .vault, .pad vs .r15), and a media query
+     adds no specificity — they were winning only by appearing later, so re-ordering the file would
+     silently reshuffle the mobile map. `.arch-grid` raises them to (0,2,0), so they win on merit. */
   .arch-grid .b-you {
     grid-row: 1;
     max-width: none;
@@ -2773,10 +2700,9 @@ section {
     grid-row: 26;
   }
 
-  /* Both lines turn with the rail. Once the grid collapses to one column this is a full-width box
-     like any other, and vertical text inside it is a ~700px tall column of sideways words beside an
-     empty orange field. `nowrap` has to go with the rotation: horizontal, the string is far wider
-     than a phone. */
+  /* Both lines turn horizontal with the rail. Collapsed to one column this is a full-width box, and
+     vertical text would be a ~700px column of sideways words. `nowrap` goes with the rotation:
+     horizontal, the string is far wider than a phone. */
   .vault-t,
   .vault-m {
     writing-mode: horizontal-tb;
@@ -2820,17 +2746,14 @@ section {
     justify-content: center;
   }
 
-  /* Diagram 2 (CICD): the three worlds stack, in the order the pipeline actually runs — GitHub, then
-     this machine, then the cluster. Nothing is hidden and nothing is re-authored: it is the same boxes
-     in the same order, one per row. The connectors are .auth-h, so they degrade with the rule below
-     rather than needing one of their own.
+  /* Diagram 2 (CICD): the three worlds stack in pipeline order — GitHub, this machine, the cluster.
+     Same boxes, same order, one per row; the connectors are .auth-h, so they degrade with the rule
+     below. The PR/merge fork goes single-column too — two 135px branches side by side is not a fork,
+     it's two crushed columns. */
 
-     The PR/merge fork goes single-column too. Two 135px branches side by side on a phone is how the
-     quiz's .match mode became unreadable; a fork that narrow is not a fork, it is two crushed columns. */
-
-  /* Diagram 3: each picture's three-part row (consumer | arrows | provider) stacks into one column.
-     The horizontal arrows have no width to run across, so their shafts/heads are dropped and each
-     label becomes a plain centred caption between the boxes it used to join. */
+  /* Diagram 3: each three-part row (consumer | arrows | provider) stacks into one column. The
+     horizontal arrows have no width to run, so shafts/heads drop and each label becomes a centred
+     caption between the boxes. */
   .auth-flow {
     grid-template-columns: 1fr;
     gap: 8px;
@@ -2856,18 +2779,11 @@ section {
   }
 }
 
-/* ══ MOBILE DIAGRAMS ═══════════════════════════════════════════════════════════════════════════════
-   The transit maps that replace the first three diagrams on a phone. See mobile-diagrams.ts for why
-   they exist and for the debt they carry (two hand-maintained pictures of one platform).
-
-   Everything is scoped under .arch-mobile and prefixed per diagram (mt-/mc-/ma-). The three maps
-   reuse names like "trunk" and "stn" for DIFFERENT strokes — topology's trunk is two coloured lines,
-   the pipeline's is amber-or-crimson, auth's is rose — so one shared vocabulary would have them
-   overwriting each other. The prefix is not decoration; it is what makes three maps coexist.
-
-   Colours are tokens rather than literals because the desktop diagrams are (var(--accent),
-   var(--panel)) and follow prefers-color-scheme. A map hardcoded to #fff would be a lit island on a
-   dark phone — worse than what it replaced. */
+/* MOBILE DIAGRAMS. The transit maps that replace the first three diagrams on a phone (see
+   mobile-diagrams.ts for why, and the debt). Scoped under .arch-mobile and prefixed per diagram
+   (mt-/mc-/ma-): the three maps reuse names like "trunk" and "stn" for DIFFERENT strokes, so one
+   vocabulary would overwrite. Colours are tokens, not literals, so they follow prefers-color-scheme —
+   a map hardcoded to #fff would be a lit island on a dark phone. */
 :root {
   --mt-browser: #1f5fd0;
   --mt-agent: #c2185b;
@@ -2992,9 +2908,9 @@ section {
   font-size: 11px;
 }
 
-/* Character data — URL paths, workflow filenames, shell commands — is read a character at a time and
-   cannot live under a station at 366px. Four names plus four paths do not share this rank; that was
-   every label collision in the drafts. The paths ARE a routing table, so they are drawn as one. */
+/* Character data — URL paths, filenames, commands — is read a character at a time and can't live under
+   a station at 366px (four names plus four paths don't share the rank). The paths ARE a routing table,
+   so they're drawn as one. */
 .arch-mobile .mdg-tbl {
   width: 100%;
   border-collapse: collapse;
@@ -3365,9 +3281,8 @@ section {
   stroke-width: 1.5;
 }
 
-/* The slide centres its text, which the mocks never did — a routing table read as three centred
-   columns with ragged edges on both sides, and a URL path is the one thing that must start where the
-   eye expects it. Stated on the container so every child inherits it, rather than per cell. */
+/* Left-aligned: a centred routing table has ragged edges, and a URL path must start where the eye
+   expects. Stated on the container so every child inherits it, rather than per cell. */
 .arch-mobile,
 .arch-mobile .mdg-intro,
 .arch-mobile .mdg-tbl td,
@@ -3379,12 +3294,10 @@ section {
   text-align: right;
 }
 
-/* SPECIFICITY, not !important. `.arch-mobile .mdg-tbl td` sets the padding SHORTHAND at (0,2,1),
-   which silently zeroes the padding-left that the cell classes set at (0,2,0) — so the label column
-   and the value column abutted ("a pull requestci.yml"). The mock used !important; this scopes the
-   cell classes under the table instead, which wins on its merits and leaves the shorthand honest.
-   This is the collision styles.css already warns about further up: a longer selector beats a
-   "more specific-looking" one, and a media query adds nothing. */
+/* SPECIFICITY, not !important. `.arch-mobile .mdg-tbl td` sets the padding SHORTHAND at (0,2,1), which
+   zeroes the padding-left the cell classes set at (0,2,0) — so label and value abutted ("a pull
+   requestci.yml"). Scoping the cell classes under the table wins on merit and leaves the shorthand
+   honest — the same collision warned about above. */
 .arch-mobile .mdg-tbl .mdg-s,
 .arch-mobile .mdg-tbl .mdg-f,
 .arch-mobile .mdg-tbl .mdg-no,
@@ -3396,15 +3309,10 @@ section {
   padding-left: 8px;
 }
 
-/* ── The security matrix on a phone ────────────────────────────────────────────────────────────────
-   A repo × scan matrix is the one diagram here that IS a table, so it stays one. The problem is what
-   you could see of it: at 390px the desktop metrics (34% repo column, 13.5px headers, 12px cell
-   padding, 460px min-width) showed the repo column and ONE AND A HALF scan columns. Six columns
-   existed; you got 1.5.
-   Worse, scrolling right to reach the others took the repo name with it — so you were reading a row
-   of ticks with nothing to say whose row it was. A matrix whose row label scrolls away is not a
-   matrix; it is two lists.
-   So: pin the repo column, and spend the recovered width on the scans. */
+/* The security matrix on a phone. It IS a table, so it stays one — but at 390px the desktop metrics
+   (34% repo column, 460px min-width) showed the repo column and 1.5 scan columns of six, and scrolling
+   right took the repo name with it (a matrix whose row label scrolls away is two lists). So: pin the
+   repo column and spend the recovered width on the scans. */
 @media (max-width: 900px) {
   .sec-tbl {
     /* 460px forced a horizontal scroll before the columns were even tight. Let the cells decide. */
@@ -3419,14 +3327,11 @@ section {
     max-width: 13ch;
     padding-right: 8px;
     font-size: 11px;
-    /* The names are long and hyphenated; letting them wrap to two short lines buys back ~90px of
-       width for the scans, which is the whole point of this block.
-       NOT `overflow-wrap: anywhere`, which is what this said first. It tells automatic table layout
-       that the column's min-content width is ONE CHARACTER, so the column collapses to a sliver and
-       shreds the name down the page — "project-platform" became sixteen stacked letters. That exact
-       bug is already written up in open-vMCP's app.css, where it shredded a uuid; the note there did
-       not stop it happening here, so: the min-width is the floor that makes the max-width safe.
-       Default wrapping already breaks these names at their hyphens, which is where they should break. */
+    /* Long hyphenated names wrap to two short lines, buying back ~90px for the scans. NOT
+       `overflow-wrap: anywhere`: it tells table layout the min-content width is ONE CHARACTER, so the
+       column collapses and shreds the name down the page ("project-platform" as sixteen stacked
+       letters). The min-width is the floor that makes the max-width safe; default wrapping already
+       breaks these at their hyphens. */
     white-space: normal;
     overflow-wrap: normal;
     line-height: 1.2;
@@ -3447,10 +3352,9 @@ section {
     letter-spacing: 0;
   }
 
-  /* THE ROW LABEL STAYS. Sticky needs an opaque background of its own: the default is transparent,
-     so the scrolled tick columns would slide visibly underneath the repo name. It also needs to sit
-     above them — hence z-index — and a right-hand rule, which is what tells you the column is pinned
-     rather than merely first. */
+  /* THE ROW LABEL STAYS. Sticky needs an opaque background (default is transparent, so tick columns
+     would slide visibly under the repo name), a z-index to sit above them, and a right-hand rule that
+     says the column is pinned, not merely first. */
   .sec-tbl th.sec-repo-name,
   .sec-tbl tbody th.sec-repo-name {
     position: sticky;
@@ -3466,14 +3370,10 @@ section {
   }
 }
 
-/* ── The project list on a phone ───────────────────────────────────────────────────────────────────
-   `.projects li` is a flex row with a fixed 104px date rail, which reads as a timeline at desktop
-   width. On a 390px screen it spends 104px + a 16px gap — 36% of the row — on the four characters of
-   "Jul 2026", and leaves the body 175px. Everything downstream pays for it: the blurb wraps to six
-   lines, and the action buttons stack instead of sitting side by side, each trailing dead space to
-   its right. Meanwhile the rail itself is empty below its one line.
-   A date is not worth a column here. Stacked, it becomes an eyebrow over the title — which is what
-   it already is on the experience cards above, so this also makes the two lists agree. */
+/* The project list on a phone. `.projects li`'s fixed 104px date rail reads as a timeline on desktop,
+   but on a 390px screen spends 36% of the row on "Jul 2026" and leaves the body 175px — the blurb
+   wraps to six lines and the buttons stack. Stacked, the date becomes an eyebrow over the title, as on
+   the experience cards above, so the two lists agree. */
 @media (max-width: 640px) {
   .projects li {
     flex-direction: column;
@@ -3489,12 +3389,9 @@ section {
   .proj-body {
     width: 100%;
   }
-  /* Make the experience date agree with the list above — the eyebrow the projects comment CLAIMED the
-     two lists already shared but never actually delivered. The date lived inside .exp-head with
-     margin-left:auto, so on a phone it wrapped to its own line RIGHT-aligned below the role rather
-     than sitting over the title. flex-basis:100% puts it on a full line of its own, order:-1 lifts it
-     above the role, and dropping the auto-margin left-aligns it — the same top-left eyebrow the list
-     rows use, in this section's own accent. */
+  /* Make the experience date agree with the list above. It lived in .exp-head with margin-left:auto,
+     so on a phone it wrapped right-aligned below the role; flex-basis:100% + order:-1 + dropping the
+     auto-margin make it the same top-left eyebrow the list rows use. */
   .exp-dates {
     order: -1;
     flex-basis: 100%;
@@ -3505,23 +3402,14 @@ section {
   }
 }
 
-/* ══ THE PHONE ═════════════════════════════════════════════════════════════════════════════════════
-   Everything below is 640px-and-under only. The desktop page is unchanged. */
+/* THE PHONE. Everything below is 640px-and-under only. The desktop page is unchanged. */
 
-/* ── The gutters ───────────────────────────────────────────────────────────────────────────────────
-   THIS RE-DECLARES --wrap-max, WHICH @platform/ui's base.css EXPLICITLY FORBIDS. Doing it anyway, on
-   purpose, and the reason it is not the drift that comment is guarding against:
-   That rule exists because the apps once each picked their own DESKTOP column — 1080 here, 940 in the
-   quiz — and a wide monitor then showed two different gutters side by side. The knob being turned
-   here is the phone term, and the formula's own comment says what that term is for: "the 92vw term is
-   what keeps it off the edges on everything narrower". On a 390px screen, 8% is 31px of a 390px
-   screen spent holding the content away from an edge it was never going to hit — and then --wrap-pad
-   spends 14 more on each side. 331px of usable width out of 390.
-   The cards are the whole page here, so that is 60px of nothing, and it is why everything inside them
-   was fighting for room. On a phone the edge IS the margin.
-   The quiz has this same 60px and does NOT get it back from here — this is portfolio-home's
-   stylesheet. The principled fix is a phone term in base.css, which is a submodule change and a
-   second PR. Noted rather than smuggled. */
+/* The gutters. THIS RE-DECLARES --wrap-max, WHICH @platform/ui's base.css FORBIDS — on purpose, and not
+   the drift that rule guards against (that was the apps picking different DESKTOP columns). The knob
+   turned here is the phone term: on a 390px screen the 92vw formula spends 31px a side plus --wrap-pad's
+   14, leaving 331px of 390 — 60px of nothing, and the cards are the whole page. On a phone the edge IS
+   the margin. The quiz has the same 60px and doesn't get it back here; the principled fix is a phone
+   term in base.css (a submodule change and a second PR). Noted, not smuggled. */
 @media (max-width: 640px) {
   :root {
     --wrap-max: 100%;
@@ -3531,11 +3419,8 @@ section {
   }
 }
 
-/* ── The bio ───────────────────────────────────────────────────────────────────────────────────────
-   16.5px/1.55 is tuned for the 1080px measure it sits in on a desktop, where it sets in three lines.
-   At 386px that same size sets it in TWELVE, and a 16.5px paragraph twelve lines deep is a wall. The
-   max-width is inert here (the column is narrower than the cap), so the only knobs that matter are
-   size and leading. Both come down; the measure is now the screen. */
+/* The bio. 16.5px/1.55 is tuned for the 1080px desktop measure (three lines); at 386px it sets in
+   TWELVE — a wall. The max-width is inert here, so only size and leading matter; both come down. */
 @media (max-width: 640px) {
   .mast-bio {
     font-size: 14.5px;
@@ -3548,21 +3433,15 @@ section {
   }
 }
 
-/* ── The badges ────────────────────────────────────────────────────────────────────────────────────
-   `margin-left: auto` inside a `flex-wrap: wrap` head is a right-align that gives up: the moment the
-   title and the chips do not both fit — which on a phone is always — the chips wrap onto a line of
-   their own, and "top right" becomes "somewhere in the middle, later". The card is already
-   position:relative (.lux), and the date moved to a left-hand eyebrow when the rows stacked, so the
-   top-right corner is empty and can simply be claimed. Every badge answers the same question, so they
-   keep sharing one corner — the point of badges() in view.ts — it is now a corner they cannot leave. */
+/* The badges. `margin-left: auto` in a `flex-wrap: wrap` head is a right-align that gives up: when the
+   title and chips don't both fit (on a phone, always) the chips wrap to their own line. The card is
+   position:relative (.lux) and the date moved to a left eyebrow, so the top-right corner is empty and
+   can be claimed — every badge sharing one corner, the point of badges() in view.ts. */
 @media (max-width: 640px) {
-  /* CHILD COMBINATORS ALL THE WAY DOWN, and that is the whole rule. `.projects li .badges` is a
-     DESCENDANT match, and a group row contains member panels that each emit their own badges() —
-     so every member's "live" chip was also torn out of its panel and stacked into the card's one
-     top-right corner, on top of the group's "Featured". Two group rows rendered "Featuredlive" as a
-     single smear while the plain rows looked perfect, which is exactly how a too-broad selector
-     presents: correct everywhere it was tested, wrong wherever the DOM is deeper. Only the ROW's own
-     head is the row's corner. */
+  /* CHILD COMBINATORS ALL THE WAY DOWN — the whole rule. `.projects li .badges` is a DESCENDANT match,
+     and a group row's member panels each emit their own badges(), so every member's "live" chip got
+     torn out and stacked into the card's corner atop the group's "Featured" ("Featuredlive" as one
+     smear). Only the ROW's own head is the row's corner. */
   .projects > li > .proj-body > .proj-head > .badges {
     position: absolute;
     top: 12px;
@@ -3575,10 +3454,9 @@ section {
     position: static;
     margin-left: auto;
   }
-  /* Same "right-align that gives up" trap, one level down: a member's tech list ("TS · Express ·
-     Postgres · jose") is long enough to wrap the head on a phone, which drops that member's "live" chip
-     onto a second line instead of its top-right corner. Hold the head to one row and let the tech list
-     ellipsize into the space left over, so it shortens with "…" and the chip keeps its corner. */
+  /* Same "right-align that gives up" trap one level down: a member's tech list wraps the head on a
+     phone, dropping its "live" chip to a second line. Hold the head to one row and let the tech list
+     ellipsize, so it shortens with "…" and the chip keeps its corner. */
   .projects .member .member-head {
     flex-wrap: nowrap;
   }
@@ -3601,10 +3479,9 @@ section {
   }
 }
 
-/* ── The tab bar ───────────────────────────────────────────────────────────────────────────────────
-   With the short labels above, four tabs fit — so the bar stops being a scroller and becomes what it
-   claims to be. `safe center` stays: it is correct at every width and costs nothing once the content
-   fits, and it is what makes the overflow reachable if a fifth diagram ever arrives. */
+/* The tab bar. With the short labels above, four tabs fit, so the bar stops being a scroller. `safe
+   center` stays — correct at every width, costing nothing once content fits, and keeping the overflow
+   reachable if a fifth diagram ever arrives. */
 .tab-brief {
   display: none;
 }
@@ -3632,18 +3509,12 @@ section {
   }
 }
 
-/* ── Landscape on a phone ──────────────────────────────────────────────────────────────────────────
-   Gated on HEIGHT. `orientation: landscape` alone is true of every desktop monitor, and a width gate
-   would catch a tablet held upright — the scarce thing when a phone turns is vertical room, so that
-   is what is measured. 500px is above a landscape iPhone (~390) and below any laptop.
-   The max-width term stops a SHORT DESKTOP WINDOW from being told to rotate its phone: height alone
-   is true of a 1400x450 browser window, which is a thing people have. A landscape phone is the only
-   viewport that is both under 950 wide and under 500 tall.
-   The icon is drawn upright on purpose — it shows the phone as it should BE, not as it is. Rotated,
-   it depicted the very orientation being refused.
-   This does lock out someone who cannot rotate — a mounted phone, or a person who holds theirs one
-   way. It is a deliberate trade for a page whose every picture is drawn tall, and it is reversible in
-   one media query. */
+/* Landscape on a phone. Gated on HEIGHT: `orientation: landscape` alone is true of every desktop, and
+   width would catch an upright tablet — the scarce thing when a phone turns is vertical room. 500px is
+   above a landscape iPhone (~390), below a laptop; the max-width term stops a short desktop window
+   (e.g. 1400x450) from being told to rotate. The icon is drawn upright on purpose — the phone as it
+   should BE. This locks out someone who can't rotate — a deliberate trade for a page drawn tall,
+   reversible in one media query. */
 .rotate-me {
   display: none;
 }
@@ -3692,22 +3563,17 @@ section {
   color: var(--muted);
 }
 
-/* ── The masthead ──────────────────────────────────────────────────────────────────────────────────
-   Pulling --wrap-pad to 2px achieves nothing while the panel inside it spends 34px a side: the width
-   was handed back and immediately taken again, and the name — 34px type in the 318px that left —
-   clipped its own last letters against the panel edge. ("Irarragorri" rendered as "Irarragorñ",
-   which is a name, cut, in the largest type on the page.)
-   The type here is explicitly "sized for the column it now sits in" per the comment above; on a phone
-   that column is a different column, so the size follows it down. */
+/* The masthead. Pulling --wrap-pad to 2px achieves nothing while the panel spends 34px a side: the
+   name (34px type in the 318px left) clipped its last letters against the panel edge ("Irarragorri" as
+   "Irarragorñ"). The type is sized for its column; on a phone that column is smaller, so it follows. */
 @media (max-width: 640px) {
   .masthead {
     padding: 18px 12px 16px;
   }
   .masthead h1 {
-    /* 24, not 26: the account chip is position:fixed at the top-right and its left edge lands at
-       300px on a 390px screen. At 26px the centred name reached 303 and ran under it. The chip is
-       not in flow, so no amount of padding here would have been told about it — the only honest fix
-       is to measure where it actually sits and stay out of its way. */
+    /* 24, not 26: the account chip is position:fixed, its left edge at 300px on a 390px screen. At
+       26px the centred name reached 303 and ran under it; the chip isn't in flow, so measure where it
+       sits and stay clear. */
     font-size: 24px;
     letter-spacing: -.4px;
     /* Long single words in a gradient-clipped heading cannot be allowed to overflow: background-clip
@@ -3723,17 +3589,11 @@ section {
   }
 }
 
-/* ── The featured tiles on a phone ─────────────────────────────────────────────────────────────────
-   `.feat` is 292px and `.feat.wide` is 390px, both fixed, both chosen for a desktop strip where the
-   only question is how many fit across. On a 390px screen the scrollport is 386 — so a WIDE tile is
-   wider than the screen it is on. Its right edge sits past the viewport entirely and its last stretch
-   of text lives under the curtain: you cannot read one without panning it, and panning a card inside
-   a strip that also pans is a gesture nobody should have to discover.
-   So on a phone a tile stops where the curtain starts. calc against --feat-fade rather than a second
-   copy of 56 — the card, the mask and the JS all read the one token, so the tile cannot drift out
-   from under the fade if the fade ever changes.
-   The next tile then begins inside the curtain, which is exactly the peek that says "there is more":
-   the fade is not covering content, it is covering the EDGE of the next card. */
+/* The featured tiles on a phone. `.feat` (292px) and `.feat.wide` (390px) are fixed for a desktop
+   strip, but on a 386px scrollport a wide tile is wider than the screen — its last text lives under
+   the curtain, unreadable without panning a card inside a strip that also pans. So a tile stops where
+   the curtain starts (calc against --feat-fade, not a second copy of 56, so card, mask and JS share
+   one token). The next tile then begins inside the curtain — the peek that says "there is more". */
 @media (max-width: 640px) {
   .feat,
   .feat.wide {
