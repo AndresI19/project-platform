@@ -2633,3 +2633,629 @@ section {
     background: none;
   }
 }
+
+/* ══ MOBILE DIAGRAMS ═══════════════════════════════════════════════════════════════════════════════
+   The transit maps that replace the first three diagrams on a phone. See mobile-diagrams.ts for why
+   they exist and for the debt they carry (two hand-maintained pictures of one platform).
+
+   Everything is scoped under .arch-mobile and prefixed per diagram (mt-/mc-/ma-). The three maps
+   reuse names like "trunk" and "stn" for DIFFERENT strokes — topology's trunk is two coloured lines,
+   the pipeline's is amber-or-crimson, auth's is rose — so one shared vocabulary would have them
+   overwriting each other. The prefix is not decoration; it is what makes three maps coexist.
+
+   Colours are tokens rather than literals because the desktop diagrams are (var(--accent),
+   var(--panel)) and follow prefers-color-scheme. A map hardcoded to #fff would be a lit island on a
+   dark phone — worse than what it replaced. */
+:root {
+  --mt-browser: #1f5fd0;
+  --mt-agent: #c2185b;
+  --mt-rail: #6a4fb6;
+  --mt-metal: #ede7d9;
+  --mt-metal-h: #8a7f63;
+  --mt-metal-e: #cfc7b3;
+  --mt-cluster: #dce9f2;
+  --mt-cluster-h: #4e7fa5;
+  --mt-cluster-e: #afc8da;
+  --mt-ink: #12161c;
+  --mt-muted: #5a6472;
+  --mt-paper: #fff;
+
+  --mc-pr: #c8880e;
+  --mc-rel: #c2185b;
+  --mc-gh: #ede7d9;
+  --mc-gh-h: #8a7f63;
+  --mc-gh-e: #cfc7b3;
+  --mc-out: #d8eae5;
+  --mc-out-h: #2e7d6f;
+  --mc-out-e: #a9cfc7;
+  --mc-k8s: #dce9f2;
+  --mc-k8s-h: #4e7fa5;
+  --mc-k8s-e: #afc8da;
+  --mc-ink: #12161c;
+  --mc-muted: #5a6472;
+  --mc-paper: #fff;
+
+  --ma-ticket: #b0003a;
+  --ma-key: #2f6fa8;
+  --ma-svc: #12507e;
+  --ma-office: #f3e9ec;
+  --ma-office-h: #8c5566;
+  --ma-office-e: #e0cdd4;
+  --ma-gates: #e4edf4;
+  --ma-gates-h: #4e7fa5;
+  --ma-gates-e: #afc8da;
+  --ma-open: #b9c4ce;
+  --ma-ink: #12161c;
+  --ma-muted: #5a6472;
+  --ma-paper: #fff;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* Zones darken and the lines BRIGHTEN. Keeping a line's light-mode hue on a dark ground drops its
+       contrast against the very band it crosses, which is where a route is least readable. */
+    --mt-browser: #6f9dff;
+    --mt-agent: #ff8098;
+    --mt-rail: #a3abff;
+    --mt-metal: #2b2620;
+    --mt-metal-h: #5d5442;
+    --mt-metal-e: #3f382c;
+    --mt-cluster: #1d2b36;
+    --mt-cluster-h: #3c6079;
+    --mt-cluster-e: #2b3f4e;
+    --mt-ink: #e8ecf2;
+    --mt-muted: #9aa4b2;
+    --mt-paper: #161a20;
+
+    --mc-pr: #e8a33a;
+    --mc-rel: #ff8098;
+    --mc-gh: #2b2620;
+    --mc-gh-h: #5d5442;
+    --mc-gh-e: #3f382c;
+    --mc-out: #1c2e2a;
+    --mc-out-h: #47968a;
+    --mc-out-e: #2a4540;
+    --mc-k8s: #1d2b36;
+    --mc-k8s-h: #3c6079;
+    --mc-k8s-e: #2b3f4e;
+    --mc-ink: #e8ecf2;
+    --mc-muted: #9aa4b2;
+    --mc-paper: #161a20;
+
+    --ma-ticket: #ff6f92;
+    --ma-key: #6aa9e0;
+    --ma-svc: #7fb2e6;
+    --ma-office: #2c2126;
+    --ma-office-h: #6d4552;
+    --ma-office-e: #403036;
+    --ma-gates: #1d2b36;
+    --ma-gates-h: #3c6079;
+    --ma-gates-e: #2b3f4e;
+    --ma-open: #4a5560;
+    --ma-ink: #e8ecf2;
+    --ma-muted: #9aa4b2;
+    --ma-paper: #161a20;
+  }
+}
+
+/* The swap. Desktop is the default and stays EXACTLY as it was — the mobile map is the addition, not
+   a replacement, so a bug here degrades to the diagram that already worked. */
+.arch-mobile {
+  display: none;
+}
+@media (max-width: 900px) {
+  .arch-desktop {
+    display: none;
+  }
+  .arch-mobile {
+    display: block;
+  }
+}
+
+.arch-mobile svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.arch-mobile .mdg-intro {
+  margin: 0 0 12px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+.arch-mobile .mdg-intro b {
+  color: var(--text);
+}
+.arch-mobile .mdg-intro code {
+  font-family: var(--mono);
+  font-size: 11px;
+}
+
+/* Character data — URL paths, workflow filenames, shell commands — is read a character at a time and
+   cannot live under a station at 366px. Four names plus four paths do not share this rank; that was
+   every label collision in the drafts. The paths ARE a routing table, so they are drawn as one. */
+.arch-mobile .mdg-tbl {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 14px 0 0;
+}
+.arch-mobile .mdg-tbl.mdg-lead {
+  margin: 0 0 16px;
+}
+.arch-mobile .mdg-tbl caption {
+  padding: 0 0 4px;
+  text-align: left;
+  font-size: 8.5px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.arch-mobile .mdg-tbl th {
+  padding: 0 0 3px;
+  text-align: left;
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+  border-bottom: 1px solid var(--line);
+}
+.arch-mobile .mdg-tbl td {
+  padding: 3.5px 0;
+  border-top: 1px solid var(--line);
+  vertical-align: baseline;
+  font-size: 9.5px;
+}
+.arch-mobile .mdg-tbl .mdg-p,
+.arch-mobile .mdg-tbl .mdg-mono,
+.arch-mobile .mdg-tbl .mdg-cmd {
+  font-family: var(--mono);
+  font-size: 8.5px;
+  white-space: nowrap;
+}
+.arch-mobile .mdg-tbl .mdg-p {
+  color: var(--text);
+}
+.arch-mobile .mdg-tbl .mdg-cmd {
+  color: var(--text);
+  padding-left: 8px;
+}
+.arch-mobile .mdg-tbl .mdg-s,
+.arch-mobile .mdg-tbl .mdg-f {
+  width: 100%;
+  padding-left: 10px;
+  font-size: 9.5px;
+  font-weight: 700;
+  color: var(--muted);
+}
+.arch-mobile .mdg-tbl .mdg-f {
+  font-weight: 400;
+  color: var(--text);
+}
+.arch-mobile .mdg-tbl .mdg-l {
+  text-align: right;
+  white-space: nowrap;
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.arch-mobile .mdg-tbl .mdg-you {
+  color: var(--mt-browser);
+}
+.arch-mobile .mdg-tbl .mdg-agent {
+  color: var(--mt-agent);
+}
+.arch-mobile .mdg-tbl .mdg-n {
+  width: 14px;
+  font-family: var(--mono);
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--mc-rel);
+}
+.arch-mobile .mdg-tbl .mdg-n-poll {
+  color: var(--mc-out-h);
+}
+.arch-mobile .mdg-tbl .mdg-n-pull {
+  color: var(--mc-k8s-h);
+}
+.arch-mobile .mdg-tbl .mdg-ev {
+  font-size: 9.5px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.arch-mobile .mdg-tbl .mdg-ev-pr {
+  color: var(--mc-pr);
+}
+.arch-mobile .mdg-tbl .mdg-ev-rel {
+  color: var(--mc-rel);
+}
+.arch-mobile .mdg-tbl .mdg-svc {
+  font-weight: 800;
+  color: var(--ma-svc);
+  white-space: nowrap;
+  text-transform: none;
+  font-size: 9.5px;
+  letter-spacing: 0;
+}
+.arch-mobile .mdg-tbl .mdg-no {
+  color: var(--live);
+  padding-left: 10px;
+}
+.arch-mobile .mdg-tbl .mdg-yes {
+  color: var(--ok, #1b7f4b);
+  padding-left: 10px;
+}
+.arch-mobile .mdg-tbl .mdg-none {
+  color: var(--muted);
+  padding-left: 10px;
+  font-style: italic;
+}
+
+.arch-mobile .mdg-key {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px 12px;
+  margin: 12px 0 0;
+}
+.arch-mobile .mdg-lead + svg,
+.arch-mobile .mdg-key + .mdg-tbl {
+  margin-top: 0;
+}
+.arch-mobile .mdg-k {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 9.5px;
+  font-weight: 700;
+  color: var(--muted);
+}
+.arch-mobile .mdg-sw {
+  width: 16px;
+  height: 4px;
+  border-radius: 2px;
+  flex: none;
+}
+.arch-mobile .mdg-sw-both {
+  background: linear-gradient(90deg, var(--mt-browser) 0 50%, var(--mt-agent) 50% 100%);
+  border-radius: 999px;
+}
+.arch-mobile .mdg-sw-cicd {
+  background: linear-gradient(90deg, var(--mc-pr) 0 50%, var(--mc-rel) 50% 100%);
+  border-radius: 999px;
+}
+.arch-mobile .mdg-sw-dash {
+  background: repeating-linear-gradient(90deg, var(--muted) 0 4px, transparent 4px 7px);
+}
+.arch-mobile .mdg-sw-key {
+  background: repeating-linear-gradient(90deg, var(--ma-key) 0 4px, transparent 4px 7px);
+}
+.arch-mobile .mdg-sw-guest {
+  background: repeating-linear-gradient(90deg, var(--muted) 0 2px, transparent 2px 5px);
+}
+
+/* ── The topology map ─────────────────────────────────────────────────────────────────────────── */
+.arch-mobile .mt-trunk {
+  fill: none;
+  stroke-width: 6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.arch-mobile .mt-t-browser {
+  stroke: var(--mt-browser);
+}
+.arch-mobile .mt-t-agent {
+  stroke: var(--mt-agent);
+}
+.arch-mobile .mt-stn {
+  fill: var(--mt-paper);
+  stroke: var(--mt-ink);
+  stroke-width: 2.2;
+}
+.arch-mobile .mt-name {
+  font-size: 12.5px;
+  font-weight: 700;
+  fill: var(--mt-ink);
+}
+.arch-mobile .mt-meta {
+  font-size: 9.5px;
+  font-weight: 600;
+  fill: var(--mt-muted);
+}
+.arch-mobile .mt-mono {
+  font-family: var(--mono);
+  font-size: 8.5px;
+  fill: var(--mt-muted);
+}
+.arch-mobile .mt-ztag {
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  fill: #fff;
+}
+.arch-mobile .mt-railline {
+  fill: none;
+  stroke: var(--mt-rail);
+  stroke-width: 3.5;
+  stroke-linecap: round;
+}
+.arch-mobile .mt-tap {
+  stroke: var(--mt-rail);
+  stroke-width: 1.3;
+  stroke-dasharray: 2 2.5;
+  fill: none;
+}
+.arch-mobile .mt-siding {
+  stroke: var(--mt-muted);
+  stroke-width: 1.4;
+  stroke-dasharray: 3.5 2.5;
+  fill: none;
+}
+.arch-mobile .mt-depot {
+  fill: var(--mt-paper);
+  stroke: var(--mt-muted);
+  stroke-width: 1.5;
+}
+.arch-mobile .mt-cap {
+  font-size: 8.5px;
+  font-weight: 700;
+  fill: var(--mt-muted);
+}
+
+/* ── The pipeline ─────────────────────────────────────────────────────────────────────────────── */
+.arch-mobile .mc-trunk {
+  fill: none;
+  stroke-width: 5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.arch-mobile .mc-t-pr {
+  stroke: var(--mc-pr);
+}
+.arch-mobile .mc-t-rel {
+  stroke: var(--mc-rel);
+}
+.arch-mobile .mc-stn {
+  fill: var(--mc-paper);
+  stroke: var(--mc-ink);
+  stroke-width: 2.2;
+}
+.arch-mobile .mc-name {
+  font-size: 11.5px;
+  font-weight: 700;
+  fill: var(--mc-ink);
+}
+.arch-mobile .mc-meta {
+  font-size: 9px;
+  font-weight: 600;
+  fill: var(--mc-muted);
+}
+.arch-mobile .mc-mono {
+  font-family: var(--mono);
+  font-size: 8.5px;
+  fill: var(--mc-muted);
+}
+.arch-mobile .mc-ztag {
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  fill: #fff;
+}
+.arch-mobile .mc-buffer {
+  stroke: var(--mc-pr);
+  stroke-width: 3.5;
+  stroke-linecap: round;
+  fill: none;
+}
+.arch-mobile .mc-poll {
+  fill: none;
+  stroke: var(--mc-out-h);
+  stroke-width: 1.6;
+  stroke-dasharray: 3 2.5;
+}
+.arch-mobile .mc-pull {
+  fill: none;
+  stroke: var(--mc-k8s-h);
+  stroke-width: 1.6;
+  stroke-dasharray: 3 2.5;
+}
+.arch-mobile .mc-depot {
+  fill: var(--mc-paper);
+  stroke: var(--mc-muted);
+  stroke-width: 1.5;
+}
+.arch-mobile .mc-exit {
+  fill: none;
+  stroke: var(--mc-muted);
+  stroke-width: 1.4;
+}
+.arch-mobile .mc-num {
+  fill: var(--mc-paper);
+  stroke-width: 1.6;
+}
+.arch-mobile .mc-numt {
+  font-size: 8px;
+  font-weight: 800;
+  text-anchor: middle;
+}
+
+/* ── Auth ─────────────────────────────────────────────────────────────────────────────────────── */
+.arch-mobile .ma-trunk {
+  fill: none;
+  stroke: var(--ma-ticket);
+  stroke-width: 5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.arch-mobile .ma-stn {
+  fill: var(--ma-paper);
+  stroke: var(--ma-ink);
+  stroke-width: 2.2;
+}
+.arch-mobile .ma-name {
+  font-size: 11.5px;
+  font-weight: 700;
+  fill: var(--ma-ink);
+}
+.arch-mobile .ma-meta {
+  font-size: 9px;
+  font-weight: 600;
+  fill: var(--ma-muted);
+}
+.arch-mobile .ma-mono {
+  font-family: var(--mono);
+  font-size: 8.5px;
+  fill: var(--ma-muted);
+}
+.arch-mobile .ma-ztag {
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  fill: #fff;
+}
+.arch-mobile .ma-keyline {
+  fill: none;
+  stroke: var(--ma-key);
+  stroke-width: 1.6;
+  stroke-dasharray: 3 2.5;
+}
+.arch-mobile .ma-guest {
+  fill: none;
+  stroke: var(--ma-muted);
+  stroke-width: 1.6;
+  stroke-dasharray: 1.5 3;
+}
+.arch-mobile .ma-depot {
+  fill: var(--ma-paper);
+  stroke: var(--ma-muted);
+  stroke-width: 1.5;
+}
+
+/* The slide centres its text, which the mocks never did — a routing table read as three centred
+   columns with ragged edges on both sides, and a URL path is the one thing that must start where the
+   eye expects it. Stated on the container so every child inherits it, rather than per cell. */
+.arch-mobile,
+.arch-mobile .mdg-intro,
+.arch-mobile .mdg-tbl td,
+.arch-mobile .mdg-tbl th,
+.arch-mobile .mdg-tbl caption {
+  text-align: left;
+}
+.arch-mobile .mdg-tbl .mdg-l {
+  text-align: right;
+}
+
+/* SPECIFICITY, not !important. `.arch-mobile .mdg-tbl td` sets the padding SHORTHAND at (0,2,1),
+   which silently zeroes the padding-left that the cell classes set at (0,2,0) — so the label column
+   and the value column abutted ("a pull requestci.yml"). The mock used !important; this scopes the
+   cell classes under the table instead, which wins on its merits and leaves the shorthand honest.
+   This is the collision styles.css already warns about further up: a longer selector beats a
+   "more specific-looking" one, and a media query adds nothing. */
+.arch-mobile .mdg-tbl .mdg-s,
+.arch-mobile .mdg-tbl .mdg-f,
+.arch-mobile .mdg-tbl .mdg-no,
+.arch-mobile .mdg-tbl .mdg-yes,
+.arch-mobile .mdg-tbl .mdg-none {
+  padding-left: 10px;
+}
+.arch-mobile .mdg-tbl .mdg-cmd {
+  padding-left: 8px;
+}
+
+/* ── The security matrix on a phone ────────────────────────────────────────────────────────────────
+   A repo × scan matrix is the one diagram here that IS a table, so it stays one. The problem is what
+   you could see of it: at 390px the desktop metrics (34% repo column, 13.5px headers, 12px cell
+   padding, 460px min-width) showed the repo column and ONE AND A HALF scan columns. Six columns
+   existed; you got 1.5.
+   Worse, scrolling right to reach the others took the repo name with it — so you were reading a row
+   of ticks with nothing to say whose row it was. A matrix whose row label scrolls away is not a
+   matrix; it is two lists.
+   So: pin the repo column, and spend the recovered width on the scans. */
+@media (max-width: 900px) {
+  .sec-tbl {
+    /* 460px forced a horizontal scroll before the columns were even tight. Let the cells decide. */
+    min-width: 0;
+  }
+  .sec-tbl th.sec-repo-name {
+    /* A percentage of a scrolling table is a percentage of the SCROLL width, not the screen — so 34%
+       kept growing the column it was meant to bound. A character-based width bounds it honestly:
+       the longest name (data-driven-quiz-server) sets it, and nothing else does. */
+    width: auto;
+    min-width: 9ch;
+    max-width: 13ch;
+    padding-right: 8px;
+    font-size: 11px;
+    /* The names are long and hyphenated; letting them wrap to two short lines buys back ~90px of
+       width for the scans, which is the whole point of this block.
+       NOT `overflow-wrap: anywhere`, which is what this said first. It tells automatic table layout
+       that the column's min-content width is ONE CHARACTER, so the column collapses to a sliver and
+       shreds the name down the page — "project-platform" became sixteen stacked letters. That exact
+       bug is already written up in open-vMCP's app.css, where it shredded a uuid; the note there did
+       not stop it happening here, so: the min-width is the floor that makes the max-width safe.
+       Default wrapping already breaks these names at their hyphens, which is where they should break. */
+    white-space: normal;
+    overflow-wrap: normal;
+    line-height: 1.2;
+  }
+  .sec-tbl thead th {
+    padding: 4px 2px 8px;
+    font-size: 10px;
+  }
+  .sec-tbl tbody th.sec-repo-name {
+    padding: 8px 8px 8px 0;
+  }
+  .sec-tbl tbody td {
+    padding: 8px 2px;
+    font-size: 13px;
+  }
+  .sec-n {
+    font-size: 8px;
+    letter-spacing: 0;
+  }
+
+  /* THE ROW LABEL STAYS. Sticky needs an opaque background of its own: the default is transparent,
+     so the scrolled tick columns would slide visibly underneath the repo name. It also needs to sit
+     above them — hence z-index — and a right-hand rule, which is what tells you the column is pinned
+     rather than merely first. */
+  .sec-tbl th.sec-repo-name,
+  .sec-tbl tbody th.sec-repo-name {
+    position: sticky;
+    left: 0;
+    z-index: 1;
+    background: var(--panel);
+    border-right: 1px solid var(--line);
+    padding-right: 8px;
+  }
+  .sec-wrap {
+    /* The pinned column casts a shadow only while there is something scrolled under it. */
+    scrollbar-width: thin;
+  }
+}
+
+/* ── The project list on a phone ───────────────────────────────────────────────────────────────────
+   `.projects li` is a flex row with a fixed 104px date rail, which reads as a timeline at desktop
+   width. On a 390px screen it spends 104px + a 16px gap — 36% of the row — on the four characters of
+   "Jul 2026", and leaves the body 175px. Everything downstream pays for it: the blurb wraps to six
+   lines, and the action buttons stack instead of sitting side by side, each trailing dead space to
+   its right. Meanwhile the rail itself is empty below its one line.
+   A date is not worth a column here. Stacked, it becomes an eyebrow over the title — which is what
+   it already is on the experience cards above, so this also makes the two lists agree. */
+@media (max-width: 640px) {
+  .projects li {
+    flex-direction: column;
+    gap: 6px;
+  }
+  .projects time {
+    /* The 104px was reserving room to ALIGN dates down the rail. Stacked, there is no rail to align
+       to, and a fixed width would only re-introduce the dead space one line higher. */
+    width: auto;
+    font-size: 12px;
+  }
+  /* The body was never given a width — it took what the rail left. Now it takes the row. */
+  .proj-body {
+    width: 100%;
+  }
+}

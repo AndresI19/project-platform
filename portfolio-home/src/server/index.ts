@@ -4,13 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { serveClient } from '@platform/ui/server';
 import express, { type Request, type Response } from 'express';
 import rateLimit from 'express-rate-limit';
-import {
-  contentWritable,
-  mountContent,
-  resumePath,
-  resumeUid,
-  serveResume,
-} from './content.js';
+import { contentWritable, mountContent, resumePath, resumeUid, serveResume } from './content.js';
 import { loadEnv } from './env.js';
 import { collectVersions, platformVersion } from './versions.js';
 
@@ -223,7 +217,9 @@ app.listen(env.port, () => {
   // the uploads line — a deploy that never minted a UID is otherwise silent.
   {
     const uid = resumeUid(env.contentDir);
-    console.log(`  résumé     : ${uid ? `/resume → /resume-${uid}.pdf (versioned)` : '/resume (bare — no UID yet)'}`);
+    console.log(
+      `  résumé     : ${uid ? `/resume → /resume-${uid}.pdf (versioned)` : '/resume (bare — no UID yet)'}`,
+    );
   }
   // Checked once, for the log only. Never to gate a request: that would be a TOCTOU check, and the
   // write already reports the truth (503, see content.ts).

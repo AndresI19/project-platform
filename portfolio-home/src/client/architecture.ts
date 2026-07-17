@@ -1,6 +1,12 @@
 // The platform architecture, revealed by a pull-down in the masthead banner. FOUR diagrams now, paged
 // by a slider:
 //
+// ON A PHONE, THE FIRST THREE ARE DIFFERENT PICTURES — not this one reflowed. See mobile-diagrams.ts.
+// A wide grid scaled to a phone is a shape you zoom into rather than a picture you read, so a phone
+// gets transit maps drawn for it. The diagrams below are UNCHANGED and remain the desktop form.
+// The cost is two hand-maintained pictures of one platform, which is the same debt that rotted the
+// old 900px reflow block; mobile-diagrams.ts states it in full and names the drift already present.
+//
 //   1. Platform topology — who talks to whom, from the browser down to the outbound APIs. This is the
 //      evidence for the bio's closing claim: everything below is built, hosted and running right here.
 //   2. CICD — how a merge reaches the cluster: the pipeline from a pushed commit through the blocking
@@ -20,6 +26,8 @@
 // services at three columns each (home, quiz, vmcp, platform-auth), so the row fills the width and
 // every connector is a column SPAN rather than a measured pixel offset — which is what keeps it exact
 // across reflow. It mirrors the "whole picture" section of the orchestration wiki, the source of truth.
+
+import { mobileAuth, mobileCicd, mobileTopology } from './mobile-diagrams.js';
 
 const WIKI = 'https://github.com/AndresI19/platform-orchestration/wiki';
 
@@ -431,9 +439,18 @@ export function architecturePanel(): string {
           </div>
           <div class="arch-viewport">
             <div class="arch-track">
-              <section class="arch-slide" role="tabpanel" aria-label="Platform Topography">${topologyDiagram()}</section>
-              <section class="arch-slide" role="tabpanel" aria-label="CICD">${cicdDiagram()}</section>
-              <section class="arch-slide" role="tabpanel" aria-label="Auth and Entrypoint">${authDiagram()}</section>
+              <section class="arch-slide" role="tabpanel" aria-label="Platform Topography">
+                <div class="arch-desktop">${topologyDiagram()}</div>
+                <div class="arch-mobile">${mobileTopology()}</div>
+              </section>
+              <section class="arch-slide" role="tabpanel" aria-label="CICD">
+                <div class="arch-desktop">${cicdDiagram()}</div>
+                <div class="arch-mobile">${mobileCicd()}</div>
+              </section>
+              <section class="arch-slide" role="tabpanel" aria-label="Auth and Entrypoint">
+                <div class="arch-desktop">${authDiagram()}</div>
+                <div class="arch-mobile">${mobileAuth()}</div>
+              </section>
               <section class="arch-slide" role="tabpanel" aria-label="Security posture">${securityDiagram()}</section>
             </div>
           </div>
