@@ -48,15 +48,10 @@ export function featuredChip(e: Entry): string {
 /** The artwork that fills a featured card's empty space — image(s), or a drawn schematic. */
 export function media(p: Project): string {
   if (p.images) {
-    // A .gif is oversized artwork (the garden) — wrap it in a drag-to-pan frame so a visitor can swipe
-    // around the whole scene; garden-pan.ts wires the [data-pan] frames. A still (the question png)
-    // stays a plain contained image. draggable=false stops the browser's native image-drag ghost.
-    const cell = (src: string): string =>
-      src.endsWith('.gif')
-        ? `<div class="pan" data-pan><img class="pan-img" src="${esc(src)}" alt="" loading="lazy" draggable="false"></div>`
-        : `<img src="${esc(src)}" alt="" loading="lazy">`;
+    // Two stacked images in one frame each: the question png is contained so it stays readable, the
+    // garden gif is cover-cropped as artwork (CSS: .media.stack img:first-child / :last-child).
     return `<div class="media stack">
-      ${p.images.map(cell).join('')}
+      ${p.images.map((src) => `<img src="${esc(src)}" alt="" loading="lazy">`).join('')}
     </div>`;
   }
   if (p.image) return `<div class="media"><img src="${esc(p.image)}" alt="" loading="lazy"></div>`;

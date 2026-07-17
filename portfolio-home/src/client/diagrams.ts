@@ -70,7 +70,7 @@ export const K8S_DIAGRAM = `<div class="term" role="img" aria-label="A terminal 
     <span class="term-title">platform — kubectl</span>
   </div>
   <div class="term-body">
-    <div class="term-cmd"><span class="p">➜</span> <span class="d">~/platform-orchestration</span> <span class="c">kubectl -n platform get pods -l 'app in (nginx,home,vmcp,platform-auth)'</span></div>
+    <div class="term-cmd"><span class="p">➜</span> <span class="d">~/</span> <span class="c">kubectl -n platform get pods -l 'app in (nginx,home,vmcp,platform-auth)'</span></div>
     <table class="ps">
       <thead><tr><th>NAME</th><th>READY</th><th>STATUS</th></tr></thead>
       <tbody>
@@ -83,7 +83,6 @@ export const K8S_DIAGRAM = `<div class="term" role="img" aria-label="A terminal 
         ).join('')}
       </tbody>
     </table>
-    <div class="term-cmd last"><span class="p">➜</span> <span class="cur"></span></div>
   </div>
 </div>`;
 
