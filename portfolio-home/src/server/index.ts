@@ -2,9 +2,15 @@ import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { serveClient } from '@platform/ui/server';
-import express from 'express';
+import express, { type Request, type Response } from 'express';
 import rateLimit from 'express-rate-limit';
-import { contentWritable, mountContent, serveResume } from './content.js';
+import {
+  contentWritable,
+  mountContent,
+  resumePath,
+  resumeUid,
+  serveResume,
+} from './content.js';
 import { loadEnv } from './env.js';
 import { collectVersions, platformVersion } from './versions.js';
 
@@ -152,7 +158,41 @@ app.post('/api/hello', (req, res) => {
 // the IMAGE's stale copy, silently and forever: a 200 indistinguishable from the bug being fixed here.
 // That same copy is the seed fallback below, which is why the fallback costs nothing.
 // ---------------------------------------------------------------------------
-app.get('/resume.pdf', serveResume(env.contentDir, resolve(CLIENT_DIR, 'resume.pdf')));
+// #37 removed the rollout-to-swap by reading per request; this removes the OTHER staleness, the one
+// #37 could not reach: Cloudflare edge-caches /resume.pdf under a Browser-Cache-TTL it stamps itself
+// (measured max-age=14400), overriding the origin's no-cache, so a replaced PDF still shows old in a
+// browser for hours. The URL is made to change instead. The page links the EXTENSIONLESS /resume,
+// which Cloudflare does not edge-cache (it caches by extension), so it always resolves fresh to the
+// current /resume-<uid>.pdf — and THAT url, one exact version, is cached hard. See content.ts.
+const RESUME_SEED = resolve(CLIENT_DIR, 'resume.pdf');
+const serveCurrent = serveResume(env.contentDir, RESUME_SEED); // no-cache — the fallback when no UID
+const serveVersioned = serveResume(env.contentDir, RESUME_SEED, 'public, max-age=31536000, immutable');
+
+// The redirect target moves every deploy, so it must never be cached — no-store keeps both the browser
+// and Cloudflare re-resolving it. With no UID (dev, or before the first write) serve the file directly,
+// exactly as #37 did, so nothing regresses in a checkout without a volume.
+function toCurrentResume(req: Request, res: Response): void {
+  const uid = resumeUid(env.contentDir);
+  if (uid) {
+    res.set('Cache-Control', 'no-store');
+    res.redirect(302, resumePath(uid));
+    return;
+  }
+  serveCurrent(req, res);
+}
+
+app.get('/resume', toCurrentResume);
+// Bare /resume.pdf is what old links and bookmarks point at — redirect them forward to the current
+// version rather than 404, so a saved link always lands on the latest résumé.
+app.get('/resume.pdf', toCurrentResume);
+app.get('/resume-:uid.pdf', (req, res) => {
+  if (req.params.uid === resumeUid(env.contentDir)) {
+    serveVersioned(req, res);
+    return;
+  }
+  // A stale or unknown UID — an old link after a newer résumé shipped — goes to the current one.
+  toCurrentResume(req, res);
+});
 
 // Admin-only writes to that volume. Registers NOTHING when AUTH_JWKS_URI is unset — see content.ts.
 mountContent(app, { env });

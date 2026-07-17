@@ -16,7 +16,15 @@ import { SignJWT, createLocalJWKSet, exportJWK, generateKeyPair } from 'jose';
 import type { JWK } from 'jose';
 import request from 'supertest';
 import { afterEach, beforeAll, beforeEach, describe, expect, test } from 'vitest';
-import { mountContent, resolveTarget, serveResume, writeAtomic } from '../src/server/content.js';
+import {
+  mintResumeUid,
+  mountContent,
+  resolveTarget,
+  resumePath,
+  resumeUid,
+  serveResume,
+  writeAtomic,
+} from '../src/server/content.js';
 import type { Env } from '../src/server/env.js';
 
 /**
@@ -273,6 +281,109 @@ describe('serveResume', () => {
   });
 });
 
+describe('resumeUid / resumePath / mintResumeUid', () => {
+  test('reads a five-digit UID off the volume, trailing newline and all', () => {
+    writeFileSync(join(dir, 'resume-uid'), '48213\n');
+    expect(resumeUid(dir)).toBe('48213');
+  });
+
+  test('a missing file (dev checkout, or before the first write) is null, not a guess', () => {
+    expect(resumeUid(join(dir, 'empty'))).toBeNull();
+  });
+
+  test('a malformed or half-written UID reads as unknown, never a partial redirect target', () => {
+    for (const bad of ['', '4821', '482130', 'abcde', '48 13']) {
+      writeFileSync(join(dir, 'resume-uid'), bad);
+      expect(resumeUid(dir)).toBeNull();
+    }
+  });
+
+  test('resumePath builds the versioned, immutable path', () => {
+    expect(resumePath('48213')).toBe('/resume-48213.pdf');
+  });
+
+  test('mintResumeUid always returns five digits and never repeats the previous value', () => {
+    let prev = '00000';
+    for (let i = 0; i < 2000; i++) {
+      const uid = mintResumeUid(prev);
+      expect(uid).toMatch(/^\d{5}$/);
+      expect(uid).not.toBe(prev);
+      prev = uid;
+    }
+  });
+});
+
+describe('the versioned-résumé routes', () => {
+  // Shaped like index.ts: /resume and /resume.pdf redirect to the current UID, /resume-<uid>.pdf
+  // serves it immutable (or redirects a stale UID forward), and with no UID everything serves the file.
+  function resumeRoutesApp(contentDir: string, seed: string): Express {
+    const a = baseApp();
+    const current = () => resumeUid(contentDir);
+    const serveVersioned = serveResume(contentDir, seed, 'public, max-age=31536000, immutable');
+    const serveCurrent = serveResume(contentDir, seed);
+    const toCurrent = (req: express.Request, res: express.Response): void => {
+      const uid = current();
+      if (uid) {
+        res.set('Cache-Control', 'no-store');
+        res.redirect(302, resumePath(uid));
+        return;
+      }
+      serveCurrent(req, res);
+    };
+    a.get('/resume', toCurrent);
+    a.get('/resume.pdf', toCurrent);
+    a.get('/resume-:uid.pdf', (req, res) => {
+      if (req.params.uid === current()) return serveVersioned(req, res);
+      toCurrent(req, res);
+    });
+    return a;
+  }
+
+  function seeded(): { app: Express; uid: string } {
+    writeFileSync(join(dir, 'resume.pdf'), PDF);
+    writeFileSync(join(dir, 'resume-uid'), '48213');
+    return { app: resumeRoutesApp(dir, join(dir, 'seed.pdf')), uid: '48213' };
+  }
+
+  test('/resume 302s to the current versioned path, uncacheable', async () => {
+    const { app } = seeded();
+    const r = await request(app).get('/resume').redirects(0);
+    expect(r.status).toBe(302);
+    expect(r.headers.location).toBe('/resume-48213.pdf');
+    expect(r.headers['cache-control']).toBe('no-store');
+  });
+
+  test('the current versioned path serves the PDF, cached immutable for a year', async () => {
+    const { app } = seeded();
+    const r = await request(app).get('/resume-48213.pdf');
+    expect(r.status).toBe(200);
+    expect(r.headers['content-type']).toMatch(/application\/pdf/);
+    expect(r.headers['cache-control']).toMatch(/immutable/);
+    expect(Buffer.from(r.body)).toEqual(PDF);
+  });
+
+  test('a stale UID (an old link after a new résumé) 302s forward to the current one', async () => {
+    const { app } = seeded();
+    const r = await request(app).get('/resume-00001.pdf').redirects(0);
+    expect(r.status).toBe(302);
+    expect(r.headers.location).toBe('/resume-48213.pdf');
+  });
+
+  test('bare /resume.pdf redirects old links forward rather than 404ing', async () => {
+    const { app } = seeded();
+    const r = await request(app).get('/resume.pdf').redirects(0);
+    expect(r.status).toBe(302);
+    expect(r.headers.location).toBe('/resume-48213.pdf');
+  });
+
+  test('with no UID file, /resume serves the résumé directly — #37 behaviour is preserved', async () => {
+    writeFileSync(join(dir, 'resume.pdf'), PDF);
+    const r = await request(resumeRoutesApp(dir, join(dir, 'seed.pdf'))).get('/resume');
+    expect(r.status).toBe(200);
+    expect(Buffer.from(r.body)).toEqual(PDF);
+  });
+});
+
 describe('PUT /api/content/* — the guard', () => {
   test('an admin writes the résumé', async () => {
     const r = await request(app())
@@ -479,6 +590,46 @@ describe('PUT /api/content/* — the payload', () => {
       .send(PDF);
     expect(r.status).toBe(503);
     expect(r.body.error).toMatch(/not mounted/);
+  });
+
+  test('a successful résumé write lands the file AND mints a fresh cache-busting UID', async () => {
+    const r = await request(app())
+      .put('/api/content/resume.pdf')
+      .set('Authorization', `Bearer ${await token()}`)
+      .set('Content-Type', 'application/pdf')
+      .send(PDF);
+    expect(r.status).toBe(200);
+    expect(r.body).toMatchObject({ ok: true, bytes: PDF.length });
+    expect(readFileSync(join(dir, 'resume.pdf'))).toEqual(PDF);
+    // The UID now exists and is well-formed — the versioned url the redirect points at.
+    expect(readFileSync(join(dir, 'resume-uid'), 'utf8')).toMatch(/^\d{5}$/);
+  });
+
+  test('a second résumé write ROTATES the UID — the url must change or the edge cache never busts', async () => {
+    const a = app();
+    const put = async () =>
+      request(a)
+        .put('/api/content/resume.pdf')
+        .set('Authorization', `Bearer ${await token()}`)
+        .set('Content-Type', 'application/pdf')
+        .send(PDF);
+    await put();
+    const first = readFileSync(join(dir, 'resume-uid'), 'utf8');
+    await put();
+    const second = readFileSync(join(dir, 'resume-uid'), 'utf8');
+    expect(second).toMatch(/^\d{5}$/);
+    expect(second).not.toBe(first);
+  });
+
+  test('writing a card does NOT touch the résumé UID', async () => {
+    writeFileSync(join(dir, 'resume-uid'), '48213');
+    const r = await request(app())
+      .put('/api/content/cards/a-thing.yaml')
+      .set('Authorization', `Bearer ${await token()}`)
+      .set('Content-Type', 'application/yaml')
+      .send('q: 1');
+    expect(r.status).toBe(200);
+    expect(readFileSync(join(dir, 'resume-uid'), 'utf8')).toBe('48213');
   });
 });
 
