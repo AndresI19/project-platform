@@ -72,7 +72,7 @@ npm run db:migrate
 npm run dev
 ```
 
-`npm test` — 14 tests. They assert the properties that matter: a chosen password verifies and a
+`npm test` — 37 tests. They assert the properties that matter: a chosen password verifies and a
 near-miss does not, the stored hash is salted and useless without the pepper, and the token never
 carries the password.
 
@@ -81,9 +81,9 @@ carries the password.
 - **The rate limiter is in-process**, and this service is single-replica. Scale it out and each
   replica enforces its own limit, silently multiplying the real ceiling by the replica count. That is
   the first thing to fix if it ever needs more than one pod.
-- **Rate limiting protects the service, not the user.** A patient distributed attacker sampling the
-  keyspace will eventually land on somebody's code. 34 billion combinations makes that a long way
-  off, and the prize is a stranger's flashcard garden. Do not mistake it for safety.
+- **Rate limiting protects the service, not the user.** A patient distributed attacker sampling
+  common passwords will eventually land on somebody's; the prize is a stranger's flashcard garden. Do
+  not mistake it for safety. (The honest floor is the bullet below, not a big keyspace number.)
 - **A forgotten password is lost.** There is still no recovery, because recovery would need an email,
   and an email would be PII. The user chooses the secret now, but a forgotten one is gone.
 - **A chosen password is a weaker floor than the old code.** The 7-char code was 34 billion uniform

@@ -39,8 +39,11 @@ at the first request:
 
 ```
 portfolio-home listening on http://localhost:3000
+  version    : snapshot
   vMCP API   : (same-origin /vmcp/api)
   greetings  : logged to stdout (DISCORD_WEBHOOK_URL unset)
+  uploads    : disabled — route not registered (AUTH_JWKS_URI unset)
+  résumé     : /resume (bare — no UID yet)
 ```
 
 ### In a container
@@ -58,17 +61,19 @@ see `platform-orchestration` for the Compose stack.
 
 ## Environment variables
 
-**All three are optional — the server runs with an empty environment.** They are validated once at
+**Every variable is optional — the server runs with an empty environment.** All are validated once at
 boot ([`src/server/env.ts`](src/server/env.ts)), so a value that is set and *wrong* fails immediately
 with the variable named, instead of misbehaving quietly at request time.
 
 | Variable | Default | What it does |
 |---|---|---|
-| `PORT` | `3000` | Port the server listens on. Must be an integer, 1–65535. |
-| `VMCP_API_BASE` | *(empty)* | Absolute origin of the vMCP data API the liveness badges read from. Empty means same-origin (`/vmcp/api`) — the local and Compose deployment. Set it when the front end and the API live on different hostnames. Must be an absolute URL; a bare hostname is rejected. |
-| `DISCORD_WEBHOOK_URL` | *(empty)* | Where the optional "Who are you?" greeting is relayed. Empty means the greeting is logged to stdout instead — that is a supported mode, not a failure. |
+| `PORT` | `3000` | Port the server listens on. An integer, 1–65535. |
+| `VMCP_API_BASE` | *(empty)* | Absolute origin of the vMCP data API the liveness badges poll. Empty = same-origin (`/vmcp/api`), the local and Compose deployment. Set it when front end and API live on different hostnames. Must be an absolute URL. |
+| `DISCORD_WEBHOOK_URL` | *(empty)* | Where the optional "Who are you?" greeting is relayed. Empty logs it to stdout instead — a supported mode, not a failure. |
 
-Copy [`.env.example`](.env.example) to `.env` (gitignored) to set them locally.
+The admin upload route adds `AUTH_JWKS_URI` / `AUTH_ISSUER` / `AUTH_AUDIENCE`, `CONTENT_DIR`, and
+`UPLOAD_MAX_BYTES`; see `src/server/env.ts` for the full set. Copy [`.env.example`](.env.example) to
+`.env` (gitignored) to set any locally.
 
 > **`DISCORD_WEBHOOK_URL` is a credential.** Anyone holding that URL can post to your channel. It is
 > never logged and never echoed into an error message — a malformed one is reported as `<redacted>` —
@@ -89,16 +94,15 @@ truth.** It holds only what the platform's front ends must agree on:
 | `@platform/ui/server` | `serveClient()` — health probe, static assets with the right cache policy, SPA fallback. |
 | `@platform/ui/tsconfig.base.json` | The compiler options both apps extend. |
 
-It exists because *"the two sites match"* used to be enforced by copy-paste — and that broke the first
-time one site's accent changed and the other's did not. It is deliberately small: the apps share about
-a hundred lines. They do **not** share components, state or routing, because they genuinely have none
-of those in common.
+It exists because *"the two sites match"* was once enforced by copy-paste, which broke the first time
+one site's accent changed and the other's did not. It is deliberately small — the apps share about a
+hundred lines, and **no** components, state or routing, because they have none of those in common.
 
 ### How other repos get it
 
 This repo consumes it directly (`file:packages/platform-ui`). Other repos vendor **this repo** as a
-git submodule and resolve the package inside it — there is no separate published copy, so there is
-nothing that can drift from the source.
+git submodule and resolve the package inside it — there is no published copy, so nothing can drift
+from the source.
 
 [data-driven-quiz-server](https://github.com/AndresI19/data-driven-quiz-server) does exactly that:
 
@@ -120,25 +124,34 @@ site to get ~100 lines of shared CSS. To roll out a change here, consumers bump 
 ```
 src/
   client/
-    data.ts        the whole site's content — projects, experience, bio, contacts
-    view.ts        pure builders: data -> HTML (no DOM, no fetch, no state)
-    liveness.ts    polls the vMCP gateway and lights the live/offline badges
-    greet.ts       the first-visit "Who are you?" dialog
-    icons.ts       inline SVG marks
-    diagrams.ts    the drawn graphics (the vMCP schematic, the `docker ps` mock)
-    util.ts        esc / slug / fmtDate / tab — pure, tested
-    main.ts        bootstrap: render, greet, start polling
+    data.ts          the whole site's content — projects, experience, bio, contacts
+    view.ts          pure builders: data → HTML (no DOM, no fetch, no state)
+    liveness.ts      polls the vMCP gateway on a timer, lights the live/offline badges
+    versions.ts      asks the server each component's version once, fills the badges
+    architecture.ts  the four architecture-diagram builders
+    architecture-toggle.ts   masthead pull-down + diagram-slider controller
+    diagrams.ts      inline-SVG assets (the vMCP schematic, the `docker ps` mock)
+    mobile-diagrams.ts   phone forms of the first three diagrams
+    feat-rail.ts     the featured banner's fade edges
+    icons.ts         inline SVG marks
+    util.ts          esc / slug / fmtDate / tab — pure, tested
+    main.ts          bootstrap: render, start polling
   server/
-    env.ts         the config surface, validated at boot
-    index.ts       Express: the API routes + the built client
+    env.ts           the config surface, validated at boot
+    index.ts         Express: the API routes + the built client
+    versions.ts      the /api/versions fan-out to sibling components
+    content.ts       /resume reads + admin PUT /api/content/* writes
 packages/
-  platform-ui/     the shared design system — this repo is its source of truth
+  platform-ui/       the shared design system — this repo is its source of truth
 ```
 
 ## API
 
 | Route | |
 |---|---|
-| `GET /api/health` | `{"ok":true}` — what the platform's liveness probe reads. |
-| `GET /api/config` | `{"vmcpApiBase":"…"}` — runtime config, so one image runs locally and in production. |
-| `POST /api/hello` | The optional greeting. Rate-limited to 5/hour per IP; relays to Discord, or logs to stdout. |
+| `GET /api/health` | `{"ok":true}` — the platform's liveness probe reads this (from `@platform/ui`). |
+| `GET /api/config` | `{"vmcpApiBase":"…"}` — runtime config, so one image runs everywhere. |
+| `GET /version` · `/api/versions` | This image's version; and the whole platform's, aggregated. |
+| `POST /api/hello` | The optional greeting. Rate-limited to 5/hour per IP; relays to Discord or logs to stdout. |
+| `GET /resume` · `/resume.pdf` | The résumé, read per request from the content volume. |
+| `PUT /api/content/*` | Admin-only writes to that volume (allowlisted). Registered only when `AUTH_JWKS_URI` is set. |
