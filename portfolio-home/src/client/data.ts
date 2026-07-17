@@ -120,6 +120,10 @@ export interface Project {
   /** An inline schematic drawn in place of an image. 'vmcp' shows a user reaching two MCP
    *  servers through the gateway; 'k8s' is a mock `kubectl get pods` of the running cluster. */
   diagram?: 'vmcp' | 'k8s';
+  /** A second repo featured inside the same card — the one that builds/deploys this one, shown as a
+   *  compact block beneath a vertically-squeezed diagram. Distinct from a Group: this stays one card
+   *  with one graphic, and the companion is a supporting credit, not a co-equal member. */
+  companion?: { name: string; blurb: string; href: string };
   /** Status badge — how finished this is, so a visitor does not misjudge it. */
   tag?: { label: string; icon: 'wip' | 'archived' };
 }
@@ -298,12 +302,30 @@ export const ENTRIES: Entry[] = [
     blurb:
       'A minikube cluster where nginx fronts every app on one port, published through an outbound Cloudflare tunnel with no open ports, its secrets vaulted.',
     diagram: 'k8s',
+    // The CI/CD that builds and ships everything above, featured in the same tile — the platform is
+    // the thing being run, this is the thing that runs it. Its own list entry lives below too.
+    companion: {
+      name: 'platform-cicd',
+      blurb:
+        'The self-hosted pipeline that ships it: a merge cuts a version, an ephemeral GitHub runner builds each image and Helm-rolls the cluster — on a ServiceAccount scoped so a CI job can’t read the platform’s secrets.',
+      href: `${GITHUB_ORG}/platform-cicd`,
+    },
     links: [
       // The wiki is the real documentation — architecture, networking, secrets, backup/restore — so
       // it leads. The repository is the artifact; the wiki is the explanation.
       { label: 'Wiki', href: `${GITHUB_ORG}/platform-orchestration/wiki`, external: true },
       { label: 'Repository', href: `${GITHUB_ORG}/platform-orchestration`, external: true },
     ],
+  },
+  {
+    // Featured in tandem inside the platform-orchestration card above; also stands on its own here so
+    // the full project list credits it as a distinct piece of work.
+    name: 'platform-cicd',
+    date: '2026-07-16',
+    tech: 'GitHub Actions · self-hosted runner · Helm',
+    blurb:
+      'The self-hosted CI/CD behind the platform: a merge cuts a version, an ephemeral runner builds each image and Helm-rolls the cluster, on a ServiceAccount scoped so a job can’t read secrets.',
+    links: [{ label: 'Repository', href: `${GITHUB_ORG}/platform-cicd`, external: true }],
   },
   {
     name: 'Job-Search-Go',

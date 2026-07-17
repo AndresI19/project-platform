@@ -418,6 +418,70 @@ section {
   display: flex;
   gap: 8px;
 }
+
+/* A companion repo featured inside another card (platform-cicd inside platform-orchestration). The
+   whole block is one link; on hover it borrows the featured accent so it reads as clickable. */
+.feat-companion {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--panel-2);
+  padding: 9px 11px;
+  margin: 0 0 12px;
+  transition: border-color 0.15s ease;
+}
+.feat-companion:hover {
+  border-color: var(--accent);
+}
+.fc-label {
+  display: block;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.fc-name {
+  display: block;
+  font-weight: 700;
+  font-size: 13px;
+  margin-top: 2px;
+}
+/* The ↗ is drawn, not typed, so it cannot wrap onto its own line away from the name. */
+.fc-name::after {
+  content: " \2197";
+  color: var(--muted);
+  font-weight: 600;
+}
+.fc-blurb {
+  display: block;
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+/* The squeeze the companion pays for: where a card carries one, its k8s terminal graphic gives up a
+   little vertical room so the card does not run away. Smaller type and tighter rows, not a clip — the
+   pod table stays whole, just more compact. Scoped to has-companion so the standalone platform card
+   (which has none) is untouched. */
+.feat.has-companion .media {
+  margin-bottom: 10px;
+}
+.feat.has-companion .term {
+  font-size: 10px;
+}
+.feat.has-companion .term-body {
+  padding: 7px 10px 8px;
+}
+.feat.has-companion .term-cmd {
+  margin-bottom: 5px;
+}
+.feat.has-companion .term-cmd.last {
+  margin-top: 5px;
+}
 .btn {
   text-decoration: none;
   font-size: 13.5px;
