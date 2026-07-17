@@ -218,6 +218,13 @@ app.listen(env.port, () => {
         : 'disabled — route not registered (AUTH_JWKS_URI unset)'
     }`,
   );
+  // Which résumé path is live: a versioned /resume-<uid>.pdf once a UID is on the volume, or the bare
+  // file as a fallback before the first write. Reports what is actually served, in the same spirit as
+  // the uploads line — a deploy that never minted a UID is otherwise silent.
+  {
+    const uid = resumeUid(env.contentDir);
+    console.log(`  résumé     : ${uid ? `/resume → /resume-${uid}.pdf (versioned)` : '/resume (bare — no UID yet)'}`);
+  }
   // Checked once, for the log only. Never to gate a request: that would be a TOCTOU check, and the
   // write already reports the truth (503, see content.ts).
   void contentWritable(env.contentDir).then((ok) => {
