@@ -4,6 +4,13 @@ FROM node:22-bookworm-slim AS build
 WORKDIR /app
 COPY package*.json ./
 RUN npm ci
+# Cache-bust the source copy and build on every commit. The run stage stamps VERSION and the revision
+# label from build-args, independently of what this stage compiled — so a reused build-stage layer
+# would ship OLD code under a FRESH version and revision, an image that labels itself correct while
+# running the previous release (this happened to home at 0.1.42). Referencing GIT_SHA in a RUN here
+# ties the source layer's cache key to the commit; npm ci above stays cached.
+ARG GIT_SHA
+RUN echo "build stage source commit: ${GIT_SHA:-unknown}"
 COPY tsconfig.json ./
 COPY src ./src
 RUN npm run build
