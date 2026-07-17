@@ -19,6 +19,20 @@ WORKDIR /app
 COPY package*.json ./
 COPY packages ./packages
 RUN npm ci
+# Cache-bust the source copy and the bundle below on every commit. GIT_SHA (passed by build.sh, and
+# already consumed as a label in the run stage) changes each merge; referencing it in a RUN makes
+# BuildKit invalidate THIS layer and everything after it, so the build stage can never reuse a stale
+# `COPY . .`/esbuild layer for a different source.
+#
+# Why this is load-bearing and not belt-and-braces: the run stage stamps VERSION and the revision label
+# from build-args, INDEPENDENTLY of what this stage actually bundled. So a stale build-stage cache ships
+# OLD code under a FRESH version and revision — an image that labels itself correct while running old
+# code, which passes every check downstream (the label says the right SHA, /version says the right
+# number). That is not hypothetical: 0.1.42 shipped exactly this way, from the right commit, running
+# the previous release's code. Only a rebuild forced by a NEW source change (0.1.43) dislodged it.
+# Tying the source layer's cache key to the commit is what makes that silent staleness unrepresentable.
+ARG GIT_SHA
+RUN echo "build stage source commit: ${GIT_SHA:-unknown}"
 COPY . .
 # Vite builds the client into dist/client; esbuild bundles the server into dist/server.mjs. ESM (not
 # CJS) so `import.meta.url` — which serveClient uses to locate dist/client — resolves natively; the
