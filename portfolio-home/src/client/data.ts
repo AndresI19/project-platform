@@ -51,7 +51,10 @@ const ALL_CONTACTS: Contact[] = [
     title: 'LinkedIn profile',
     external: true,
   },
-  { icon: 'resume', value: 'Résumé (PDF)', url: '/resume.pdf', title: 'Résumé', external: true },
+  // Extensionless on purpose: the server 302s /resume to the current /resume-<uid>.pdf. Cloudflare
+  // edge-caches by extension, so /resume is never pinned and always resolves to the latest résumé —
+  // the cache-bust that lets a replaced PDF appear at once. See server/content.ts.
+  { icon: 'resume', value: 'Résumé (PDF)', url: '/resume', title: 'Résumé', external: true },
 ];
 
 // Drop any contact still holding a placeholder, so the page never ships a dead link.

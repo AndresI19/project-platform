@@ -28,7 +28,7 @@
  */
 
 import { randomUUID } from 'node:crypto';
-import { constants } from 'node:fs';
+import { constants, readFileSync } from 'node:fs';
 import { access, mkdir, open, rename, stat, unlink } from 'node:fs/promises';
 import { basename, dirname, join, resolve, sep } from 'node:path';
 import express, { type Express, type NextFunction, type Request, type Response } from 'express';
@@ -55,6 +55,20 @@ import type { Env } from './env.js';
  */
 const RESUME = 'resume.pdf';
 const CARD = /^cards\/[a-z0-9][a-z0-9-]{0,63}\.yaml$/;
+
+/**
+ * The résumé's cache-busting UID, written beside it on the volume.
+ *
+ * #37 made a résumé swap live on the next request from THIS server — no cache here, read per request.
+ * But this server is not the only cache in front of the file: Cloudflare edge-caches /resume.pdf under
+ * a Browser-Cache-TTL it stamps itself (measured: max-age=14400), overriding the origin's no-cache, so
+ * a replaced PDF still shows stale in a visitor's browser for hours. That is an edge cache we cannot
+ * flush from here. The fix is to make the URL itself change: the page links the extensionless /resume,
+ * which the server 302s to /resume-<uid>.pdf — a url the edge has never seen — and that versioned url,
+ * naming one exact version, is then cached hard, which is correct. Every writer of the résumé mints a
+ * fresh UID here: `pv-content.sh set-resume`, and the admin PUT route below.
+ */
+const RESUME_UID = 'resume-uid';
 
 export interface Target {
   /** Absolute path to write, already proven to be inside the content directory. */
@@ -251,11 +265,13 @@ function volumeFault(err: NodeJS.ErrnoException): { status: number; error: strin
  * same file express.static would have served, now reached deliberately rather than by accident of a
  * mount. Both are parameters, not constants, so tests use real files.
  */
-export function serveResume(contentDir: string, seed: string) {
+export function serveResume(contentDir: string, seed: string, cacheControl = 'no-cache') {
   return (_req: Request, res: Response): void => {
     // no-cache = revalidate every time (it does NOT mean "do not store"). serve-static's default for
     // this path is already equivalent; saying it means the rule survives someone changing that default.
-    const opts = { headers: { 'Cache-Control': 'no-cache' } };
+    // The versioned /resume-<uid>.pdf route overrides this with `immutable`: that url names one exact
+    // version that will never change, so caching it for a year is correct rather than a bug.
+    const opts = { headers: { 'Cache-Control': cacheControl } };
     res.sendFile(join(contentDir, RESUME), opts, (err) => {
       // headersSent means the stream died mid-flight — the response is already committed and there is
       // nothing useful left to say.
@@ -265,6 +281,40 @@ export function serveResume(contentDir: string, seed: string) {
       });
     });
   };
+}
+
+/**
+ * The current résumé UID off the volume, or null when the file is absent (a dev checkout, or before
+ * the first résumé write) or malformed. `contentDir` is a parameter for the same reason serveResume's
+ * is — the tests point it at a real temp dir. Callers treat null as "no versioned url yet" and serve
+ * the résumé at its bare path, so a missing UID degrades to #37's behaviour rather than 404ing.
+ */
+export function resumeUid(contentDir: string): string | null {
+  try {
+    const raw = readFileSync(join(contentDir, RESUME_UID), 'utf8').trim();
+    // Exactly five digits, or nothing. A half-written file — it arrives by `kubectl cp` or an atomic
+    // rename — must read as "unknown" rather than as a partial UID we would 302 a visitor to.
+    return /^\d{5}$/.test(raw) ? raw : null;
+  } catch {
+    return null;
+  }
+}
+
+/** The versioned, immutable path the bare /resume routes redirect to. */
+export const resumePath = (uid: string): string => `/resume-${uid}.pdf`;
+
+/**
+ * A fresh five-digit UID that differs from `prev`. Differing is the whole point — an identical UID
+ * would leave the url unchanged and the edge cache unbusted — so this re-rolls until it does. The
+ * space is 100k and only the previous value is excluded, so it returns on the first try ~99.999% of
+ * the time; the loop is correctness, not a hot path.
+ */
+export function mintResumeUid(prev: string | null = null): string {
+  let uid = prev;
+  while (uid === null || uid === prev) {
+    uid = String(Math.floor(Math.random() * 100000)).padStart(5, '0');
+  }
+  return uid;
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -364,6 +414,16 @@ export function mountContent(app: Express, opts: MountOpts): void {
         console.error(`[content] write ${name.replace(/\n|\r/g, '')} failed: ${fault.code}`);
         res.status(fault.status).json({ error: fault.error });
         return;
+      }
+
+      // A new résumé is a new version, so it gets a new cache-busting UID — the same mint the deploy
+      // script does, so both write paths behave identically. After the résumé write, not before: a UID
+      // pointing at a résumé that failed to land would 302 visitors to a 404. The tiny window between
+      // the two writes (both atomic, same volume) can only leave the OLD UID against the NEW résumé,
+      // which still serves — never a dangling pointer. See resumeUid/mintResumeUid.
+      if (name === RESUME) {
+        const next = mintResumeUid(resumeUid(env.contentDir));
+        await writeAtomic(join(env.contentDir, RESUME_UID), Buffer.from(next), env.contentDir);
       }
 
       // The size is READ BACK off the volume rather than taken from the request body's length, and it
