@@ -46,7 +46,7 @@
   --wash-1: 30%;
   --wash-2: 28.2%;
   --wash-3: 15.9%;
-  --card-tint: 3.5%;
+  --card-tint: 7.5%;
 }
 @media (prefers-color-scheme: dark) {
   :root {
