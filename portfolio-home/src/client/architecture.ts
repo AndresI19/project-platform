@@ -1,4 +1,3 @@
-import { CICD_DIAGRAM } from './diagrams.js';
 // The platform architecture, revealed by a pull-down in the masthead banner. FOUR diagrams now, paged
 // by a slider:
 //
@@ -167,7 +166,106 @@ function topologyDiagram(): string {
     </div>`;
 }
 
-/* ── Diagram 2 — auth & the browser ────────────────────────────────────────────────────────────── */
+/* ── Diagram 2 — CICD ──────────────────────────────────────────────────────────────────────────── */
+// THREE WORLDS, left to right: GitHub's infrastructure, this machine, the cluster. Every arrow between
+// them is opened from our side.
+//
+// This was an inline SVG (a 1280x560 viewBox at width:100%), and it was the one diagram that broke the
+// rule this file opens with. An SVG scales UNIFORMLY: at ~340px of usable width on a phone the whole
+// picture rendered at 0.266x, so its 12px labels came out at ~3.2px and the entire pipeline collapsed
+// into a 149px band of unreadable grey. Tabbing across the slider, this slide was a postage stamp
+// between two legible ones — which is exactly what "the diagrams render inconsistently" meant.
+//
+// Rebuilt out of diagram 3's parts on purpose: `.auth-flow`'s three-track grid, `harrow()` and
+// `vconn()`. That is not tidiness — `.auth-h`'s mobile rules are keyed on the CLASS, not on
+// `.auth-flow`, so reusing the helper inherits the degradation for free: below 900px the shafts and
+// heads are dropped and every label becomes a plain caption between the boxes it used to join. One
+// mechanism, four diagrams, no fifth strategy and no second picture to maintain.
+const RUNNER_STEPS: [string, string][] = [
+  ['1', 'docker build --build-arg VERSION'],
+  ['2', 'docker push registry:5000/quiz:…'],
+  ['3', 'helm upgrade quiz · its own release'],
+];
+
+function cicdDiagram(): string {
+  const steps = RUNNER_STEPS.map(
+    ([n, t]) => `<tr><th class="cicd-n">${n}</th><td><code>${t}</code></td></tr>`,
+  ).join('');
+  return `
+    <div class="arch-diagram arch-cicd">
+      <p class="cicd-intro">
+        A pull request makes a <strong>CI job</strong>; a merge starts <strong>version-tag</strong> and
+        <strong>release</strong> on the same event. Every job lands in one queue and is dispatched
+        <strong>by label</strong> — GitHub's own VMs take the ordinary jobs, and our self-hosted runner
+        takes the rest. It builds, pushes, and upgrades one service's release, then leaves: the rollout is
+        watched from inside the cluster, because by the time one stalls the runner is long gone.
+      </p>
+
+      <div class="cicd-flow">
+
+        <!-- ① GitHub's infrastructure -->
+        <section class="cicd-zone z-gh">
+          <span class="cicd-ztag">GitHub-hosted · GitHub's infrastructure</span>
+          ${box('b-app', 'Service repos', 'one pipeline each')}
+          <div class="cicd-split">
+            <div class="cicd-branch">
+              ${vconn('a pull request')}
+              ${box('b-app', 'CI job', 'ci.yml · codeql.yml · secret-scan.yml')}
+            </div>
+            <div class="cicd-branch">
+              ${vconn('a merge')}
+              ${box('b-app', 'Version tag and release', 'version-tag.yml · release.yml')}
+            </div>
+          </div>
+          ${vconn('every job, one queue')}
+          ${box('b-infra cicd-here', 'The job queue', 'dispatched BY LABEL — a job reaches only a runner whose labels match. The runner is registered solely to platform-cicd, isolated from the application repositories.')}
+          ${vconn('ubuntu-latest')}
+          ${box('b-ext', 'GitHub-hosted VM · fresh per job', 'provisioned for ONE job, then destroyed')}
+        </section>
+
+        <div class="auth-conn cicd-conn">
+          ${harrow('back', '(1) the runner polls')}
+        </div>
+
+        <!-- ② this machine -->
+        <section class="cicd-zone z-out">
+          <span class="cicd-ztag">Outside K8s · this machine, not in the cluster</span>
+          ${box('b-vol cicd-here', 'registry:5000 · TLS, our own CA', 'pinned .10 · keeps the latest 2 · the kubelet trusts our CA')}
+          ${vconn('(2) push')}
+          ${box('b-infra cicd-here', 'Self-hosted runner · ephemeral', 'ONE job at a time — that IS the serialization. One job, de-register, restart.')}
+          <table class="arch-tbl cicd-steps">${steps}</table>
+          <span class="cicd-note">applied, not awaited — free again in ~0.5s</span>
+          ${vconn('the release summary → Discord ↗')}
+        </section>
+
+        <div class="auth-conn cicd-conn">
+          ${harrow('fwd', '(3) helm upgrade')}
+          ${harrow('back key', '(4) the kubelet pulls the image')}
+        </div>
+
+        <!-- ③ the cluster -->
+        <section class="cicd-zone z-k8s">
+          <span class="cicd-ztag">Inside K8s · the cluster</span>
+          ${box('b-app', 'kubelet · the minikube node', 'pull registry:5000/quiz:0.1.22')}
+          ${vconn('schedules the Pod')}
+          ${box('b-net cicd-here', 'apiserver · platform namespace', 'the release’s new image → a new ReplicaSet. It schedules the Pod for an image the node has yet to pull.')}
+          ${box('b-infra', 'A Job watches the rollout, in-cluster', 'stalls → helm rollback + a Discord alert. RollingUpdate means the old pods never stopped serving.')}
+        </section>
+
+      </div>
+
+      <footer class="arch-foot">
+        <div class="arch-key">
+          <span class="arch-chip cicd-chip-gh">GitHub’s</span>
+          <span class="arch-chip cicd-chip-out">ours, outside</span>
+          <span class="arch-chip cicd-chip-k8s">in-cluster</span>
+        </div>
+        <a class="arch-more" href="${WIKI}" target="_blank" rel="noopener">The full pipeline in the wiki →</a>
+      </footer>
+    </div>`;
+}
+
+/* ── Diagram 3 — auth & the browser ────────────────────────────────────────────────────────────── */
 // TWO stacked pictures, because a front end touches platform-auth for two different reasons and the
 // old single grid blurred them. TOP is the MISS path: the browser's gate, finding no local identity,
 // asks platform-auth for a token — this is client-side, and it is the only thing that ever calls
@@ -334,7 +432,7 @@ export function architecturePanel(): string {
           <div class="arch-viewport">
             <div class="arch-track">
               <section class="arch-slide" role="tabpanel" aria-label="Platform Topography">${topologyDiagram()}</section>
-              <section class="arch-slide" role="tabpanel" aria-label="CICD">${CICD_DIAGRAM}</section>
+              <section class="arch-slide" role="tabpanel" aria-label="CICD">${cicdDiagram()}</section>
               <section class="arch-slide" role="tabpanel" aria-label="Auth and Entrypoint">${authDiagram()}</section>
               <section class="arch-slide" role="tabpanel" aria-label="Security posture">${securityDiagram()}</section>
             </div>

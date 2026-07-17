@@ -1,0 +1,86 @@
+{
+  "//": "Visual baselines. Run against a LOCAL build, not the live site — `npm run build && npm start`,",
+  "//2": "then: node ../../Claude-Project-Tooling/claude/tools/shots.mjs --manifest test/shots.json --check",
+  "//3": "--update to accept a change. These exist because geometry cannot be unit-tested here: the suite",
+  "//4": "runs under happy-dom, which has no layout engine, so getBoundingClientRect returns zeros. Every",
+  "//5": "shot below is a bug that actually shipped.",
+  "baseUrl": "http://localhost:3000",
+  "dir": "shots",
+  "shots": [
+    {
+      "name": "arch-topography-mobile",
+      "//": "17 desktop rows collapse to 26 hand-written mobile ones. Nothing else pins that map.",
+      "path": "/",
+      "mobile": true,
+      "identity": "guest",
+      "click": "[data-act=architecture]",
+      "eval": "document.querySelectorAll('.arch-tab')[0]?.click()",
+      "selector": ".arch-slider",
+      "wait": 2500
+    },
+    {
+      "name": "arch-cicd-mobile",
+      "//": "Was a 1280px SVG that scaled to 0.266x: 12px labels at ~3.2px, the whole slide 217px tall",
+      "//2": "against its siblings' 1720. If this shot ever shrinks like that again, it is that bug returning.",
+      "path": "/",
+      "mobile": true,
+      "identity": "guest",
+      "click": "[data-act=architecture]",
+      "eval": "document.querySelectorAll('.arch-tab')[1]?.click()",
+      "selector": ".arch-slider",
+      "wait": 2500
+    },
+    {
+      "name": "arch-cicd-desktop",
+      "//": "The three worlds side by side. Guards the reflow from the other direction.",
+      "path": "/",
+      "width": 1460,
+      "height": 1200,
+      "identity": "guest",
+      "click": "[data-act=architecture]",
+      "eval": "document.querySelectorAll('.arch-tab')[1]?.click()",
+      "selector": ".cicd-flow",
+      "wait": 2500
+    },
+    {
+      "name": "arch-auth-mobile",
+      "path": "/",
+      "mobile": true,
+      "identity": "guest",
+      "click": "[data-act=architecture]",
+      "eval": "document.querySelectorAll('.arch-tab')[2]?.click()",
+      "selector": ".arch-slider",
+      "wait": 2500
+    },
+    {
+      "name": "arch-security-mobile",
+      "//": "A min-width:460px table inside a sideways scroller.",
+      "path": "/",
+      "mobile": true,
+      "identity": "guest",
+      "click": "[data-act=architecture]",
+      "eval": "document.querySelectorAll('.arch-tab')[3]?.click()",
+      "selector": ".arch-slider",
+      "wait": 2500
+    },
+    {
+      "name": "arch-tabs-mobile",
+      "//": "Four tabs do not fit 390px. Plain `center` stranded the first and last off both edges with no",
+      "//2": "way to scroll to them; `safe center` is what makes them reachable. This shot is that guarantee.",
+      "path": "/",
+      "mobile": true,
+      "identity": "guest",
+      "click": "[data-act=architecture]",
+      "selector": ".arch-tabs",
+      "wait": 2000
+    },
+    {
+      "name": "home-masthead-mobile",
+      "path": "/",
+      "mobile": true,
+      "identity": "guest",
+      "selector": ".masthead",
+      "wait": 2500
+    }
+  ]
+}
