@@ -1962,6 +1962,14 @@ section {
 /* ── CICD diagram (desktop SVG) ─────────────────────────────────────────────────────────────────
    The restored inline SVG for the desktop CICD slide. Scoped to .arch-cicd; the phone uses
    mobileCicd() and never sees this. See diagrams.ts CICD_DIAGRAM and architecture.ts. */
+/* Marching dashes — the flow the .ln arrows animate. Distinct from arch-flow (which shifts a CSS
+   background for the HTML diagrams); an SVG stroke marches via stroke-dashoffset. Restored alongside
+   the SVG, since the .ln rule below references it. */
+@keyframes cicd-flow {
+  to {
+    stroke-dashoffset: -14;
+  }
+}
 .arch-cicd svg {
   display: block;
   width: 100%;
