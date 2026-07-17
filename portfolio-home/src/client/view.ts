@@ -177,24 +177,29 @@ export function hereMarker(): string {
   </div>`;
 }
 
+/** A group card's artwork: its wordmark if it has one, else a drawn schematic, else nothing. The same
+    "pick one" shape as media() above, as guard clauses rather than a nested ternary. */
+function groupMedia(g: Group): string {
+  if (g.logo) {
+    return `<div class="media logo"><img src="${esc(g.logo)}" alt="${esc(g.name)}" loading="lazy"></div>`;
+  }
+  if (g.diagram) return diagramMedia(g.diagram);
+  return '';
+}
+
 /** Featured card for a group: one card, one shared blurb, then each member as a sub-panel —
     so a reader sees at a glance that the members are parts of a single project. */
 export function featGroupCard(g: Group): string {
   const members = memberPanels(g.members, 'btn sm');
   // The wordmark is flavour, not a headline — it sits under the description rather than above it,
   // so the blurb still leads and the mark reads as a mark.
-  const logo = g.logo
-    ? `<div class="media logo"><img src="${esc(g.logo)}" alt="${esc(g.name)}" loading="lazy"></div>`
-    : g.diagram
-      ? diagramMedia(g.diagram)
-      : '';
   return `<article class="feat wide lux${g.hereMarker ? ' has-here' : ''}">
     <div class="feat-top">
       <h3>${esc(g.name)}</h3>
       <span class="grouped">${g.members.length} repos</span>
     </div>
     <p class="feat-blurb">${esc(g.blurb)}</p>
-    ${logo}
+    ${groupMedia(g)}
     ${g.hereMarker ? hereMarker() : ''}
     <div class="members">${members}</div>
   </article>`;

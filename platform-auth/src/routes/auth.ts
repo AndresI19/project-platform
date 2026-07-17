@@ -169,7 +169,10 @@ authRouter.post('/token', async (req, res) => {
     res.status(401).json({ error: 'unknown username or password' });
   };
 
-  if (!isValidUsername(username)) return void (await deny());
+  if (!isValidUsername(username)) {
+    await deny();
+    return;
+  }
 
   const [row] = await db
     .select({ id: identities.id, username: identities.username, passwordHash: identities.passwordHash })
@@ -183,7 +186,10 @@ authRouter.post('/token', async (req, res) => {
     ? await verifyPassword(row.passwordHash, password, env.codePepper)
     : await verifyPassword(DUMMY_HASH, password, env.codePepper);
 
-  if (!row || !ok) return void (await deny());
+  if (!row || !ok) {
+    await deny();
+    return;
+  }
 
   await db.update(identities).set({ lastSeen: sql`now()` }).where(eq(identities.id, row.id));
   await audit(ip, true);
