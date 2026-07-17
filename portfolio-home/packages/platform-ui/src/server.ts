@@ -26,21 +26,21 @@ export interface ServeClientOptions {
 export function serveClient(app: Express, opts: ServeClientOptions): void {
   const { clientDir, base = '/', appName = 'app' } = opts;
   // '' at the root, else '/cloud-developer-quiz' — every route hangs beneath it.
-  const b = base.replace(/\/$/, '');
+  const prefix = base.replace(/\/$/, '');
 
-  app.get(`${b}/api/health`, (_req, res) => res.json({ ok: true }));
+  app.get(`${prefix}/api/health`, (_req, res) => res.json({ ok: true }));
 
   if (!existsSync(clientDir)) {
     // Answer *something* coherent rather than 404ing every route, so a missing build is diagnosed
     // in one request instead of looking like a routing bug.
-    app.get(`${b}/*`, (_req, res) =>
+    app.get(`${prefix}/*`, (_req, res) =>
       res.status(503).send(`${appName}: client not built yet. Run \`npm run build\` first.`),
     );
     return;
   }
 
   app.use(
-    b || '/',
+    prefix || '/',
     express.static(clientDir, {
       setHeaders(res, path) {
         // Vite fingerprints every asset it emits, so those may be cached forever. Anything else —
@@ -59,7 +59,7 @@ export function serveClient(app: Express, opts: ServeClientOptions): void {
   // reading as a browser problem (a fresh device is fine, clearing site data "fixes" it). A 404 is the
   // honest, recoverable answer. Same lie once hit a missing `/resume.pdf` (see portfolio-home's
   // CLAUDE.md). Client routes are extension-free, so this can't swallow one.
-  app.get(`${b}/*`, (req, res) => {
+  app.get(`${prefix}/*`, (req, res) => {
     if (req.path.includes('/assets/') || /\.[a-z0-9]{2,5}$/i.test(req.path)) {
       res.status(404).end();
       return;

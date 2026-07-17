@@ -225,7 +225,7 @@ function authDiagram(): string {
     </div>`;
 }
 
-/* ── Diagram 3 — the security posture ──────────────────────────────────────────────────────────── */
+/* ── Diagram 4 — the security posture ──────────────────────────────────────────────────────────── */
 // Every service against the automated scans that gate its CI. Rows are repos (the two in the platform
 // monorepo share one); columns are scan classes. A tick is a BLOCKING check on every PR — a regression
 // fails before it reaches the cluster. Mirrors the orchestration wiki's security section.

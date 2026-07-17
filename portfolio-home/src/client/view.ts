@@ -90,8 +90,10 @@ function badges(...chips: string[]): string {
 
 /** Render a link as a button. `data-resolve-*` marks the ones whose href is fixed up at runtime. */
 export function btn(l: Link, cls = 'btn'): string {
-  const res = l.resolve ? ` data-resolve="${esc(l.resolve.from)}" data-slug="${esc(l.resolve.slug)}"` : '';
-  return `<a class="${cls} ${l.primary ? 'primary' : 'ghost'}" href="${esc(l.href)}"${tab(l.external)}${res}>${esc(l.label)}</a>`;
+  const resolveAttr = l.resolve
+    ? ` data-resolve="${esc(l.resolve.from)}" data-slug="${esc(l.resolve.slug)}"`
+    : '';
+  return `<a class="${cls} ${l.primary ? 'primary' : 'ghost'}" href="${esc(l.href)}"${tab(l.external)}${resolveAttr}>${esc(l.label)}</a>`;
 }
 
 /** Featured card for a single project. The `kubectl get pods` table needs full width to avoid
@@ -110,11 +112,11 @@ export function featCompanion(c: NonNullable<Project['companion']>): string {
 export function featCard(p: Project): string {
   // `data-component` lets the stylesheet give one card its own accent — the quiz is themed gold this
   // way — without a bespoke class per project. Absent for entries that are not deployed components.
-  const dc = p.component ? ` data-component="${esc(p.component)}"` : '';
+  const componentAttr = p.component ? ` data-component="${esc(p.component)}"` : '';
   const cls = ['feat', 'lux', p.diagram === 'k8s' ? 'wide' : '', p.companion ? 'has-companion' : '']
     .filter(Boolean)
     .join(' ');
-  return `<article class="${cls}"${dc}>
+  return `<article class="${cls}"${componentAttr}>
     <div class="feat-top">
       <h3>${esc(p.name)}</h3>
       ${badges(tagChip(p), liveBadge(p), versionBadge(p))}
