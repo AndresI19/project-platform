@@ -84,3 +84,129 @@ export const DIAGRAMS: Record<NonNullable<Project['diagram']>, string> = {
   vmcp: VMCP_DIAGRAM,
   k8s: K8S_DIAGRAM,
 };
+
+/* Diagram 2 — CICD, DESKTOP ONLY. The 1280x560 inline SVG restored to the web slide by request:
+   it reads best at desktop width. The phone gets mobileCicd() (mobile-diagrams.ts) instead, so this
+   SVG never has to scale down past legibility — the reason it was briefly replaced by an HTML build. */
+export const CICD_DIAGRAM = `
+    <div class="arch-diagram arch-cicd">
+      <svg viewBox="0 0 1280 560" width="100%" role="img" aria-label="A pull request makes a CI job; a merge starts version-tag and release on the same event — version-tag cuts the git tag, release reads it and posts a repository_dispatch. Every job lands in one queue, dispatched by label: ubuntu-latest jobs run on a fresh GitHub-hosted VM, self-hosted jobs are taken by our runner, which polls the queue, builds and pushes to the local registry, checks out the Helm chart and runs helm upgrade on that one service's own release. The upgrade is applied, not awaited, so the runner is free in about half a second and the next release starts; the kubelet pulls the new image, and a Job inside the cluster watches the rollout in the runner's place. If the rollout stalls, that Job rolls the release back and alerts Discord, outbound — a rolling update means the old pods never stopped serving. The runner posts the release summary to Discord separately.">
+        <defs>
+          <marker id="cicdA" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M0 0 L10 5 L0 10 z" fill="currentColor" style="color:var(--muted)"/>
+          </marker>
+        </defs>
+
+        <!-- GitHub-hosted -->
+        <rect class="zone z-gh" x="6" y="8" width="594" height="544" rx="12"/>
+        <rect class="ztag-gh" x="16" y="12" width="238" height="22" rx="11"/>
+        <text class="ztt" x="28" y="27">GitHub-hosted · GitHub's infrastructure</text>
+
+        <rect class="box" x="20" y="36" width="160" height="32" rx="7"/>
+        <text class="t" x="34" y="56">Service repo 1</text>
+        <rect class="box" x="58" y="66" width="160" height="32" rx="7"/>
+        <text class="t" x="72" y="86">Service repo 2</text>
+        <rect class="box" x="96" y="96" width="160" height="32" rx="7"/>
+        <text class="t" x="110" y="116">Service repo 3</text>
+
+        <path class="ln" style="marker-end:url(#cicdA)" d="M110 128 V 148"/>
+        <path class="ln" style="marker-end:url(#cicdA)" d="M256 112 H 330 V 146"/>
+
+        <rect class="box" x="20" y="150" width="230" height="44" rx="8"/>
+        <text class="t" x="34" y="176">PR</text>
+
+        <path class="ln" style="marker-end:url(#cicdA)" d="M70 194 V 212"/>
+
+        <rect class="box" x="20" y="212" width="230" height="76" rx="8"/>
+        <text class="t" x="34" y="230">CI job</text>
+        <text class="t m" x="34" y="247">ci.yml</text>
+        <text class="t m" x="34" y="262">codeql.yml</text>
+        <text class="t m" x="34" y="277">secret-scan.yml</text>
+
+        <rect class="box" x="290" y="150" width="270" height="44" rx="8"/>
+        <text class="t" x="304" y="176">Merge</text>
+
+        <path class="ln" style="marker-end:url(#cicdA)" d="M425 194 V 212"/>
+
+        <rect class="box" x="290" y="212" width="270" height="76" rx="8"/>
+        <text class="t" x="304" y="232">Version tag and release</text>
+        <text class="t m" x="304" y="256">version-tag.yml</text>
+        <text class="t m" x="304" y="273">release.yml</text>
+
+        <path class="ln hot" style="marker-end:url(#cicdA)" d="M425 288 V 330"/>
+        <path class="ln" style="marker-end:url(#cicdA)" d="M70 288 V 330"/>
+
+        <rect class="box here" x="20" y="330" width="540" height="106" rx="8"/>
+        <text class="t big" x="34" y="362">The job queue · every repo's jobs land here</text>
+        <text class="t s" x="34" y="388">dispatched BY LABEL: a job reaches only a runner whose labels match.</text>
+        <text class="t s" x="34" y="412">The runner is registered solely to platform-cicd, isolated from the application repositories.</text>
+
+        <path class="ln" style="marker-end:url(#cicdA)" d="M303 436 V 475"/>
+
+        <rect class="box vm" x="170" y="475" width="266" height="50" rx="8"/>
+        <text class="t" x="184" y="497">GitHub-hosted VM · fresh per job</text>
+        <text class="t s" x="184" y="514">provisioned for ONE job, then DESTROYED.</text>
+
+        <!-- Outside K8s -->
+        <rect class="zone z-out" x="616" y="8" width="304" height="544" rx="12"/>
+        <rect class="ztag-out" x="626" y="12" width="278" height="22" rx="11"/>
+        <text class="ztt" x="638" y="27">Outside K8s · this machine, not in the cluster</text>
+
+        <rect class="box here" x="630" y="110" width="276" height="76" rx="8"/>
+        <text class="t" x="644" y="130">registry:5000 · TLS, our own CA</text>
+        <text class="t s" x="644" y="147">pinned .10 · keeps the latest 2</text>
+        <text class="t s" x="644" y="164">the kubelet trusts our CA</text>
+
+        <path class="ln hot" style="marker-end:url(#cicdA)" d="M768 300 V 192"/>
+        <text class="t s" x="776" y="250">(2) push</text>
+
+        <rect class="box here" x="630" y="300" width="276" height="155" rx="8"/>
+        <text class="t big" x="644" y="326">Self-hosted runner · ephemeral</text>
+        <text class="t s" x="644" y="346">ONE job at a time — that IS the serialization</text>
+        <text class="t s" x="644" y="360">one job, de-register, restart</text>
+        <text class="t m" x="644" y="380">1 · docker build --build-arg VERSION</text>
+        <text class="t m" x="644" y="397">2 · docker push registry:5000/quiz:…</text>
+        <text class="t m" x="644" y="414">3 · helm upgrade quiz · its own release</text>
+        <text class="t s" x="644" y="434">applied, not awaited — free again in ~0.5s</text>
+
+        <path class="ln hot" style="marker-end:url(#cicdA)" d="M630 385 H 566"/>
+        <text class="t s" x="570" y="378">(1) polls</text>
+
+        <!-- the runner's release summary — it LEAVES the box: starts inside, crosses out -->
+        <path class="ln" style="marker-end:url(#cicdA)" d="M855 440 V 545"/>
+        <text class="t s" x="700" y="500">the release summary → Discord ↗</text>
+
+        <!-- Inside K8s -->
+        <rect class="zone z-k8s" x="936" y="8" width="338" height="544" rx="12"/>
+        <rect class="ztag-k8s" x="946" y="12" width="156" height="22" rx="11"/>
+        <text class="ztt" x="958" y="27">Inside K8s · the cluster</text>
+
+        <rect class="box here" x="950" y="110" width="310" height="76" rx="8"/>
+        <text class="t" x="964" y="130">kubelet · the minikube node</text>
+        <text class="t m" x="964" y="149">pull registry:5000/quiz:0.1.22</text>
+
+        <path class="ln hot" style="marker-end:url(#cicdA)" d="M950 148 H 912"/>
+        <text class="t s" x="916" y="102">(4) pull</text>
+
+        <path class="ln" style="stroke-dasharray:4 3; marker-end:url(#cicdA)" d="M1105 300 V 192"/>
+        <text class="t s" x="1113" y="240">schedules a Pod for an image</text>
+        <text class="t s" x="1113" y="254">the node has yet to pull</text>
+
+        <rect class="box here" x="950" y="300" width="310" height="155" rx="8"/>
+        <text class="t big" x="964" y="326">apiserver · platform namespace</text>
+        <text class="t s" x="964" y="348">the release's new image → a new ReplicaSet →</text>
+        <text class="t m" x="964" y="368">a Job watches the rollout, in-cluster</text>
+        <text class="t s" x="964" y="388">stalls → helm rollback; RollingUpdate means</text>
+        <text class="t s" x="964" y="402">the old pods never stopped serving</text>
+        <text class="t s" x="964" y="422">reached at its NATIVE address — the one</text>
+        <text class="t s" x="964" y="436">the host cannot route to, but the runner can</text>
+
+        <path class="ln hot" style="marker-end:url(#cicdA)" d="M906 352 H 946"/>
+        <text class="t s" x="912" y="344">(3)</text>
+
+        <!-- the stalled-rollout alert leaves the CLUSTER, not the runner: by the time a rollout
+             stalls the runner is long gone, which is the whole point of watching from in here -->
+        <path class="ln" style="marker-end:url(#cicdA)" d="M1105 455 V 545"/>
+        <text class="t s" x="1113" y="500">a stalled rollout → Discord ↗</text>
+      </svg>
+    </div>`;
