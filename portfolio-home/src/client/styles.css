@@ -490,9 +490,6 @@ section {
 .feat.has-companion .term-cmd {
   margin-bottom: 5px;
 }
-.feat.has-companion .term-cmd.last {
-  margin-top: 5px;
-}
 
 /* "You are here" — the map pin on the card that IS this site. It sits between the description and the
    member bubbles as its own centered band: a pin over a ground ring that pulses outward, the way a
@@ -703,53 +700,8 @@ section {
   object-fit: contain;
   background: #fbfbfe;
 }
-/* The garden's drag-to-pan frame: the artwork is wider/taller than this window, and a press-and-swipe
-   (garden-pan.ts) moves it inside. touch-action:none hands the vertical swipe to the pan instead of
-   the page scroll; grab/grabbing cursors say it is draggable. */
-.media.stack .pan {
-  position: relative;
-  height: 150px;
-  overflow: hidden;
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  cursor: grab;
-  touch-action: none;
-}
-.media.stack .pan.grabbing {
-  cursor: grabbing;
-}
-.media.stack .pan .pan-img {
-  display: block;
-  width: 100%;
-  height: auto;
-  border: none;
-  border-radius: 0;
-  user-select: none;
-  -webkit-user-drag: none;
-  will-change: transform;
-}
-/* A one-line hint that fades on first interaction, so the pan is discoverable without a permanent
-   chrome sitting over the art. */
-.media.stack .pan::after {
-  content: "⤢ drag to explore";
-  position: absolute;
-  right: 7px;
-  bottom: 7px;
-  padding: 2px 7px;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.3px;
-  color: #fff;
-  background: rgba(0, 0, 0, 0.5);
-  border-radius: 20px;
-  pointer-events: none;
-  transition: opacity 0.3s ease;
-}
-.media.stack .pan.grabbing::after {
-  opacity: 0;
-}
-/* The garden keeps its original full 118px — the question sits above it rather than eating into it,
-   which is the whole reason the two are separately framed. */
+/* The garden is cover-cropped artwork; the question sits above it rather than eating into it, which
+   is the whole reason the two are separately framed. */
 .media.stack img:last-child {
   height: 138px;
   object-fit: cover;
@@ -913,33 +865,6 @@ section {
 .term-cmd .c {
   color: var(--t-ink);
   font-weight: 700;
-}
-.term-cmd.last {
-  margin: 8px 0 0;
-}
-/* A blinking block cursor on the trailing prompt — the detail that sells it as a live shell. */
-.cur {
-  display: inline-block;
-  width: 6px;
-  height: 12px;
-  background: var(--t-purple);
-  vertical-align: -2px;
-  animation: blink 1.1s step-end infinite;
-}
-@keyframes blink {
-  0%,
-  49% {
-    opacity: 1;
-  }
-  50%,
-  100% {
-    opacity: 0;
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .cur {
-    animation: none;
-  }
 }
 
 .ps {
@@ -3644,6 +3569,24 @@ section {
   .projects .member .badges {
     position: static;
     margin-left: auto;
+  }
+  /* Same "right-align that gives up" trap, one level down: a member's tech list ("TS · Express ·
+     Postgres · jose") is long enough to wrap the head on a phone, which drops that member's "live" chip
+     onto a second line instead of its top-right corner. Hold the head to one row and let the tech list
+     ellipsize into the space left over, so it shortens with "…" and the chip keeps its corner. */
+  .projects .member .member-head {
+    flex-wrap: nowrap;
+  }
+  .projects .member .member-head .member-name {
+    flex: none;
+    white-space: nowrap;
+  }
+  .projects .member .member-head .tech-inline {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
   }
   /* The head must not run under them. Only the first line needs the room, but reserving it on the
      whole block is honest and costs nothing the badges were not already taking. */
