@@ -23,8 +23,8 @@
   --exp: #0f766e;
   --exp-2: #115e59;
   --slate: #64748b;
-  --proj: #2f9e6a;
-  --proj-2: #1e7a51;
+  --proj: #579b34;
+  --proj-2: #3f7d22;
   --gold: #c08a12;
   --gold-2: #8a610a;
   --wip: #e2660c;
@@ -48,8 +48,8 @@
     --exp: #14b8a6;
     --exp-2: #2dd4bf;
     --slate: #94a3b8;
-    --proj: #4cc38a;
-    --proj-2: #7fdcaf;
+    --proj: #7fc94a;
+    --proj-2: #a6dd78;
     --gold: #e8b23c;
     --gold-2: #f2cd77;
     --wip: #ff8c42;
@@ -256,6 +256,102 @@ section {
   );
 }
 
+/* Featured (non-quiz) gleam: the card's OWN accent, not white. A white sweep read grey once the cards
+   were darkened; the accent has somewhere to travel — a light-mode navy sweep, a dark-mode lifted-navy
+   shine — so it stays visible on both grounds. Normal blend keeps the hue true (screen washed it out). */
+.feat:not([data-component="quiz"]).lux::before {
+  background-image: linear-gradient(
+    105deg,
+    transparent 38%,
+    color-mix(in srgb, var(--accent) 40%, transparent) 47%,
+    color-mix(in srgb, var(--accent) 72%, transparent) 50%,
+    color-mix(in srgb, var(--accent) 40%, transparent) 53%,
+    transparent 62%
+  );
+}
+
+/* The quiz's gold card runs its gleam, then a four-spark twinkle keyed to WHERE the light is: each spark
+   blooms as the gleam's bright core (which crosses the card left-to-right over the .7s sweep) reaches it.
+   The delays below are therefore COUPLED to that .7s — retune them together if the gleam speed changes.
+   overflow:visible lets a spark sit a few px past the card edge; .feat-banner carries the headroom. */
+.feat[data-component="quiz"] {
+  overflow: visible;
+}
+.feat[data-component="quiz"] .sparks {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+}
+.feat[data-component="quiz"] .spark {
+  position: absolute;
+  opacity: 0;
+  background: radial-gradient(circle at 50% 50%, #fff 0%, var(--gold-2) 34%, var(--gold) 58%, transparent 72%);
+  clip-path: polygon(50% 0, 60% 40%, 100% 50%, 60% 60%, 50% 100%, 40% 60%, 0 50%, 40% 40%);
+  filter: drop-shadow(0 0 4px color-mix(in srgb, var(--gold) 70%, #fff));
+  transform: scale(0.2);
+}
+/* Four sparks, one per quadrant, each from a few px outside the card to inside it. */
+.feat[data-component="quiz"] .spark:nth-child(1) {
+  left: 22%;
+  top: -7px;
+  width: 16px;
+  height: 16px;
+}
+.feat[data-component="quiz"] .spark:nth-child(2) {
+  left: calc(100% - 7px);
+  top: 24%;
+  width: 14px;
+  height: 14px;
+}
+.feat[data-component="quiz"] .spark:nth-child(3) {
+  left: -7px;
+  top: 62%;
+  width: 13px;
+  height: 13px;
+}
+.feat[data-component="quiz"] .spark:nth-child(4) {
+  left: 66%;
+  top: 78%;
+  width: 15px;
+  height: 15px;
+}
+/* Delays follow the sweep: bottom-left first, top-right last, tracking the core's L->R crossing. */
+.feat[data-component="quiz"]:hover .spark {
+  animation: spark-twinkle 0.36s ease forwards;
+}
+.feat[data-component="quiz"]:hover .spark:nth-child(1) {
+  animation-delay: 0.32s;
+}
+.feat[data-component="quiz"]:hover .spark:nth-child(2) {
+  animation-delay: 0.47s;
+}
+.feat[data-component="quiz"]:hover .spark:nth-child(3) {
+  animation-delay: 0.23s;
+}
+.feat[data-component="quiz"]:hover .spark:nth-child(4) {
+  animation-delay: 0.37s;
+}
+@keyframes spark-twinkle {
+  0% {
+    opacity: 0;
+    transform: scale(0.2) rotate(-25deg);
+  }
+  40% {
+    opacity: 1;
+    transform: scale(1.2) rotate(10deg);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.5) rotate(32deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .feat[data-component="quiz"]:hover .spark {
+    animation: none;
+  }
+}
+
 /* Featured — a horizontal-scroll banner of cards. */
 .feat-banner {
   display: flex;
@@ -264,7 +360,9 @@ section {
   gap: 14px;
   overflow-x: auto;
   overflow-y: hidden;
-  padding: 2px 2px 12px;
+  /* Top padding is headroom: the hover-lift and the quiz card's sparks spill a few px above the card,
+     and overflow-y:hidden would otherwise clip them. */
+  padding: 10px 2px 12px;
   scroll-snap-type: x proximity;
   scrollbar-width: thin;
 

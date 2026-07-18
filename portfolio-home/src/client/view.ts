@@ -131,7 +131,14 @@ function featCard(p: Project): string {
     ${p.companion ? featCompanion(p.companion) : ''}
     ${media(p)}
     ${p.links.length ? `<div class="feat-actions">${p.links.map((l) => btn(l)).join('')}</div>` : ''}
+    ${p.component === 'quiz' ? sparks() : ''}
   </article>`;
+}
+
+/** The gold quiz card's post-gleam VFX: four twinkling stars whose timing is tied to the sweep (see the
+    `.spark` rules in styles.css). Decorative only, so it is hidden from assistive tech. */
+function sparks(): string {
+  return `<span class="sparks" aria-hidden="true">${'<i class="spark"></i>'.repeat(4)}</span>`;
 }
 
 /** The member sub-panels of a group. The banner card and the list row draw these identically, differing
