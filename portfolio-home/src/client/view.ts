@@ -214,7 +214,7 @@ function featGroupCard(g: Group): string {
 
 /** One row in the detailed all-projects list. */
 function projRow(p: Project): string {
-  return `<li class="lux">
+  return `<li>
     <time>${esc(fmtDate(p.date))}</time>
     <div class="proj-body">
       <div class="proj-head">
@@ -230,7 +230,7 @@ function projRow(p: Project): string {
 
 /** A group occupies a single row, with its members nested inside it. */
 function groupRow(g: Group): string {
-  return `<li class="lux group-row">
+  return `<li class="group-row">
     <time>${esc(fmtDate(g.date))}</time>
     <div class="proj-body">
       ${groupBody(g, 'chip', featuredChip(g))}
