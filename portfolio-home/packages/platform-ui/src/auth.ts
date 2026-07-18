@@ -90,7 +90,15 @@ function claims(token: string): Record<string, unknown> {
   }
 }
 
-function adopt(res: { username: string; token: string; expiresIn: number }, password: string): void {
+/** The auth service's answer to /identities and /token: a signed token, the canonical username, and
+ *  the token's lifetime in seconds. The single wire shape post(), adopt(), signUp and signIn share. */
+interface TokenGrant {
+  username: string;
+  token: string;
+  expiresIn: number;
+}
+
+function adopt(res: TokenGrant, password: string): void {
   setIdentity({
     mode: 'user',
     username: res.username,
@@ -102,6 +110,15 @@ function adopt(res: { username: string; token: string; expiresIn: number }, pass
   });
 }
 
+/** Exchange credentials at an auth endpoint and adopt the identity it returns. signUp and signIn are
+ *  the same round trip — POST { username, password }, adopt the grant — differing only in the path
+ *  and what they hand back, so the exchange lives here once. */
+async function authenticate(path: string, username: string, password: string): Promise<TokenGrant> {
+  const res = await post<TokenGrant>(path, { username, password });
+  adopt(res, password);
+  return res;
+}
+
 export async function checkUsername(username: string): Promise<{ valid: boolean; available: boolean }> {
   const r = await fetch(`${AUTH}/usernames/${encodeURIComponent(username)}`);
   return (await r.json()) as { valid: boolean; available: boolean };
@@ -110,20 +127,12 @@ export async function checkUsername(username: string): Promise<{ valid: boolean;
 /** Sign up with a chosen password. On success the identity is signed in immediately — there is no
  *  code to hand back and nothing to write down. */
 export async function signUp(username: string, password: string): Promise<{ username: string }> {
-  const res = await post<{ username: string; token: string; expiresIn: number }>('/identities', {
-    username,
-    password,
-  });
-  adopt(res, password);
+  const res = await authenticate('/identities', username, password);
   return { username: res.username };
 }
 
 export async function signIn(username: string, password: string): Promise<void> {
-  const res = await post<{ username: string; token: string; expiresIn: number }>('/token', {
-    username,
-    password,
-  });
-  adopt(res, password);
+  await authenticate('/token', username, password);
 }
 
 export function continueAsGuest(): void {

@@ -10,18 +10,18 @@
  * orchestration repo has no image, Pod or Service, so the server keeps the two apart. See
  * server/versions.ts.
  */
-interface Payload {
+interface VersionsResponse {
   platform: string | null;
   components: Record<string, string | null>;
 }
 
 /** Fill every `[data-ver]` element with its version. Called once, on load. */
 export async function paintVersions(): Promise<void> {
-  let payload: Payload;
+  let payload: VersionsResponse;
   try {
     const r = await fetch('/api/versions', { cache: 'no-store' });
     if (!r.ok) return;
-    payload = (await r.json()) as Payload;
+    payload = (await r.json()) as VersionsResponse;
   } catch {
     // No versions is a fine outcome: the placeholders stay as they are. A build-metadata display must
     // never be able to break the page it decorates.

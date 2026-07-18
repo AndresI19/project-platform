@@ -27,7 +27,7 @@ const chip = (cls: string, icon: string, label: string): string =>
   `<span class="tag ${cls}">${icon}<span>${esc(label)}</span></span>`;
 
 /** Contact chip: the icon plus the value itself (the handle/address), not a category name. */
-export function contactChip(c: Contact): string {
+function contactChip(c: Contact): string {
   // The icon name doubles as the colour class (.cx.github, .cx.resume, …).
   return `<a class="cx ${esc(c.icon)}" href="${esc(c.url)}" title="${esc(c.title)}" aria-label="${esc(c.title)}"${tab(c.external)}>
     <span class="cx-ico">${ICONS[c.icon]}</span><span class="cx-val">${esc(c.value)}</span>
@@ -35,18 +35,23 @@ export function contactChip(c: Contact): string {
 }
 
 /** Status badge — how finished a project is (work-in-progress, archived). */
-export function tagChip(p: Project): string {
+function tagChip(p: Project): string {
   return p.tag ? chip(p.tag.icon, TAG_ICONS[p.tag.icon], p.tag.label) : '';
 }
 
 /** "Featured" badge for the list rows, marking the entries that also lead the banner above — so a
     reader scanning only the list can still tell which ones I'd point at first. */
-export function featuredChip(e: Entry): string {
+function featuredChip(e: Entry): string {
   return e.featured ? chip('featured', STAR_ICON, 'Featured') : '';
 }
 
+/** A drawn schematic in a card's media slot — the same markup wherever a diagram fills one, so a
+    featured card and a group card can't drift on how a diagram is framed. */
+const diagramMedia = (name: NonNullable<Project['diagram']>): string =>
+  `<div class="media diagram ${esc(name)}">${DIAGRAMS[name]}</div>`;
+
 /** The artwork that fills a featured card's empty space — image(s), or a drawn schematic. */
-export function media(p: Project): string {
+function media(p: Project): string {
   if (p.images) {
     // Two stacked images in one frame each: the question png is contained so it stays readable, the
     // garden gif is cover-cropped as artwork (CSS: .media.stack img:first-child / :last-child).
@@ -55,12 +60,12 @@ export function media(p: Project): string {
     </div>`;
   }
   if (p.image) return `<div class="media"><img src="${esc(p.image)}" alt="" loading="lazy"></div>`;
-  if (p.diagram) return `<div class="media diagram ${esc(p.diagram)}">${DIAGRAMS[p.diagram]}</div>`;
+  if (p.diagram) return diagramMedia(p.diagram);
   return '';
 }
 
 /** Live/offline pill (dot + "live") for projects with a liveliness probe; starts as "checking". */
-export function liveBadge(p: Project): string {
+function liveBadge(p: Project): string {
   if (!p.live) return '';
   return `<span class="live checking" data-live="${slug(p.name)}"><span class="dot"></span><span class="lt">checking…</span></span>`;
 }
@@ -72,7 +77,7 @@ export function liveBadge(p: Project): string {
  * does not answer therefore shows nothing at all, rather than an empty pill or the word "unknown" —
  * the badge appears only when there is something true to put in it.
  */
-export function versionBadge(p: Project): string {
+function versionBadge(p: Project): string {
   if (!p.component) return '';
   return `<span class="ver" data-ver="${esc(p.component)}" title="Version of the running image" hidden></span>`;
 }
@@ -89,9 +94,11 @@ function badges(...chips: string[]): string {
 }
 
 /** Render a link as a button. `data-resolve-*` marks the ones whose href is fixed up at runtime. */
-export function btn(l: Link, cls = 'btn'): string {
-  const res = l.resolve ? ` data-resolve="${esc(l.resolve.from)}" data-slug="${esc(l.resolve.slug)}"` : '';
-  return `<a class="${cls} ${l.primary ? 'primary' : 'ghost'}" href="${esc(l.href)}"${tab(l.external)}${res}>${esc(l.label)}</a>`;
+function btn(l: Link, cls = 'btn'): string {
+  const resolveAttr = l.resolve
+    ? ` data-resolve="${esc(l.resolve.from)}" data-slug="${esc(l.resolve.slug)}"`
+    : '';
+  return `<a class="${cls} ${l.primary ? 'primary' : 'ghost'}" href="${esc(l.href)}"${tab(l.external)}${resolveAttr}>${esc(l.label)}</a>`;
 }
 
 /** Featured card for a single project. The `kubectl get pods` table needs full width to avoid
@@ -99,7 +106,7 @@ export function btn(l: Link, cls = 'btn'): string {
 /** A companion repo credited inside a featured card — the thing that builds/deploys the card's
  *  project. The block is one link to its repo; `has-companion` tells the stylesheet to squeeze the
  *  diagram beneath it so both fit. */
-export function featCompanion(c: NonNullable<Project['companion']>): string {
+function featCompanion(c: NonNullable<Project['companion']>): string {
   return `<a class="feat-companion" href="${esc(c.href)}" target="_blank" rel="noopener noreferrer">
     <span class="fc-label">Built &amp; shipped by</span>
     <span class="fc-name">${esc(c.name)}</span>
@@ -107,14 +114,14 @@ export function featCompanion(c: NonNullable<Project['companion']>): string {
   </a>`;
 }
 
-export function featCard(p: Project): string {
+function featCard(p: Project): string {
   // `data-component` lets the stylesheet give one card its own accent — the quiz is themed gold this
   // way — without a bespoke class per project. Absent for entries that are not deployed components.
-  const dc = p.component ? ` data-component="${esc(p.component)}"` : '';
+  const componentAttr = p.component ? ` data-component="${esc(p.component)}"` : '';
   const cls = ['feat', 'lux', p.diagram === 'k8s' ? 'wide' : '', p.companion ? 'has-companion' : '']
     .filter(Boolean)
     .join(' ');
-  return `<article class="${cls}"${dc}>
+  return `<article class="${cls}"${componentAttr}>
     <div class="feat-top">
       <h3>${esc(p.name)}</h3>
       ${badges(tagChip(p), liveBadge(p), versionBadge(p))}
@@ -129,7 +136,7 @@ export function featCard(p: Project): string {
 
 /** The member sub-panels of a group. The banner card and the list row draw these identically, differing
     only in link style (button vs chip), so the panel is defined once rather than copied into both. */
-export function memberPanels(members: Project[], linkCls: string): string {
+function memberPanels(members: Project[], linkCls: string): string {
   return members
     .map(
       (m) => `<div class="member">
@@ -160,7 +167,7 @@ function groupBody(g: Group, linkCls: string, extra: string): string {
 /** A "you are here" map-pin marker, drawn to fill the spare vertical space of the card that IS this
     site — a pin over a pulsing ground ring. The pin is decorative (aria-hidden); the label carries
     the meaning for a screen reader. margin-top:auto in CSS floats it into whatever room is left. */
-export function hereMarker(): string {
+function hereMarker(): string {
   return `<div class="here">
     <span class="here-pin">
       <span class="here-ping" aria-hidden="true"></span>
@@ -170,31 +177,36 @@ export function hereMarker(): string {
   </div>`;
 }
 
+/** A group card's artwork: its wordmark if it has one, else a drawn schematic, else nothing. The same
+    "pick one" shape as media() above, as guard clauses rather than a nested ternary. */
+function groupMedia(g: Group): string {
+  if (g.logo) {
+    return `<div class="media logo"><img src="${esc(g.logo)}" alt="${esc(g.name)}" loading="lazy"></div>`;
+  }
+  if (g.diagram) return diagramMedia(g.diagram);
+  return '';
+}
+
 /** Featured card for a group: one card, one shared blurb, then each member as a sub-panel —
     so a reader sees at a glance that the members are parts of a single project. */
-export function featGroupCard(g: Group): string {
+function featGroupCard(g: Group): string {
   const members = memberPanels(g.members, 'btn sm');
   // The wordmark is flavour, not a headline — it sits under the description rather than above it,
   // so the blurb still leads and the mark reads as a mark.
-  const logo = g.logo
-    ? `<div class="media logo"><img src="${esc(g.logo)}" alt="${esc(g.name)}" loading="lazy"></div>`
-    : g.diagram
-      ? `<div class="media diagram ${esc(g.diagram)}">${DIAGRAMS[g.diagram]}</div>`
-      : '';
   return `<article class="feat wide lux${g.hereMarker ? ' has-here' : ''}">
     <div class="feat-top">
       <h3>${esc(g.name)}</h3>
       <span class="grouped">${g.members.length} repos</span>
     </div>
     <p class="feat-blurb">${esc(g.blurb)}</p>
-    ${logo}
+    ${groupMedia(g)}
     ${g.hereMarker ? hereMarker() : ''}
     <div class="members">${members}</div>
   </article>`;
 }
 
 /** One row in the detailed all-projects list. */
-export function projRow(p: Project): string {
+function projRow(p: Project): string {
   return `<li class="lux">
     <time>${esc(fmtDate(p.date))}</time>
     <div class="proj-body">
@@ -210,7 +222,7 @@ export function projRow(p: Project): string {
 }
 
 /** A group occupies a single row, with its members nested inside it. */
-export function groupRow(g: Group): string {
+function groupRow(g: Group): string {
   return `<li class="lux group-row">
     <time>${esc(fmtDate(g.date))}</time>
     <div class="proj-body">
@@ -219,7 +231,7 @@ export function groupRow(g: Group): string {
   </li>`;
 }
 
-export function expCard(e: Experience): string {
+function expCard(e: Experience): string {
   // Raised, filled bubbles rather than underlined text: these are shipped IBM products a reader can go
   // read about — the strongest evidence on the card, so they shouldn't look like a footnote.
   const links = e.links

@@ -63,6 +63,10 @@ const KEYLEN = 32;
 const MAXMEM = 64 * 1024 * 1024;
 const SALT_BYTES = 16;
 
+/** Field 0 of every stored hash: the KDF label that says how to read the rest. One source, so the
+ *  writer's prefix and the verifier's guard can never name two different schemes. */
+const SCHEME = 'scrypt';
+
 /**
  * What we store instead of the password: `scrypt$N$r$p$salt$hash`, base64url throughout. The pepper is
  * prepended before hashing — NOT the salt: the salt is stored beside the hash (defends users from each
@@ -72,7 +76,7 @@ const SALT_BYTES = 16;
 export async function hashPassword(password: string, pepper: string): Promise<string> {
   const salt = randomBytes(SALT_BYTES);
   const derived = await scrypt(pepper + password, salt, KEYLEN, { N, r: R, p: P, maxmem: MAXMEM });
-  return `scrypt$${N}$${R}$${P}$${salt.toString('base64url')}$${derived.toString('base64url')}`;
+  return `${SCHEME}$${N}$${R}$${P}$${salt.toString('base64url')}$${derived.toString('base64url')}`;
 }
 
 /**
@@ -82,7 +86,7 @@ export async function hashPassword(password: string, pepper: string): Promise<st
  */
 export async function verifyPassword(stored: string, password: string, pepper: string): Promise<boolean> {
   const parts = stored.split('$');
-  if (parts.length !== 6 || parts[0] !== 'scrypt') return false;
+  if (parts.length !== 6 || parts[0] !== SCHEME) return false;
   const [, nStr, rStr, pStr, saltB64, hashB64] = parts;
   if (saltB64 === undefined || hashB64 === undefined) return false;
   const n = Number(nStr);

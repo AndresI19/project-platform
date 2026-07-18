@@ -46,7 +46,7 @@ const e = parsed.data;
  *  differs only in case would silently never match — a quiet way to lose your own admin rights. */
 const admins = new Set(
   e.AUTH_ADMINS.split(',')
-    .map((s2) => s2.trim().toLowerCase())
+    .map((name) => name.trim().toLowerCase())
     .filter(Boolean),
 );
 

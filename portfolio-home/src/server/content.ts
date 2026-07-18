@@ -66,19 +66,16 @@ export interface Target {
  */
 export function resolveTarget(name: string, contentDir: string): Target | null {
   const root = resolve(contentDir);
-  const spec =
-    name === RESUME
-      ? { accepts: ['application/pdf'] as const, magic: '%PDF-' }
-      : CARD.test(name)
-        ? { accepts: ['application/yaml', 'text/yaml', 'application/x-yaml', 'text/plain'] as const }
-        : null;
-  if (!spec) return null;
-
   const abs = resolve(root, name);
-  // Deliberately unreachable today (the patterns can't express a traversal) — here to catch the day
-  // someone widens CARD to allow a slash or a dot.
+  // Deliberately unreachable today (the patterns below can't express a traversal) — here to catch the
+  // day someone widens CARD to allow a slash or a dot.
   if (abs !== root && !abs.startsWith(root + sep)) return null;
-  return { abs, ...spec };
+
+  if (name === RESUME) return { abs, accepts: ['application/pdf'], magic: '%PDF-' };
+  if (CARD.test(name)) {
+    return { abs, accepts: ['application/yaml', 'text/yaml', 'application/x-yaml', 'text/plain'] };
+  }
+  return null;
 }
 
 // --- Who may write ---
@@ -260,10 +257,12 @@ export const resumePath = (uid: string): string => `/resume-${uid}.pdf`;
  * first try ~99.999% of the time; the loop is correctness, not a hot path.
  */
 export function mintResumeUid(prev: string | null = null): string {
-  let uid = prev;
-  while (uid === null || uid === prev) {
+  // do/while, so a UID is minted first and re-rolled only on the rare `=== prev` collision — the plain
+  // `while` needed a redundant `uid === null` seed clause just to force the first pass.
+  let uid: string;
+  do {
     uid = String(Math.floor(Math.random() * 100000)).padStart(5, '0');
-  }
+  } while (uid === prev);
   return uid;
 }
 

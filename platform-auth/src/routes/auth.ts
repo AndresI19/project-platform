@@ -1,5 +1,5 @@
 import { eq, sql } from 'drizzle-orm';
-import { type Request, Router } from 'express';
+import { type Request, type Response, Router } from 'express';
 import { createLocalJWKSet, jwtVerify } from 'jose';
 import { z } from 'zod';
 import {
@@ -68,6 +68,17 @@ const CredentialsBody = z.object({
   password: z.string().min(1).max(256),
 });
 
+/** Both credential endpoints accept the same body and reject a malformed one the same way. Returns the
+ *  parsed fields, or null once it has already answered 400 — so a caller's only job is `if (!c) return`. */
+function readCredentials(req: Request, res: Response): z.infer<typeof CredentialsBody> | null {
+  const parsed = CredentialsBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: 'provide { username, password }' });
+    return null;
+  }
+  return parsed.data;
+}
+
 authRouter.post('/identities', async (req, res) => {
   const ip = clientIp(req);
   if (overLimit(ip)) {
@@ -75,13 +86,10 @@ authRouter.post('/identities', async (req, res) => {
     return;
   }
 
-  const parsed = CredentialsBody.safeParse(req.body);
-  if (!parsed.success) {
-    res.status(400).json({ error: 'provide { username, password }' });
-    return;
-  }
+  const creds = readCredentials(req, res);
+  if (!creds) return;
 
-  const username = normaliseUsername(parsed.data.username);
+  const username = normaliseUsername(creds.username);
   if (!isValidUsername(username)) {
     res.status(400).json({
       error: 'invalid username',
@@ -89,7 +97,7 @@ authRouter.post('/identities', async (req, res) => {
     });
     return;
   }
-  if (!isValidPassword(parsed.data.password)) {
+  if (!isValidPassword(creds.password)) {
     res.status(400).json({
       error: 'invalid pin',
       detail: '4–128 characters',
@@ -100,7 +108,7 @@ authRouter.post('/identities', async (req, res) => {
   // Hash BEFORE the insert, so plaintext never leaves this handler and a failed insert writes nothing.
   // Username is the only unique column, so a conflict means exactly one thing — name taken — answered
   // directly, no retry loop.
-  const passwordHash = await hashPassword(parsed.data.password, env.codePepper);
+  const passwordHash = await hashPassword(creds.password, env.codePepper);
 
   const [row] = await db
     .insert(identities)
@@ -146,14 +154,11 @@ authRouter.post('/token', async (req, res) => {
     return;
   }
 
-  const parsed = CredentialsBody.safeParse(req.body);
-  if (!parsed.success) {
-    res.status(400).json({ error: 'provide { username, password }' });
-    return;
-  }
+  const creds = readCredentials(req, res);
+  if (!creds) return;
 
-  const username = normaliseUsername(parsed.data.username);
-  const password = parsed.data.password;
+  const username = normaliseUsername(creds.username);
+  const password = creds.password;
 
   // EVERY failure returns the same generic message. Distinguishing "no such username" from "wrong
   // password" would hand an attacker an oracle to confirm which usernames exist, then spend the whole
@@ -164,7 +169,10 @@ authRouter.post('/token', async (req, res) => {
     res.status(401).json({ error: 'unknown username or password' });
   };
 
-  if (!isValidUsername(username)) return void (await deny());
+  if (!isValidUsername(username)) {
+    await deny();
+    return;
+  }
 
   const [row] = await db
     .select({ id: identities.id, username: identities.username, passwordHash: identities.passwordHash })
@@ -173,12 +181,13 @@ authRouter.post('/token', async (req, res) => {
     .limit(1);
 
   // Verify whether or not the row exists: skipping scrypt on a missing username would answer faster
-  // than "wrong password" — a timing oracle — so a miss still burns one hash against a throwaway.
-  const ok = row
-    ? await verifyPassword(row.passwordHash, password, env.codePepper)
-    : await verifyPassword(DUMMY_HASH, password, env.codePepper);
+  // than "wrong password" — a timing oracle — so a miss still burns one hash against the throwaway.
+  const ok = await verifyPassword(row?.passwordHash ?? DUMMY_HASH, password, env.codePepper);
 
-  if (!row || !ok) return void (await deny());
+  if (!row || !ok) {
+    await deny();
+    return;
+  }
 
   await db.update(identities).set({ lastSeen: sql`now()` }).where(eq(identities.id, row.id));
   await audit(ip, true);
