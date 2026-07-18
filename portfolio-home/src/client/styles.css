@@ -33,7 +33,7 @@
   --db-2: #21567f;
   /* The card accent tint — the wash of --accent inside a featured card. Home-only (the quiz has no
      featured cards); the page ground and corner washes it sits within live in @platform/ui tokens. */
-  --card-tint: 7.5%;
+  --card-tint: 10%;
 }
 @media (prefers-color-scheme: dark) {
   :root {
