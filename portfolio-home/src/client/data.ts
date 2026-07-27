@@ -166,6 +166,19 @@ export const ENTRIES: Entry[] = [
     ],
   },
   {
+    name: 'Job Searcher',
+    date: '2026-07',
+    featured: true,
+    tech: 'Go · Vite · @platform/ui',
+    live: { type: 'health', url: '/job-searcher/api/health' },
+    blurb:
+      'Finds real software-engineering jobs and filters out the ghost postings: a concurrent Go pipeline cross-references each listing against the employer ATS (Greenhouse / Lever) and has Claude judge the match. Sign in as an admin to run it live; anyone can explore the verified dataset.',
+    links: [
+      { label: 'Check out! →', href: '/job-searcher/', primary: true },
+      { label: 'Repository', href: `${GITHUB_ORG}/Job-Search-Go`, external: true },
+    ],
+  },
+  {
     name: 'open-vMCP',
     date: '2026-07-09',
     featured: true,
