@@ -98,13 +98,13 @@ export interface Project {
   live?: Live;
   /**
    * The name /api/versions reports this project under. Set it and the card shows what's ACTUALLY
-   * running (see client/versions.ts). Five are deployed services: the key names the image and Service,
+   * running (see client/versions.ts). Most are deployed services: the key names the image and Service,
    * the version comes from a VERSION file baked in. `platform` is the odd one, deliberately not a
    * service — the orchestration repo ships no image, so the deploy writes its version onto the shared
    * volume (the whole platform's version, shown in the footer). A repo that is neither (planning,
    * tooling) has no version, which is why this is optional.
    */
-  component?: 'home' | 'quiz' | 'vmcp' | 'rs-mcp-server' | 'platform-auth' | 'platform';
+  component?: 'home' | 'quiz' | 'vmcp' | 'rs-mcp-server' | 'platform-auth' | 'platform' | 'job-searcher';
   /** Artwork filling the featured card's empty space; a path under public/. */
   image?: string;
   /** Two stacked images instead of one. Use when a single graphic misrepresents the project —
@@ -318,8 +318,13 @@ export const ENTRIES: Entry[] = [
     date: '2026-06-30',
     tech: 'Go',
     tag: { label: 'Work in progress', icon: 'wip' },
+    live: { type: 'health', url: '/job-searcher/api/health' },
+    component: 'job-searcher',
     blurb: 'Ingests job listings, verifies them with ATS matching + Claude, and emits a scored, ranked CSV.',
-    links: [{ label: 'Check out! →', href: '/job-searcher/', primary: true }],
+    links: [
+      { label: 'Check out! →', href: '/job-searcher/', primary: true },
+      { label: 'Repository', href: `${GITHUB_ORG}/Job-Search-Go`, external: true },
+    ],
   },
   {
     name: 'Claude-Project-Tooling',
