@@ -24,6 +24,8 @@ const TARGETS: Record<string, string> = {
   vmcp: 'http://vmcp:8001/version',
   'rs-mcp-server': 'http://rs-mcp-server:8000/version',
   'platform-auth': 'http://platform-auth:8002/version',
+  // Prefixed like `quiz`: the Go server mounts every route beneath its BASE_PATH (/job-searcher/).
+  'job-searcher': 'http://job-searcher:8080/job-searcher/version',
 };
 
 /**
@@ -76,7 +78,7 @@ async function probe(url: string): Promise<string | null> {
 export interface PlatformVersions {
   /** The orchestration repo's version — the topology, not any one service. `null` if unknown. */
   platform: string | null;
-  /** The five deployed services, each reporting the version baked into its own image. */
+  /** The deployed services, each reporting the version baked into its own image. */
   components: Record<string, string | null>;
 }
 
