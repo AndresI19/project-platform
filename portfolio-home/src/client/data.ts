@@ -166,21 +166,6 @@ export const ENTRIES: Entry[] = [
     ],
   },
   {
-    name: 'open-vMCP',
-    date: '2026-07-09',
-    featured: true,
-    tech: 'TypeScript · Carbon',
-    live: { type: 'health', url: '/vmcp/api/servers' },
-    component: 'vmcp',
-    blurb:
-      'A reverse proxy for MCP: one endpoint in front of every MCP server, with a data-driven registry, mocked identity/RBAC, and a dashboard logging every call.',
-    diagram: 'vmcp',
-    links: [
-      { label: 'Check out! →', href: '/vmcp/', primary: true },
-      { label: 'Repository', href: `${GITHUB_ORG}/open-vMCP`, external: true },
-    ],
-  },
-  {
     // The frontend is branded "Jobomancer"; the repo stays Job-Search-Go.
     name: 'Jobomancer',
     date: '2026-08',
@@ -194,6 +179,21 @@ export const ENTRIES: Entry[] = [
     links: [
       { label: 'Check out! →', href: '/job-searcher/', primary: true },
       { label: 'Repository', href: `${GITHUB_ORG}/Job-Search-Go`, external: true },
+    ],
+  },
+  {
+    name: 'open-vMCP',
+    date: '2026-07-09',
+    featured: true,
+    tech: 'TypeScript · Carbon',
+    live: { type: 'health', url: '/vmcp/api/servers' },
+    component: 'vmcp',
+    blurb:
+      'A reverse proxy for MCP: one endpoint in front of every MCP server, with a data-driven registry, mocked identity/RBAC, and a dashboard logging every call.',
+    diagram: 'vmcp',
+    links: [
+      { label: 'Check out! →', href: '/vmcp/', primary: true },
+      { label: 'Repository', href: `${GITHUB_ORG}/open-vMCP`, external: true },
     ],
   },
   {
