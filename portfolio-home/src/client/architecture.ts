@@ -111,16 +111,19 @@ function topologyDiagram(): string {
         ${arrow('a-agent s3 r10', 'MCP · /mcp')}
         ${arrow('a-user s4 r10', '/auth/')}
 
-        ${box('b-app s0 r11', 'job-searcher', '/job-searcher/ · Jobomancer', '/job-searcher/')}
+        ${box('b-app s0 r11', 'Jobomancer', '/job-searcher/', '/job-searcher/')}
         ${box('b-app s1 r11', 'home', '/', '/')}
         ${box('b-app s2 r11', 'quiz', '/cloud-developer-quiz/', '/cloud-developer-quiz/')}
         ${box('b-app s3 r11', 'vmcp', '/vmcp/ · MCP gateway', '/vmcp/')}
         ${box('b-auth s4 r11', 'platform-auth', '/auth/ · the identity service')}
 
-        <!-- job-searcher recycles the SHARED platform-db (a jobsearch database on the same Postgres that
-             holds auth and quiz — no dedicated server). It sits right beside platform-auth, so this is a
-             SHORT elbow into the neighbouring database, not a reach across the map. -->
-        <div class="js-db" aria-hidden="true"><span class="js-db-l">SQL · jobsearch</span></div>
+        <!-- Jobomancer recycles the SHARED platform-db (a jobsearch database on the same Postgres that
+             holds auth and quiz — no dedicated server). It sits right beside platform-auth, so the link
+             drops down its lane and runs straight INTO platform-db's left side — a side entry at the
+             database's own row, not an elbow over the top. Two pieces: the drop (.js-db-v) + the run-in
+             carrying the head (.js-db). -->
+        <div class="js-db-v" aria-hidden="true"></div>
+        <div class="js-db" aria-hidden="true"><span class="js-db-l">SQL</span></div>
 
         <!-- MOUNTS ARE NOT TRAFFIC — plain lines, no arrowheads. The database links ARE traffic. -->
         <div class="mount m-home" aria-hidden="true"></div>
@@ -142,9 +145,9 @@ function topologyDiagram(): string {
              for other people's servers. LEFT is job-searcher's — it scrapes boards (Apify) and runs ONE
              model, Gemini, for BOTH the verdict and the summaries. RIGHT is rs-mcp-server's public APIs.
              Each arrow starts at its service's column and pierces the frame, rather than floating in. -->
-        <div class="arch-arrow a-user s0 r15 outbound js-out" aria-hidden="true"><span class="arch-arrow-l">outbound HTTPS</span></div>
+        <div class="arch-arrow a-user js-out" aria-hidden="true"><span class="arch-arrow-l">outbound HTTPS</span></div>
         <div class="arch-box b-ext arch-ext-box s0 r16">
-          <span class="arch-name">job-searcher → outbound</span>
+          <span class="arch-name">Public APIs</span>
           <table class="arch-tbl">
             <tr><th>Apify</th><td>scrapes job boards</td></tr>
             <tr><th>Gemini</th><td>judges postings + drafts summaries</td></tr>
@@ -153,7 +156,7 @@ function topologyDiagram(): string {
 
         ${arrow('a-user s3 r15 outbound', 'outbound HTTPS')}
         <div class="arch-box b-ext arch-ext-box s3 r16">
-          <span class="arch-name">rs-mcp → public APIs</span>
+          <span class="arch-name">Public APIs</span>
           <table class="arch-tbl">
             ${OUTBOUND.map(([n, w]) => `<tr><th>${n}</th><td>${w}</td></tr>`).join('')}
           </table>
