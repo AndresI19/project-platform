@@ -243,6 +243,7 @@ const SEC_ROWS: SecRow[] = [
   { repo: 'data-driven-quiz-server', has: ['Image', 'Deps', 'SAST', 'Secrets'] },
   { repo: 'open-vMCP', has: ['Image', 'Deps', 'SAST', 'Secrets'] },
   { repo: 'rs-mcp-server', has: ['Image', 'Deps', 'SAST', 'Secrets'] },
+  { repo: 'Job-Search-Go', has: ['Image', 'Deps', 'SAST', 'Secrets'] },
   { repo: 'platform-orchestration', has: ['Secrets', 'Config', 'Manifests'] },
 ];
 /** What each column actually runs — the tool, and the class of problem it catches. */
