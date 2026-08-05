@@ -190,7 +190,7 @@ export const ENTRIES: Entry[] = [
     component: 'job-searcher',
     blurb:
       'A job-search and application helper, AI-integrated. It verifies which postings are real, then drafts tailored cover letters so you can apply in one pass.',
-    images: ['/jobomancer-mark-v2.svg', '/jobomancer-scry-discern-v2.svg'],
+    images: ['/jobomancer-mark-v3.svg', '/jobomancer-scry-discern-v2.svg'],
     links: [
       { label: 'Check out! →', href: '/job-searcher/', primary: true },
       { label: 'Repository', href: `${GITHUB_ORG}/Job-Search-Go`, external: true },
