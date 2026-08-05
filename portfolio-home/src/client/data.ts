@@ -219,8 +219,7 @@ export const ENTRIES: Entry[] = [
     tag: { label: 'Work in progress', icon: 'wip' },
     live: { type: 'health', url: '/job-searcher/api/health' },
     component: 'job-searcher',
-    blurb:
-      'Scry the real jobs from the ghosts, then Conjure the applications: an Apify → ATS → Claude verification pipeline behind a three-room divination UI (Scry · Conjure · Codex).',
+    blurb: 'A job-search and application helper, AI-integrated.',
     images: ['/jobomancer-mark.svg', '/jobomancer-scry-discern.svg'],
     links: [
       { label: 'Check out! →', href: '/job-searcher/', primary: true },
