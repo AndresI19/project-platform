@@ -181,6 +181,22 @@ export const ENTRIES: Entry[] = [
     ],
   },
   {
+    // The frontend is branded "Jobomancer"; the repo stays Job-Search-Go.
+    name: 'Jobomancer',
+    date: '2026-08',
+    featured: true,
+    tech: 'Go · Vanilla TS · Vite · Postgres',
+    live: { type: 'health', url: '/job-searcher/api/health' },
+    component: 'job-searcher',
+    blurb:
+      'A job-search and application helper, AI-integrated. It verifies which postings are real, then drafts tailored cover letters so you can apply in one pass.',
+    images: ['/jobomancer-mark-v2.svg', '/jobomancer-scry-discern-v2.svg'],
+    links: [
+      { label: 'Check out! →', href: '/job-searcher/', primary: true },
+      { label: 'Repository', href: `${GITHUB_ORG}/Job-Search-Go`, external: true },
+    ],
+  },
+  {
     // The platform this page is served by — worth featuring, since it is the thing tying the
     // other projects together into one host.
     name: 'platform-orchestration',
@@ -208,22 +224,6 @@ export const ENTRIES: Entry[] = [
       // leads; the repository is the artifact.
       { label: 'Wiki', href: `${GITHUB_ORG}/platform-orchestration/wiki`, external: true },
       { label: 'Repository', href: `${GITHUB_ORG}/platform-orchestration`, external: true },
-    ],
-  },
-  {
-    // The frontend is branded "Jobomancer"; the repo stays Job-Search-Go.
-    name: 'Jobomancer',
-    date: '2026-08',
-    featured: true,
-    tech: 'Go · Vanilla TS · Vite · Postgres',
-    tag: { label: 'Work in progress', icon: 'wip' },
-    live: { type: 'health', url: '/job-searcher/api/health' },
-    component: 'job-searcher',
-    blurb: 'A job-search and application helper, AI-integrated.',
-    images: ['/jobomancer-mark.svg', '/jobomancer-scry-discern.svg'],
-    links: [
-      { label: 'Check out! →', href: '/job-searcher/', primary: true },
-      { label: 'Repository', href: `${GITHUB_ORG}/Job-Search-Go`, external: true },
     ],
   },
   {
