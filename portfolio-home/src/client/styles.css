@@ -433,6 +433,10 @@ section {
   flex-direction: column;
   transition: transform .16s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow .16s, border-color .16s;
 }
+/* Jobomancer's card is 20% wider so its side-by-side Scry→Discern graphic has room to read. */
+.feat[data-component="job-searcher"] {
+  width: 350px;
+}
 .feat:hover {
   transform: translateY(-3px);
   box-shadow: var(--shadow-lg);
