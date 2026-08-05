@@ -778,6 +778,10 @@ section {
   height: 138px;
   object-fit: cover;
 }
+/* Jobomancer: the Scry→Discern graphic runs 10% taller so more of the grid + card shows. */
+.feat[data-component="job-searcher"] .media.stack img:last-child {
+  height: 152px;
+}
 
 /* The wordmark rests on the card — no plate, no border. It's a logo, not a screenshot, and framing it
    made it look like UI. Contained so it's never cropped; its alpha lets the card colour show through. */
