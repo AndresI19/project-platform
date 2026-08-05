@@ -103,7 +103,8 @@ describe('featured banner', () => {
 
   test('the quiz card shows the question above the garden, in separate frames', async () => {
     await mountPage();
-    const imgs = $$('.media.stack img').map((i) => (i as HTMLImageElement).getAttribute('src'));
+    // Scoped to the quiz card — other cards (e.g. Jobomancer) also use stacked images now.
+    const imgs = $$('[data-component="quiz"] .media.stack img').map((i) => (i as HTMLImageElement).getAttribute('src'));
     // Order matters: led by the garden alone, the card reads as a game and the word "quiz" is lost.
     expect(imgs).toEqual(['/quiz-sharding.png', '/home-page-garden-v3.gif']);
   });
