@@ -1903,38 +1903,54 @@ section {
   grid-column: 4;
 } /* shared by platform-content (3-5) and quiz (4-6) */
 
-/* Jobomancer → the SHARED platform-db. Jobomancer (col 6-7) sits right beside platform-db under
-   platform-auth (col 8-10), so the SQL link drops down its right lane (.js-db-v) to the database's own
-   row and runs straight into its LEFT SIDE at mid-height (.js-db + head) — a side entry, not an elbow
-   bending over the top. Db-blue and dashed, so it reads as the recycled-Postgres link. */
+/* Jobomancer → the SHARED platform-db. A dashed elbow (└) drawn in the SAME marching-dash style and
+   animation as the diagram's other arrows (.arch-arrow), so it reads as one of them, not a static
+   outline: a vertical ::before drop, a horizontal marching strip along the bottom edge, and a rightward
+   head into platform-db's LEFT SIDE at mid-height. The "SQL" label sits in the elbow's corner. */
 .js-db {
+  --arw: color-mix(in srgb, var(--muted) 75%, var(--ink));
   grid-column: 7 / 8;
   grid-row: 12 / 14;
   align-self: stretch;
   justify-self: stretch;
   z-index: 2;
-  margin-bottom: 40px; /* raise the corner + horizontal to platform-db's vertical centre (tuned) */
-  border-left: 2px dashed var(--db);
-  border-bottom: 2px dashed var(--db);
+  margin-bottom: 40px; /* raise the corner to platform-db's vertical centre (tuned) */
+  background-image: repeating-linear-gradient(90deg, var(--arw) 0 8px, transparent 8px 14px);
+  background-size: 100% 3px;
+  background-position: 0 100%;
+  background-repeat: no-repeat;
+  animation: arch-flow-x 0.9s linear infinite;
+}
+.js-db::before {
+  /* the vertical drop */
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background-image: repeating-linear-gradient(180deg, var(--arw) 0 8px, transparent 8px 14px);
+  background-size: 100% 14px;
+  animation: arch-flow 0.9s linear infinite;
 }
 .js-db::after {
   /* the head — at the elbow's bottom-right, points right into platform-db's left side */
   content: "";
   position: absolute;
-  right: -3px;
-  bottom: -8px;
-  border: 6px solid transparent;
-  border-left-color: var(--db);
+  right: -7px;
+  bottom: -5px;
+  border: 7px solid transparent;
+  border-left-color: var(--arw);
   border-right: 0;
 }
 .js-db-l {
   position: absolute;
-  bottom: 3px;
-  left: calc(100% + 5px);
+  bottom: 6px;
+  left: 7px;
   white-space: nowrap;
   font-size: 9.5px;
   font-weight: 700;
-  color: var(--db-2);
+  color: var(--muted);
 }
 
 /* job-searcher's outbound arrow is TALLER than rs-mcp's — job-searcher is a top-row service (r11), not a
@@ -1957,6 +1973,12 @@ section {
 @keyframes arch-flow {
   to {
     background-position-y: 14px;
+  }
+}
+/* Horizontal counterpart of arch-flow, for the SQL elbow's horizontal segment. */
+@keyframes arch-flow-x {
+  to {
+    background-position-x: 14px;
   }
 }
 
