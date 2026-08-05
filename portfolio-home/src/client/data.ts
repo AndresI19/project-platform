@@ -211,6 +211,23 @@ export const ENTRIES: Entry[] = [
     ],
   },
   {
+    // The frontend is branded "Jobomancer"; the repo stays Job-Search-Go.
+    name: 'Jobomancer',
+    date: '2026-08',
+    featured: true,
+    tech: 'Go · Vanilla TS · Vite · Postgres',
+    tag: { label: 'Work in progress', icon: 'wip' },
+    live: { type: 'health', url: '/job-searcher/api/health' },
+    component: 'job-searcher',
+    blurb:
+      'Scry the real jobs from the ghosts, then Conjure the applications: an Apify → ATS → Claude verification pipeline behind a three-room divination UI (Scry · Conjure · Codex).',
+    images: ['/jobomancer-mark.svg', '/jobomancer-scry-discern.svg'],
+    links: [
+      { label: 'Check out! →', href: '/job-searcher/', primary: true },
+      { label: 'Repository', href: `${GITHUB_ORG}/Job-Search-Go`, external: true },
+    ],
+  },
+  {
     // The server and its planning repo are one project — the planning drives the server.
     name: 'RuneScape Research Assistant',
     date: '2026-07-09',
@@ -312,19 +329,6 @@ export const ENTRIES: Entry[] = [
     blurb:
       'The self-hosted CI/CD behind the platform: a merge cuts a version; an ephemeral runner builds each image and Helm-rolls the cluster — on a ServiceAccount that can’t read secrets.',
     links: [{ label: 'Repository', href: `${GITHUB_ORG}/platform-cicd`, external: true }],
-  },
-  {
-    name: 'Job-Search-Go',
-    date: '2026-06-30',
-    tech: 'Go',
-    tag: { label: 'Work in progress', icon: 'wip' },
-    live: { type: 'health', url: '/job-searcher/api/health' },
-    component: 'job-searcher',
-    blurb: 'Ingests job listings, verifies them with ATS matching + Claude, and emits a scored, ranked CSV.',
-    links: [
-      { label: 'Check out! →', href: '/job-searcher/', primary: true },
-      { label: 'Repository', href: `${GITHUB_ORG}/Job-Search-Go`, external: true },
-    ],
   },
   {
     name: 'Claude-Project-Tooling',
