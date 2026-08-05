@@ -122,7 +122,6 @@ function topologyDiagram(): string {
              drops down its lane and runs straight INTO platform-db's left side — a side entry at the
              database's own row, not an elbow over the top. Two pieces: the drop (.js-db-v) + the run-in
              carrying the head (.js-db). -->
-        <div class="js-db-v" aria-hidden="true"></div>
         <div class="js-db" aria-hidden="true"><span class="js-db-l">SQL</span></div>
 
         <!-- MOUNTS ARE NOT TRAFFIC — plain lines, no arrowheads. The database links ARE traffic. -->

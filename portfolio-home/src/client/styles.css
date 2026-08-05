@@ -1907,40 +1907,30 @@ section {
    platform-auth (col 8-10), so the SQL link drops down its right lane (.js-db-v) to the database's own
    row and runs straight into its LEFT SIDE at mid-height (.js-db + head) — a side entry, not an elbow
    bending over the top. Db-blue and dashed, so it reads as the recycled-Postgres link. */
-.js-db-v {
-  grid-column: 7 / 8;
-  grid-row: 12 / 14;
-  justify-self: center;
-  align-self: stretch;
-  width: 2px;
-  z-index: 0;
-  background: repeating-linear-gradient(180deg, var(--db) 0 5px, transparent 5px 10px);
-}
 .js-db {
   grid-column: 7 / 8;
-  grid-row: 13;
-  justify-self: end;
-  align-self: center;
-  width: 55%;
-  height: 2px;
+  grid-row: 12 / 14;
+  align-self: stretch;
+  justify-self: stretch;
   z-index: 2;
-  background: repeating-linear-gradient(90deg, var(--db) 0 5px, transparent 5px 10px);
+  margin-bottom: 40px; /* raise the corner + horizontal to platform-db's vertical centre (tuned) */
+  border-left: 2px dashed var(--db);
+  border-bottom: 2px dashed var(--db);
 }
 .js-db::after {
-  /* the head — points right, into platform-db's left side */
+  /* the head — at the elbow's bottom-right, points right into platform-db's left side */
   content: "";
   position: absolute;
   right: -3px;
-  top: 50%;
-  transform: translateY(-50%);
+  bottom: -8px;
   border: 6px solid transparent;
   border-left-color: var(--db);
   border-right: 0;
 }
 .js-db-l {
   position: absolute;
-  top: -14px;
-  right: 0;
+  bottom: 3px;
+  left: calc(100% + 5px);
   white-space: nowrap;
   font-size: 9.5px;
   font-weight: 700;
@@ -1977,10 +1967,17 @@ section {
 .arch-arrow.short {
   height: 30px;
 }
-/* The outbound arrow rises to meet rs-mcp-server's box instead of starting at the frame edge, so it
-   is taller than a one-row arrow and sits flush under that box. */
+/* The outbound arrows run from their service down to the Public APIs box OUTSIDE the cluster. They must
+   REACH that box: stretch across the whole row (rs-mcp's is r15) so the head lands on the box, which is
+   pinned to the top of its own row (.arch-ext-box align-self:start) — otherwise the box centres in its
+   row and floats away below the arrowhead. */
 .arch-arrow.outbound {
-  height: 72px;
+  grid-row: 15 / 16;
+  height: auto;
+  align-self: stretch;
+  min-height: 46px; /* rs-mcp's arrow lives ONLY in r15; without this the stretched row collapses to ~0 */
+}
+.arch-ext-box {
   align-self: start;
 }
 .arch-arrow::before {
