@@ -59,13 +59,15 @@ const vconn = (label: string): string =>
 function topologyDiagram(): string {
   // Row map (keep in step with styles.css):
   //   1 callers   3 Cloudflare   7 cloudflared   9 nginx   11 services   13 volumes   14 rs-mcp
-  //   2 arrows    4 pierce↓      8 arrow↓        10 fan-out 12 connectors            16 arrow↓ 17 APIs
+  //   2 arrows    4 pierce↓      8 arrow↓        10 fan-out 12 connectors            16 outbound boxes
   //
-  // Four services, THREE content columns each: home 2-4, quiz 5-7, vmcp 8-10, platform-auth 11-13
-  // (grid lines s1 2/5 · s2 5/8 · s3 8/11 · s4 11/14). vmcp keeps its stack (database in the middle
-  // column, MCP-over-SSE down the right lane to rs-mcp). fvt-traffic left the cluster — it drives the
-  // public API like any MCP consumer, so it's named in the caller box, not drawn; that freed its row,
-  // and rs-mcp sits directly under the volumes. The TOKEN story lives in diagram 2, so this stays a map.
+  // FIVE services now — job-searcher (Jobomancer) sits between quiz and platform-auth, so it's ADJACENT
+  // to the shared platform-db and its links stay short (grid lines s1 2/4 · s2 4/6 · s0 6/8 · s4 8/11 ·
+  // s3 11/14). vmcp keeps its right-edge stack untouched (database in the middle column, MCP-over-SSE down
+  // the right lane to rs-mcp). job-searcher recycles the SHARED platform-db (a jobsearch database on the
+  // same Postgres that holds auth and quiz — no dedicated server), so its persistence is a SHORT elbow
+  // into the neighbouring db (.js-db). Its outbound (Apify to scrape, Gemini to judge + summarise) drops
+  // straight down OUTSIDE the cluster, mirroring rs-mcp's public-API box. The TOKEN story is diagram 2.
   return `
     <div class="arch-diagram">
       <div class="arch-grid">
@@ -102,18 +104,25 @@ function topologyDiagram(): string {
 
         ${box('b-net w r9', 'nginx', 'the router — splits by host and by path')}
 
-        <!-- A router fans out: one arrow per destination. Four now — the fourth is /auth/. -->
+        <!-- A router fans out: one arrow per destination. Five now — job-searcher joined on the left. -->
+        ${arrow('a-user s0 r10', 'path')}
         ${arrow('a-user s1 r10', 'path')}
         ${arrow('a-user s2 r10', 'path')}
         ${arrow('a-agent s3 r10', 'MCP · /mcp')}
         ${arrow('a-user s4 r10', '/auth/')}
 
+        ${box('b-app s0 r11', 'job-searcher', '/job-searcher/ · Jobomancer', '/job-searcher/')}
         ${box('b-app s1 r11', 'home', '/', '/')}
         ${box('b-app s2 r11', 'quiz', '/cloud-developer-quiz/', '/cloud-developer-quiz/')}
         ${box('b-app s3 r11', 'vmcp', '/vmcp/ · MCP gateway', '/vmcp/')}
         ${box('b-auth s4 r11', 'platform-auth', '/auth/ · the identity service')}
 
-        <!-- MOUNTS ARE NOT TRAFFIC — plain lines, no arrowheads. The two database links ARE traffic. -->
+        <!-- job-searcher recycles the SHARED platform-db (a jobsearch database on the same Postgres that
+             holds auth and quiz — no dedicated server). It sits right beside platform-auth, so this is a
+             SHORT elbow into the neighbouring database, not a reach across the map. -->
+        <div class="js-db" aria-hidden="true"><span class="js-db-l">SQL · jobsearch</span></div>
+
+        <!-- MOUNTS ARE NOT TRAFFIC — plain lines, no arrowheads. The database links ARE traffic. -->
         <div class="mount m-home" aria-hidden="true"></div>
         <div class="mount m-quiz" aria-hidden="true"></div>
         ${arrow('a-user s3 r12 short', 'SQL')}
@@ -121,7 +130,7 @@ function topologyDiagram(): string {
 
         ${box('b-vol pc r13', 'platform-content', 'PersistentVolume — mounted into home + quiz')}
         ${box('b-vol b-db s3 r13 db', 'vmcp-db', 'Postgres')}
-        ${box('b-vol b-db s4 r13 authdb', 'platform-db', 'Postgres')}
+        ${box('b-vol b-db s4 r13 authdb', 'platform-db', 'Postgres — auth · quiz · jobsearch')}
 
         <!-- Down the right edge of the gateway's column, PAST the database. rs-mcp-server sits directly
              below the databases now — fvt-traffic used to occupy this band but left the cluster. -->
@@ -129,11 +138,22 @@ function topologyDiagram(): string {
 
         ${box('b-infra s3 r14', 'rs-mcp-server', '17 RuneScape tools')}
 
-        <!-- The outbound call is rs-mcp-server's: the arrow starts at its box and leaves the cluster,
-             rather than appearing from the frame's edge. OUTSIDE the machine: other people's servers. -->
+        <!-- TWO outbound stacks, both OUTSIDE the cluster (below the frame): the calls leave the machine
+             for other people's servers. LEFT is job-searcher's — it scrapes boards (Apify) and runs ONE
+             model, Gemini, for BOTH the verdict and the summaries. RIGHT is rs-mcp-server's public APIs.
+             Each arrow starts at its service's column and pierces the frame, rather than floating in. -->
+        <div class="arch-arrow a-user s0 r15 outbound js-out" aria-hidden="true"><span class="arch-arrow-l">outbound HTTPS</span></div>
+        <div class="arch-box b-ext arch-ext-box s0 r16">
+          <span class="arch-name">job-searcher → outbound</span>
+          <table class="arch-tbl">
+            <tr><th>Apify</th><td>scrapes job boards</td></tr>
+            <tr><th>Gemini</th><td>judges postings + drafts summaries</td></tr>
+          </table>
+        </div>
+
         ${arrow('a-user s3 r15 outbound', 'outbound HTTPS')}
         <div class="arch-box b-ext arch-ext-box s3 r16">
-          <span class="arch-name">Public APIs</span>
+          <span class="arch-name">rs-mcp → public APIs</span>
           <table class="arch-tbl">
             ${OUTBOUND.map(([n, w]) => `<tr><th>${n}</th><td>${w}</td></tr>`).join('')}
           </table>

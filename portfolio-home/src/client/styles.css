@@ -1638,16 +1638,20 @@ section {
   grid-row: 17;
 }
 
-/* home 2-4, quiz 5-7, platform-auth 8-10, vmcp 11-13. vmcp stays on the RIGHT EDGE, where its whole
-   stack lives (agent's road down the right, database in the middle column, SSE line to rs-mcp), so
-   none of it moves; platform-auth is the new peer in the freed middle slot. (The agent box must stay
-   far-right too, or pulled inward it collides with the full-width "You" box above.) */
+/* FIVE services. home and quiz keep the far left (two columns each); job-searcher slots in between quiz
+   and platform-auth (s0 6-7) so it sits RIGHT NEXT TO the shared platform-db under auth — short links,
+   no reach across the map. platform-auth (8-10) and vmcp (11-13) DO NOT MOVE. vmcp stays on the RIGHT
+   EDGE, where its whole stack lives (agent's road down the right, db in the middle column, SSE to rs-mcp).
+   (The agent box must stay far-right too, or pulled inward it collides with the full-width "You" box.) */
 .s1 {
-  grid-column: 2 / 5;
+  grid-column: 2 / 4;
 } /* home */
 .s2 {
-  grid-column: 5 / 8;
+  grid-column: 4 / 6;
 } /* quiz */
+.s0 {
+  grid-column: 6 / 8;
+} /* job-searcher (Jobomancer) — beside platform-auth, over the shared platform-db */
 .s4 {
   grid-column: 8 / 11;
 } /* platform-auth, platform-db */
@@ -1655,7 +1659,7 @@ section {
   grid-column: 11 / 14;
 } /* vmcp, rs-mcp-server, the outbound APIs */
 .pc {
-  grid-column: 4 / 6;
+  grid-column: 3 / 5;
 } /* platform-content — the overlap of home and quiz */
 
 /* The trunk spans every content column: everything passes through it. */
@@ -1846,8 +1850,10 @@ section {
 /* A sealed Secret is a cluster object, not a service, so it sits low in the k8s frame's bottom-left and
    dresses down (dotted outline, near-background fill) — a quiet piece of the cluster, not a box in the
    traffic path. Horizontal now that it's a short wide chip rather than a tall left rail. */
+/* Bottom-LEFT corner of the k8s frame, under home/quiz — a quiet cluster object, out of the traffic
+   paths (job-searcher's outbound now drops down the centre, not here). */
 .vault {
-  grid-column: 2 / 6;
+  grid-column: 2 / 5;
   grid-row: 14;
   align-self: start;
   justify-self: start;
@@ -1891,11 +1897,60 @@ section {
   );
 }
 .m-home {
-  grid-column: 4;
-} /* shared by home (2-4) and platform-content (4-5) */
+  grid-column: 3;
+} /* shared by home (2-4) and platform-content (3-5) */
 .m-quiz {
-  grid-column: 5;
-} /* shared by platform-content (4-5) and quiz (5-7) */
+  grid-column: 4;
+} /* shared by platform-content (3-5) and quiz (4-6) */
+
+/* job-searcher → the SHARED platform-db. A SHORT elbow: job-searcher (6-7) sits right beside platform-db
+   under platform-auth (8-10), so the link leaves job-searcher's right edge (col 7) and steps one column
+   right into the database. Two borders draw it (down the left edge, along the bottom); a rightward head
+   lands on platform-db. Db-blue, dashed, so it reads as the recycled-Postgres link. */
+.js-db {
+  grid-column: 7 / 9;
+  grid-row: 12;
+  align-self: stretch;
+  justify-self: stretch;
+  z-index: 0;
+  margin: 7px 0 5px;
+  border-left: 2px dashed var(--db);
+  border-bottom: 2px dashed var(--db);
+  border-bottom-left-radius: 9px;
+}
+.js-db::after {
+  content: "";
+  position: absolute;
+  right: -2px;
+  bottom: -7px;
+  border: 7px solid transparent;
+  border-left-color: var(--db);
+  border-right: 0;
+}
+.js-db-l {
+  position: absolute;
+  top: -15px;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  font-size: 9.5px;
+  font-weight: 700;
+  color: var(--db-2);
+}
+
+/* job-searcher's outbound arrow is TALLER than rs-mcp's — job-searcher is a top-row service (r11), not a
+   low box, so the arrow spans from just under it all the way down through the cluster wall to its
+   outbound box outside (r16). Own lane (col 6), clear of the DB elbow (col 7) to its right. */
+.arch-arrow.js-out {
+  grid-column: 6 / 7;
+  grid-row: 12 / 16;
+  height: auto;
+  align-self: stretch;
+}
+/* The outbound table sits a little wider than job-searcher's two columns so its two rows breathe. */
+.arch-ext-box.s0 {
+  grid-column: 5 / 9;
+}
 
 /* ── Arrows ──────────────────────────────────────────────────────────────────────────────────── */
 /* Bolder, and the dashes MARCH — the direction of flow is the one thing a static arrowhead states
