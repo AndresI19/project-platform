@@ -1216,6 +1216,10 @@ section {
   gap: 10px;
 }
 .projects li {
+  /* The containing block for the phone-only absolute .badges (see the max-width:640px rule): without
+     it those badges escape the static row and pin to the nearest positioned ancestor (the page),
+     stacking every row's chips in one top-right corner. Inert on desktop, where .badges is flow-laid. */
+  position: relative;
   display: flex;
   gap: 16px;
   padding: 14px 16px;
@@ -3623,9 +3627,10 @@ section {
 }
 
 /* The badges. `margin-left: auto` in a `flex-wrap: wrap` head is a right-align that gives up: when the
-   title and chips don't both fit (on a phone, always) the chips wrap to their own line. The card is
-   position:relative (.lux) and the date moved to a left eyebrow, so the top-right corner is empty and
-   can be claimed — every badge sharing one corner, the point of badges() in view.ts. */
+   title and chips don't both fit (on a phone, always) the chips wrap to their own line. The row is
+   position:relative (set on .projects li, so the badges anchor to THIS row, not the page) and the date
+   moved to a left eyebrow, so the top-right corner is empty and can be claimed — every badge sharing
+   one corner, the point of badges() in view.ts. */
 @media (max-width: 640px) {
   /* CHILD COMBINATORS ALL THE WAY DOWN — the whole rule. `.projects li .badges` is a DESCENDANT match,
      and a group row's member panels each emit their own badges(), so every member's "live" chip got
