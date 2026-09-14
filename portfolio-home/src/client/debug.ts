@@ -229,10 +229,25 @@ async function render(root: HTMLElement): Promise<void> {
   }
   root.innerHTML = shell(`<p class="dbg-empty">Loading…</p>`);
   const res = await authFetch('/api/fvt/runs?limit=30');
-  if (!res || !res.ok) {
-    // 503 is the server telling us Postgres is unreachable; anything else is unexpected. Either way
-    // say which, because "no data" and "cannot reach the data" are different problems.
-    const why = res?.status === 503 ? 'the run history is unreachable' : `unexpected status ${res?.status}`;
+  if (!res) {
+    // authFetch returns null when there is no usable token — the identity looked like an admin to
+    // isAdmin() but carries nothing to send, which is what an expired session looks like. This
+    // needs its own message: reading `.status` off a null produced the memorable nonsense
+    // "unexpected status undefined", which tells the reader nothing and looks like a crash.
+    root.innerHTML = shell(
+      `<p class="dbg-empty">Your session has no valid token — sign in again with the account button, bottom right.</p>`,
+    );
+    return;
+  }
+  if (!res.ok) {
+    // 503 is the server telling us Postgres is unreachable; 401/403 mean the token was rejected
+    // rather than missing. Each is a different thing to do next, so each says so.
+    const why =
+      res.status === 503
+        ? 'the run history is unreachable'
+        : res.status === 401 || res.status === 403
+          ? 'this account is not an admin'
+          : `unexpected status ${res.status}`;
     root.innerHTML = shell(`<p class="dbg-empty">Could not load runs — ${esc(why)}.</p>`);
     return;
   }
