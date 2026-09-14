@@ -83,6 +83,10 @@ function env(over: Partial<Env> = {}): Env {
     authAudience: AUDIENCE,
     contentDir: dir,
     uploadMaxBytes: 1024 * 1024,
+    // Empty: these tests are about the content routes, and an unset DATABASE_URL is the mode in
+    // which the FVT routes are simply never registered (see fvt.ts).
+    databaseUrl: '',
+    fvtRetentionDays: 30,
     ...over,
   };
 }

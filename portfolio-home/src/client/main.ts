@@ -6,6 +6,8 @@ import './styles.css';
 
 import { mountAccountFab, mountGate } from '@platform/ui/gate';
 import { architectureToggle } from './architecture-toggle.js';
+import './debug.css';
+import { mountDebug } from './debug.js';
 import { featRail } from './feat-rail.js';
 import { loadConfig, refreshLiveness } from './liveness.js';
 import { paintVersions } from './versions.js';
@@ -16,30 +18,38 @@ import { pageHtml } from './view.js';
  * only place that knows the order they go in.
  */
 export function mount(): void {
-  document.getElementById('app')!.innerHTML = pageHtml();
-  // After pageHtml, because it binds to the button that markup just created.
-  architectureToggle();
-  // Same reason, and it must run after the cards exist: it measures them.
-  featRail();
+  // /debug is a different page served by the same SPA shell (serveClient's catch-all hands every
+  // path index.html). It takes over BEFORE the home page is built — rendering both and hiding one
+  // would run the liveness poller and the diagram measurements for a page nobody is looking at.
+  // The account FAB is still mounted below, because signing in is how you get into this board.
+  const isDebug = mountDebug();
 
-  // Wheel over the featured banner scrolls it horizontally (as the quiz's shop rows do). A vertical
-  // wheel on a horizontal strip is otherwise dead, or scrolls the page out from under you. Only when
-  // there's overflow to pan.
-  document.querySelectorAll<HTMLElement>('.feat-banner').forEach((row) => {
-    row.addEventListener(
-      'wheel',
-      (e) => {
-        if (e.deltaY === 0 || row.scrollWidth <= row.clientWidth) return;
-        e.preventDefault();
-        row.scrollLeft += e.deltaY;
-      },
-      { passive: false },
-    );
-  });
+  if (!isDebug) {
+    document.getElementById('app')!.innerHTML = pageHtml();
+    // After pageHtml, because it binds to the button that markup just created.
+    architectureToggle();
+    // Same reason, and it must run after the cards exist: it measures them.
+    featRail();
 
-  // What every component is running. Fetched ONCE — no timer, unlike liveness: a version can't change
-  // without a new image (hence new pods), a deploy the visitor must reload to see anyway.
-  void paintVersions();
+    // Wheel over the featured banner scrolls it horizontally (as the quiz's shop rows do). A vertical
+    // wheel on a horizontal strip is otherwise dead, or scrolls the page out from under you. Only when
+    // there's overflow to pan.
+    document.querySelectorAll<HTMLElement>('.feat-banner').forEach((row) => {
+      row.addEventListener(
+        'wheel',
+        (e) => {
+          if (e.deltaY === 0 || row.scrollWidth <= row.clientWidth) return;
+          e.preventDefault();
+          row.scrollLeft += e.deltaY;
+        },
+        { passive: false },
+      );
+    });
+
+    // What every component is running. Fetched ONCE — no timer, unlike liveness: a version can't change
+    // without a new image (hence new pods), a deploy the visitor must reload to see anyway.
+    void paintVersions();
+  }
 
   // Identity, shared with every other front end — gate, account FAB and sign-out all live in
   // @platform/ui so the three apps can't grow three opinions about what signing out means. Home has no
@@ -53,11 +63,15 @@ export function mount(): void {
     onUpgrade: () => mountGate({ greetUrl: '/api/hello', onDone: () => {} }),
   });
 
-  // The config tells the probes which origin to ask, so it has to land before the first poll.
-  void loadConfig().then(() => {
-    void refreshLiveness();
-    setInterval(refreshLiveness, 60_000); // poll liveliness every minute
-  });
+  // The config tells the probes which origin to ask, so it has to land before the first poll. Skipped
+  // on /debug: the badges it feeds are on the home page, and a minute-by-minute poll behind a page
+  // that never shows them is work with no reader.
+  if (!isDebug) {
+    void loadConfig().then(() => {
+      void refreshLiveness();
+      setInterval(refreshLiveness, 60_000); // poll liveliness every minute
+    });
+  }
 }
 
 mount();

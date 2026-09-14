@@ -54,6 +54,18 @@ env:
   # hardcode the same string.
   - name: AUTH_AUDIENCE
     value: platform
+  # The FVT run history behind /debug: the nightly sanity suite POSTs here and the board reads back.
+  # `optional: true` is load-bearing, not caution. It keeps the same contract AUTH_JWKS_URI has above
+  # — UNSET IS A MODE — so a cluster without this secret boots home with the FVT routes simply not
+  # registered (they 404) instead of CrashLoopBackOff. A reporting feature must not be able to take
+  # down the page it reports on, and marking it required would mean exactly that on any cluster the
+  # secret has not been sealed into yet.
+  - name: DATABASE_URL
+    valueFrom:
+      secretKeyRef:
+        name: home-db
+        key: DATABASE_URL
+        optional: true
 initContainers:
   - name: seed-resume
     command:
