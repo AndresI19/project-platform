@@ -1,0 +1,295 @@
+/* /debug — the FVT board.
+ *
+ * The status hues are the one thing here that is not a platform token, because the design system has
+ * no status ramp: it ships accent/ink/surface and nothing that means "this broke". They were picked
+ * with the palette validator rather than by eye, and the light and dark steps were SELECTED
+ * SEPARATELY — a dark mode made by flipping a light palette lands outside the band that keeps marks
+ * legible on a dark surface (0.48–0.67 OKLCH L, against 0.43–0.77 for light).
+ *
+ * Why teal and not green: measured against red, a conventional green separates by ΔE 4.4 under
+ * deuteranopia — under the floor, i.e. the two states look the same to a red-green colourblind
+ * reader. Teal against the same red measures 14.4. Colour is still never the only channel — every
+ * state also carries an icon and a word — but the default should not require the fallback.
+ */
+
+.dbg {
+  --dbg-pass: #0d9488;
+  --dbg-fail: #b42318;
+  --dbg-skip: var(--muted);
+
+  max-width: 1040px;
+  margin: 0 auto;
+  padding: 32px 20px 64px;
+}
+
+@media (prefers-color-scheme: dark) {
+  .dbg {
+    /* Re-stepped for the dark surface, not lightened from the light values. The teal happens to sit
+       inside both bands and is reused; the red does not and is its own step. */
+    --dbg-fail: #e5484d;
+  }
+}
+
+.dbg-head {
+  margin-bottom: 28px;
+}
+.dbg-h1 {
+  font-size: 1.6rem;
+  margin: 0 0 6px;
+  color: var(--ink);
+}
+.dbg-lede {
+  margin: 0;
+  color: var(--muted);
+  font-size: .95rem;
+  max-width: 62ch;
+}
+.dbg-lede a {
+  color: var(--accent);
+}
+.dbg-h2 {
+  font-size: 1.05rem;
+  margin: 0 0 10px;
+  color: var(--ink);
+}
+.dbg-h3 {
+  font-size: .95rem;
+  margin: 0 0 8px;
+  color: var(--ink);
+}
+.dbg-sub {
+  font-weight: 400;
+  color: var(--muted);
+  font-size: .85rem;
+  margin-left: 6px;
+}
+.dbg-section {
+  margin-top: 30px;
+}
+.dbg-empty {
+  color: var(--muted);
+  padding: 18px 0;
+}
+
+/* Visually hidden, still read aloud — this is how the state word reaches a screen reader on the
+   dense check rows, where printing it beside every icon would be noise on screen. */
+.dbg-vh {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.dbg-mark {
+  margin-right: 6px;
+  font-size: .9em;
+}
+
+/* --- tiles --- */
+
+.dbg-tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 14px;
+}
+.dbg-tile {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.dbg-tile-label {
+  font-size: .78rem;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--muted);
+}
+/* The number wears an ink token, never the status colour — the coloured mark beside it carries the
+   state. A value painted in the series colour is the thing that makes a board unreadable in print. */
+.dbg-tile-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--ink);
+  line-height: 1.15;
+}
+.dbg-tile-sm {
+  font-size: 1.05rem;
+}
+.dbg-tile-note {
+  font-size: .82rem;
+  color: var(--muted);
+}
+.dbg-tile[data-state="pass"] .dbg-mark {
+  color: var(--dbg-pass);
+}
+.dbg-tile[data-state="fail"] .dbg-mark {
+  color: var(--dbg-fail);
+}
+.dbg-tile[data-state="skip"] .dbg-mark {
+  color: var(--dbg-skip);
+}
+
+/* --- history strip --- */
+
+.dbg-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.dbg-cell {
+  width: 22px;
+  height: 30px;
+  border: 0;
+  /* 4px rounded ends, and a real gap between fills so adjacent cells never merge into one bar. */
+  border-radius: 4px;
+  cursor: pointer;
+  padding: 0;
+  background: var(--dbg-skip);
+}
+.dbg-cell[data-state="pass"] {
+  background: var(--dbg-pass);
+}
+.dbg-cell[data-state="fail"] {
+  background: var(--dbg-fail);
+}
+.dbg-cell:hover {
+  outline: 2px solid var(--ink);
+  outline-offset: 1px;
+}
+.dbg-cell.is-open {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+/* --- run rows --- */
+
+.dbg-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.dbg-row {
+  display: grid;
+  grid-template-columns: 96px 1fr auto auto;
+  gap: 12px;
+  align-items: center;
+  text-align: left;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--dbg-skip);
+  border-radius: 10px;
+  padding: 10px 14px;
+  cursor: pointer;
+  color: var(--ink);
+  font: inherit;
+}
+.dbg-row[data-state="pass"] {
+  border-left-color: var(--dbg-pass);
+}
+.dbg-row[data-state="fail"] {
+  border-left-color: var(--dbg-fail);
+}
+.dbg-row:hover {
+  background: var(--panel-2);
+}
+.dbg-row.is-open {
+  border-color: var(--accent);
+}
+.dbg-row-state {
+  font-size: .85rem;
+  color: var(--muted);
+}
+.dbg-row[data-state="pass"] .dbg-mark {
+  color: var(--dbg-pass);
+}
+.dbg-row[data-state="fail"] .dbg-mark {
+  color: var(--dbg-fail);
+}
+.dbg-row-when {
+  font-size: .9rem;
+}
+.dbg-row-counts,
+.dbg-row-dur {
+  font-size: .82rem;
+  color: var(--muted);
+}
+
+/* --- per-run detail --- */
+
+.dbg-detail:empty {
+  display: none;
+}
+.dbg-detail-inner {
+  margin-top: 14px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 16px;
+}
+.dbg-service {
+  margin-top: 14px;
+}
+.dbg-service:first-of-type {
+  margin-top: 6px;
+}
+.dbg-checks {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.dbg-check {
+  display: grid;
+  grid-template-columns: 20px 1fr auto;
+  gap: 10px;
+  align-items: baseline;
+  padding: 5px 8px;
+  border-radius: 6px;
+  font-size: .88rem;
+}
+.dbg-check[data-state="fail"] {
+  background: color-mix(in srgb, var(--dbg-fail) 10%, transparent);
+}
+.dbg-check[data-state="pass"] .dbg-mark {
+  color: var(--dbg-pass);
+}
+.dbg-check[data-state="fail"] .dbg-mark {
+  color: var(--dbg-fail);
+}
+.dbg-check[data-state="skip"] .dbg-mark {
+  color: var(--dbg-skip);
+}
+.dbg-check-name {
+  color: var(--ink);
+}
+.dbg-check-dur {
+  color: var(--muted);
+  font-size: .8rem;
+}
+/* The error text spans all three columns so a long message wraps under the name instead of
+   stretching the row's grid. */
+.dbg-check-detail {
+  grid-column: 2 / -1;
+  color: var(--muted);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: .78rem;
+  word-break: break-word;
+}
+
+@media (max-width: 620px) {
+  .dbg-row {
+    grid-template-columns: 80px 1fr;
+  }
+  .dbg-row-counts,
+  .dbg-row-dur {
+    grid-column: 2;
+  }
+}

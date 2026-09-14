@@ -37,12 +37,28 @@ export interface Env {
   contentDir: string;
   /** Largest upload body accepted, in bytes. */
   uploadMaxBytes: number;
+  /**
+   * Postgres holding the FVT run history behind /debug. UNSET IS A SUPPORTED MODE, the same switch
+   * authJwksUri is: with no database the FVT routes are never registered (see fvt.ts), so a dev
+   * checkout and CI run with no Postgres at all. Set, it must be a postgres:// URL — a typo that
+   * still parsed would otherwise surface as a connection error on the first nightly POST, hours
+   * after the deploy that caused it.
+   */
+  databaseUrl: string;
+  /** How many days of FVT runs to keep. Older runs are pruned as each new one is ingested. */
+  fvtRetentionDays: number;
 }
 
+/**
+ * Variables whose VALUE is itself a credential, so a validation failure must name them without
+ * quoting them. The webhook URL is the credential (anyone holding it can post to the channel) and a
+ * Postgres URL embeds the password. Both are rejected by name and shape, never by content — a
+ * malformed secret still ends up in a boot log, and boot logs are the least private place it could go.
+ */
+const SECRET_VARS = new Set(['DISCORD_WEBHOOK_URL', 'DATABASE_URL']);
+
 function fail(name: string, value: string, why: string): never {
-  // Never print the value of a secret. The webhook URL *is* the credential — anyone holding it can
-  // post to the channel — so a bad one is reported by name and shape, not by content.
-  const shown = name === 'DISCORD_WEBHOOK_URL' ? '<redacted>' : JSON.stringify(value);
+  const shown = SECRET_VARS.has(name) ? '<redacted>' : JSON.stringify(value);
   throw new Error(`Invalid ${name}=${shown}: ${why}`);
 }
 
@@ -123,6 +139,27 @@ function absolutePath(name: string, raw: string | undefined, fallback: string): 
   return value.replace(/\/+$/, '');
 }
 
+/**
+ * A postgres:// connection string, or '' for "no database, don't register the FVT routes".
+ * Deliberately not absoluteUrl(): that accepts http(s) only, and the failure mode here is a URL that
+ * parses but points somewhere that will never answer. The scheme is the one thing worth checking —
+ * the host, database, and credentials cannot be validated without connecting, which boot must not do.
+ */
+function postgresUrl(name: string, raw: string): string {
+  const value = raw.trim();
+  if (!value) return '';
+  let url: URL;
+  try {
+    url = new URL(value);
+  } catch {
+    return fail(name, value, 'must be a postgres:// URL, or unset to run without the /debug history');
+  }
+  if (url.protocol !== 'postgres:' && url.protocol !== 'postgresql:') {
+    return fail(name, value, `must be postgres:// or postgresql://, got "${url.protocol}"`);
+  }
+  return value;
+}
+
 function port(raw: string | undefined): number {
   if (!raw) return 3000;
   const n = Number(raw);
@@ -163,6 +200,11 @@ export function loadEnv(e: NodeJS.ProcessEnv = process.env): Env {
     authIssuer,
     authAudience: (e.AUTH_AUDIENCE ?? '').trim() || 'platform',
     contentDir: absolutePath('CONTENT_DIR', e.CONTENT_DIR, '/content'),
+    databaseUrl: postgresUrl('DATABASE_URL', e.DATABASE_URL ?? ''),
+    // 30 days. One run a day makes this ~30 rows and a few hundred checks — small enough that the
+    // prune is bookkeeping, long enough that a regression which began "a few weeks ago" is still
+    // on the board when someone goes looking for when it started.
+    fvtRetentionDays: positiveInt('FVT_RETENTION_DAYS', e.FVT_RETENTION_DAYS, 30),
     // 5 MiB. The résumé is ~82 KiB and the whole volume is 256Mi, so this is ~60x generous and still
     // far under the volume — an upload cannot fill the disk the quiz's decks live on.
     uploadMaxBytes: positiveInt('UPLOAD_MAX_BYTES', e.UPLOAD_MAX_BYTES, 5 * 1024 * 1024),

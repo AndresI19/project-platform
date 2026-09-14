@@ -24,6 +24,10 @@ describe('an empty environment is valid', () => {
       authAudience: 'platform',
       contentDir: '/content',
       uploadMaxBytes: 5 * 1024 * 1024,
+      // Like auth above, empty is a MODE: no database means mountFvt registers no FVT routes, which
+      // is what lets this app run in dev and CI with no Postgres anywhere.
+      databaseUrl: '',
+      fvtRetentionDays: 30,
     });
   });
 });
@@ -152,5 +156,36 @@ describe('DISCORD_WEBHOOK_URL', () => {
     const leaky = 'https://example.com/api/hooks/REAL-LOOKING-TOKEN-abc123';
     expect(() => loadEnv({ DISCORD_WEBHOOK_URL: leaky })).toThrow(/<redacted>/);
     expect(() => loadEnv({ DISCORD_WEBHOOK_URL: leaky })).not.toThrow(/REAL-LOOKING-TOKEN/);
+  });
+});
+
+describe('DATABASE_URL', () => {
+  const URL = 'postgres://platform:pw@platform-db:5432/fvt?sslmode=disable';
+
+  test('a postgres URL is kept verbatim — the query string carries sslmode', () => {
+    expect(loadEnv({ DATABASE_URL: URL }).databaseUrl).toBe(URL);
+  });
+
+  test('postgresql:// is accepted too — both spellings are the same scheme', () => {
+    expect(loadEnv({ DATABASE_URL: 'postgresql://u:p@h:5432/d' }).databaseUrl).toBe(
+      'postgresql://u:p@h:5432/d',
+    );
+  });
+
+  test('a non-postgres scheme fails at boot, named', () => {
+    expect(() => loadEnv({ DATABASE_URL: 'http://platform-db:5432/fvt' })).toThrow(/DATABASE_URL/);
+  });
+
+  test('the password never reaches the error message', () => {
+    // The same rule DISCORD_WEBHOOK_URL follows, for the same reason: a malformed value still ends
+    // up in a boot log, and a Postgres URL embeds the password in the value itself.
+    const leaky = 'redis://user:REAL-LOOKING-PASSWORD@platform-db:5432/fvt';
+    expect(() => loadEnv({ DATABASE_URL: leaky })).toThrow(/<redacted>/);
+    expect(() => loadEnv({ DATABASE_URL: leaky })).not.toThrow(/REAL-LOOKING-PASSWORD/);
+  });
+
+  test('FVT_RETENTION_DAYS must be a positive integer when set', () => {
+    expect(loadEnv({ FVT_RETENTION_DAYS: '7' }).fvtRetentionDays).toBe(7);
+    expect(() => loadEnv({ FVT_RETENTION_DAYS: '0' })).toThrow(/positive integer/);
   });
 });

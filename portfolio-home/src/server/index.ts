@@ -6,6 +6,7 @@ import express, { type Request, type Response } from 'express';
 import rateLimit from 'express-rate-limit';
 import { contentWritable, mountContent, resumePath, resumeUid, serveResume } from './content.js';
 import { loadEnv } from './env.js';
+import { FVT_INGEST_PATH, mountFvt } from './fvt.js';
 import { collectVersions, platformVersion } from './versions.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -19,7 +20,12 @@ const env = loadEnv();
 const app = express();
 
 // The only body this server ever accepts is one short string, so the limit is deliberately tiny.
-app.use(express.json({ limit: '2kb' }));
+// The FVT ingest is the one exception — a whole run of checks with their failure text — and it
+// brings its OWN, larger parser (see fvt.ts). Excluding its path here rather than raising this
+// number keeps every other endpoint at 2kb: one endpoint needing a bigger body is not a reason to
+// let /api/hello accept a megabyte.
+const smallJson = express.json({ limit: '2kb' });
+app.use((req, res, next) => (req.path === FVT_INGEST_PATH ? next() : smallJson(req, res, next)));
 app.set('trust proxy', true); // sits behind the nginx reverse proxy, so req.ip needs the header
 
 // A coarse global cap, defence-in-depth over the per-endpoint /api/hello limiter. Generous because
@@ -171,6 +177,11 @@ app.get('/resume-:uid.pdf', (req, res) => {
 // Admin-only writes to that volume. Registers NOTHING when AUTH_JWKS_URI is unset — see content.ts.
 mountContent(app, { env });
 
+// The FVT run history behind /debug. Like the upload route, these exist only when configured — no
+// DATABASE_URL (or no way to verify a token) and they are never registered at all. Returns the store
+// so boot can create the schema and report which way it went.
+const fvtStore = mountFvt(app, { env });
+
 // The built client, its cache policy, the health probe and the SPA fallback — all shared with the
 // quiz. Mounted LAST: it ends in a catch-all, so any route added after it would never be reached.
 serveClient(app, { clientDir: CLIENT_DIR, appName: 'portfolio-home' });
@@ -204,4 +215,25 @@ app.listen(env.port, () => {
   void contentWritable(env.contentDir).then((ok) => {
     console.log(`  content    : ${env.contentDir}${ok ? '' : ' (NOT writable — uploads would 503)'}`);
   });
+
+  // Same reasoning as the uploads line: the FVT routes 404 when unconfigured, so say which it is.
+  // The schema is created HERE rather than at mount because it is the first thing that actually
+  // touches Postgres — a database that is unreachable should be reported at boot, by this line,
+  // rather than discovered by the nightly suite getting a 503 at 1am.
+  if (!fvtStore) {
+    const why = !env.databaseUrl ? 'DATABASE_URL unset' : 'AUTH_JWKS_URI unset';
+    console.log(`  fvt        : disabled — routes not registered (${why})`);
+  } else {
+    void fvtStore
+      .init()
+      .then(() => {
+        console.log(`  fvt        : POST /api/fvt/results, /debug reads (keeps ${env.fvtRetentionDays}d)`);
+      })
+      .catch((err: Error) => {
+        // Not fatal. This process's main job is serving the home page, which needs no database at
+        // all — taking the site down because a reporting sidecar's Postgres is unreachable would be
+        // the monitoring feature causing the outage it exists to report.
+        console.error(`  fvt        : SCHEMA INIT FAILED — ingest will 503 (${err.message})`);
+      });
+  }
 });
